@@ -49,6 +49,8 @@ go run ./cmd/server
 
 打开 <http://127.0.0.1:8080>，使用刚创建的管理员账号登录，或注册普通账号后登录。
 
+API 文档页面：<http://127.0.0.1:8080/swagger/index.html>，使用方式见 [API 文档](docs/user/API.md)。
+
 `init` 需要交互式终端，隐藏读取密码及确认密码。密码要求为 12～128 个 Unicode 码点且 UTF-8 编码不超过 512 字节，不裁剪或规范化。仅在没有管理员时允许初始化；公开注册始终创建普通用户，注册后需要登录。默认服务仅监听本机环回地址，并提供构建后的 Vue 页面及安全响应头。
 
 开发时后端与Vite分别运行：
@@ -152,6 +154,8 @@ python3 scripts/verify_cli.py --go go
 
 | 文档 | 内容 |
 | --- | --- |
+| [用户模块 API 使用说明](docs/user/API.md) | 认证、错误处理、接口索引与 curl 示例 |
+| [自动生成的 Swagger 规范](server/docs/swagger.yaml) | Gin handler 注释生成的 13 个接口，可导入 API 工具 |
 | [用户模块技术设计](docs/user/USER_MODULE_TECHNICAL_DESIGN.md) | 需求、数据模型与接口契约 |
 | [用户模块架构](docs/user/USER_MODULE_ARCHITECTURE.md) | 已确认的架构图、职责与实现范围 |
 | [测试用例](docs/user/USER_MODULE_TEST_CASES.md) | 按需求组织的验证场景 |

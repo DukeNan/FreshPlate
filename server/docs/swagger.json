@@ -1,0 +1,1534 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "使用 HttpOnly Cookie 会话，不使用 Bearer Token。会话固定有效期 7 天，CSRF 有效期 24 小时。写请求须有匹配的 Origin、CSRF Cookie 与 X-CSRF-Token；受保护写请求另需表单加载时的 X-Expected-User-ID。登录后改用响应中的 csrf_token。强制改密期间只允许 /me、/auth/csrf、/auth/logout、/me/password。成功返回 data（204 无响应体），失败返回 error.code/message。JSON 最多 64 KiB，拒绝未知字段。所有 API 响应 no-store。不启用 CORS。密码任务最多同时两个，超限 429。Swagger 2.0 不支持 cookie 类型的 security scheme，Cookie 由同源浏览器自动维护。",
+        "title": "FreshPlate 用户模块 API",
+        "contact": {},
+        "version": "0.1.0"
+    },
+    "basePath": "/api",
+    "paths": {
+        "/admin/audit-logs": {
+            "get": {
+                "description": "仅管理员可用。仅管理员。按 ID 降序，使用 offset 分页。action 示例：admin_init、admin_recover_password、password_reset、role_changed、status_changed、user_updated；未知 action 返回空列表。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "管理"
+                ],
+                "summary": "分页查询审计日志",
+                "parameters": [
+                    {
+                        "maximum": 1000000,
+                        "minimum": 1,
+                        "type": "integer",
+                        "default": 1,
+                        "description": "页码。",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 100,
+                        "minimum": 1,
+                        "type": "integer",
+                        "default": 20,
+                        "description": "每页条数。",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 1,
+                        "type": "integer",
+                        "format": "int64",
+                        "description": "按目标用户筛选。",
+                        "name": "target_user_id",
+                        "in": "query"
+                    },
+                    {
+                        "maxLength": 64,
+                        "type": "string",
+                        "description": "精确匹配操作类型（实现限制为 64 字节）；省略或空字符串表示全部。",
+                        "name": "action",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/api.response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/api.auditPage"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "INVALID_ARGUMENT：参数、请求体或页面身份断言无效；INVALID_CURRENT_PASSWORD：当前密码错误。",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "AUTH_REQUIRED：未登录或会话失效；INVALID_CREDENTIALS：用户名、密码错误或账号已禁用。",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "CSRF_INVALID：Origin/CSRF 无效；FORBIDDEN：权限不足；PASSWORD_CHANGE_REQUIRED：必须先修改密码。",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "INTERNAL_ERROR：服务内部错误。",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    },
+                    "503": {
+                        "description": "DATABASE_BUSY：数据库忙，本次写入未保存，请稍后手动重提。",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/users": {
+            "get": {
+                "description": "仅管理员可用。仅管理员。按 ID 降序，使用 offset 分页；total 为筛选后的总数。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "管理"
+                ],
+                "summary": "分页查询用户",
+                "parameters": [
+                    {
+                        "maximum": 1000000,
+                        "minimum": 1,
+                        "type": "integer",
+                        "default": 1,
+                        "description": "页码。",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 100,
+                        "minimum": 1,
+                        "type": "integer",
+                        "default": 20,
+                        "description": "每页条数。",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "去除首尾空白并转小写后的子串匹配，处理后最多 32 字节。",
+                        "name": "username",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "user",
+                            "admin"
+                        ],
+                        "type": "string",
+                        "description": "角色筛选；省略或空字符串表示全部。",
+                        "name": "role",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "active",
+                            "disabled"
+                        ],
+                        "type": "string",
+                        "description": "状态筛选；省略或空字符串表示全部。",
+                        "name": "status",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/api.response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/api.userPage"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "INVALID_ARGUMENT：参数、请求体或页面身份断言无效；INVALID_CURRENT_PASSWORD：当前密码错误。",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "AUTH_REQUIRED：未登录或会话失效；INVALID_CREDENTIALS：用户名、密码错误或账号已禁用。",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "CSRF_INVALID：Origin/CSRF 无效；FORBIDDEN：权限不足；PASSWORD_CHANGE_REQUIRED：必须先修改密码。",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "INTERNAL_ERROR：服务内部错误。",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    },
+                    "503": {
+                        "description": "DATABASE_BUSY：数据库忙，本次写入未保存，请稍后手动重提。",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/users/{id}": {
+            "patch": {
+                "description": "仅管理员可用。仅管理员。不能修改本人（SELF_ADMIN_CHANGE_FORBIDDEN），不能移除最后一位启用管理员（LAST_ADMIN_REQUIRED）。状态变化撤销目标全部会话；角色变化在后续请求生效。不变值成功返回且不写审计。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "管理"
+                ],
+                "summary": "修改用户角色或状态",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "必须逐字匹配服务配置 Origin；浏览器自动设置，不允许跨站请求。",
+                        "name": "Origin",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "GET /auth/csrf 返回的 token；登录后改用登录响应中的 csrf_token，须与 CSRF Cookie 一致。",
+                        "name": "X-CSRF-Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "表单加载时登录用户 ID 的十进制规范字符串（int64 范围），不是目标用户 ID；不作为认证凭据。身份不一致返回 409。",
+                        "name": "X-Expected-User-ID",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "minimum": 1,
+                        "type": "integer",
+                        "format": "int64",
+                        "description": "目标用户 ID。",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "请求参数；拒绝未知字段，最多 64 KiB",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.userUpdate"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/api.response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/store.User"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "INVALID_ARGUMENT：参数、请求体或页面身份断言无效；INVALID_CURRENT_PASSWORD：当前密码错误。",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "AUTH_REQUIRED：未登录或会话失效；INVALID_CREDENTIALS：用户名、密码错误或账号已禁用。",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "CSRF_INVALID：Origin/CSRF 无效；FORBIDDEN：权限不足；PASSWORD_CHANGE_REQUIRED：必须先修改密码。",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "NOT_FOUND：目标用户或接口不存在。",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "USERNAME_TAKEN、IDENTITY_CHANGED、SELF_ADMIN_CHANGE_FORBIDDEN 或 LAST_ADMIN_REQUIRED；详见各接口说明。",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    },
+                    "415": {
+                        "description": "UNSUPPORTED_MEDIA_TYPE：请求体必须使用 application/json。",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "INTERNAL_ERROR：服务内部错误。",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    },
+                    "503": {
+                        "description": "DATABASE_BUSY：数据库忙，本次写入未保存，请稍后手动重提。",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/users/{id}/reset-password": {
+            "post": {
+                "description": "仅管理员可用。仅管理员，不能重置本人。临时密码不能等于目标当前密码（400 INVALID_ARGUMENT）。撤销目标全部会话，要求下次登录改密；不启用禁用账号。目标并发变化返回 IDENTITY_CHANGED。临时密码由管理员自行通过独立渠道交付。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "管理"
+                ],
+                "summary": "重置用户密码",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "必须逐字匹配服务配置 Origin；浏览器自动设置，不允许跨站请求。",
+                        "name": "Origin",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "GET /auth/csrf 返回的 token；登录后改用登录响应中的 csrf_token，须与 CSRF Cookie 一致。",
+                        "name": "X-CSRF-Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "表单加载时登录用户 ID 的十进制规范字符串（int64 范围），不是目标用户 ID；不作为认证凭据。身份不一致返回 409。",
+                        "name": "X-Expected-User-ID",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "minimum": 1,
+                        "type": "integer",
+                        "format": "int64",
+                        "description": "目标用户 ID。",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "请求参数；拒绝未知字段，最多 64 KiB",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.passwordReset"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "成功，无响应体"
+                    },
+                    "400": {
+                        "description": "INVALID_ARGUMENT：参数、请求体或页面身份断言无效；INVALID_CURRENT_PASSWORD：当前密码错误。",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "AUTH_REQUIRED：未登录或会话失效；INVALID_CREDENTIALS：用户名、密码错误或账号已禁用。",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "CSRF_INVALID：Origin/CSRF 无效；FORBIDDEN：权限不足；PASSWORD_CHANGE_REQUIRED：必须先修改密码。",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "NOT_FOUND：目标用户或接口不存在。",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "USERNAME_TAKEN、IDENTITY_CHANGED、SELF_ADMIN_CHANGE_FORBIDDEN 或 LAST_ADMIN_REQUIRED；详见各接口说明。",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    },
+                    "415": {
+                        "description": "UNSUPPORTED_MEDIA_TYPE：请求体必须使用 application/json。",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    },
+                    "429": {
+                        "description": "RATE_LIMITED：请求频率或密码运算并发超限；Retry-After 给出建议等待秒数。",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "type": "integer",
+                                "description": "建议等待的秒数"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "INTERNAL_ERROR：服务内部错误。",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    },
+                    "503": {
+                        "description": "DATABASE_BUSY：数据库忙，本次写入未保存，请稍后手动重提。",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/csrf": {
+            "get": {
+                "description": "匿名或登录均可调用；令牌有效期 24 小时并绑定当前会话/匿名状态。服务端同时维护 HttpOnly CSRF Cookie。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "认证"
+                ],
+                "summary": "取得 CSRF 令牌",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/api.response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/api.csrfResult"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "INVALID_ARGUMENT：参数、请求体或页面身份断言无效；INVALID_CURRENT_PASSWORD：当前密码错误。",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "CSRF_INVALID：Origin/CSRF 无效；FORBIDDEN：权限不足；PASSWORD_CHANGE_REQUIRED：必须先修改密码。",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "INTERNAL_ERROR：服务内部错误。",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    },
+                    "503": {
+                        "description": "DATABASE_BUSY：数据库忙，本次写入未保存，请稍后手动重提。",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/login": {
+            "post": {
+                "description": "设置固定有效期 7 天的会话 Cookie，并轮换 CSRF；后续写请求使用此处 csrf_token。每 IP 每 15 分钟 30 次，每规范化用户名每 15 分钟 10 次。must_change_password=true 时仅可访问 /me、/auth/csrf、/auth/logout、/me/password。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "认证"
+                ],
+                "summary": "登录",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "必须逐字匹配服务配置 Origin；浏览器自动设置，不允许跨站请求。",
+                        "name": "Origin",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "GET /auth/csrf 返回的 token；登录后改用登录响应中的 csrf_token，须与 CSRF Cookie 一致。",
+                        "name": "X-CSRF-Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "请求参数；拒绝未知字段，最多 64 KiB",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.credentials"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/api.response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/api.loginResult"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "INVALID_ARGUMENT：参数、请求体或页面身份断言无效；INVALID_CURRENT_PASSWORD：当前密码错误。",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "AUTH_REQUIRED：未登录或会话失效；INVALID_CREDENTIALS：用户名、密码错误或账号已禁用。",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "CSRF_INVALID：Origin/CSRF 无效；FORBIDDEN：权限不足；PASSWORD_CHANGE_REQUIRED：必须先修改密码。",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    },
+                    "415": {
+                        "description": "UNSUPPORTED_MEDIA_TYPE：请求体必须使用 application/json。",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    },
+                    "429": {
+                        "description": "RATE_LIMITED：请求频率或密码运算并发超限；Retry-After 给出建议等待秒数。",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "type": "integer",
+                                "description": "建议等待的秒数"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "INTERNAL_ERROR：服务内部错误。",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    },
+                    "503": {
+                        "description": "DATABASE_BUSY：数据库忙，本次写入未保存，请稍后手动重提。",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/logout": {
+            "post": {
+                "description": "不接受任何请求体；匿名也可调用。撤销当前会话、清除会话 Cookie 并设置匿名 CSRF Cookie，随后调用 GET /auth/csrf 获取匿名令牌。无需 X-Expected-User-ID。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "认证"
+                ],
+                "summary": "退出当前会话",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "必须逐字匹配服务配置 Origin；浏览器自动设置，不允许跨站请求。",
+                        "name": "Origin",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "GET /auth/csrf 返回的 token；登录后改用登录响应中的 csrf_token，须与 CSRF Cookie 一致。",
+                        "name": "X-CSRF-Token",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "成功，无响应体"
+                    },
+                    "400": {
+                        "description": "INVALID_ARGUMENT：参数、请求体或页面身份断言无效；INVALID_CURRENT_PASSWORD：当前密码错误。",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "CSRF_INVALID：Origin/CSRF 无效；FORBIDDEN：权限不足；PASSWORD_CHANGE_REQUIRED：必须先修改密码。",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "INTERNAL_ERROR：服务内部错误。",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    },
+                    "503": {
+                        "description": "DATABASE_BUSY：数据库忙，本次写入未保存，请稍后手动重提。",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/register": {
+            "post": {
+                "description": "始终创建 active 普通用户；注册不会自动登录。用户名重复返回 USERNAME_TAKEN。每 IP 每小时最多 10 次。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "认证"
+                ],
+                "summary": "注册普通用户",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "必须逐字匹配服务配置 Origin；浏览器自动设置，不允许跨站请求。",
+                        "name": "Origin",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "GET /auth/csrf 返回的 token；登录后改用登录响应中的 csrf_token，须与 CSRF Cookie 一致。",
+                        "name": "X-CSRF-Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "请求参数；拒绝未知字段，最多 64 KiB",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.credentials"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/api.response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/store.User"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "INVALID_ARGUMENT：参数、请求体或页面身份断言无效；INVALID_CURRENT_PASSWORD：当前密码错误。",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "CSRF_INVALID：Origin/CSRF 无效；FORBIDDEN：权限不足；PASSWORD_CHANGE_REQUIRED：必须先修改密码。",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "USERNAME_TAKEN、IDENTITY_CHANGED、SELF_ADMIN_CHANGE_FORBIDDEN 或 LAST_ADMIN_REQUIRED；详见各接口说明。",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    },
+                    "415": {
+                        "description": "UNSUPPORTED_MEDIA_TYPE：请求体必须使用 application/json。",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    },
+                    "429": {
+                        "description": "RATE_LIMITED：请求频率或密码运算并发超限；Retry-After 给出建议等待秒数。",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "type": "integer",
+                                "description": "建议等待的秒数"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "INTERNAL_ERROR：服务内部错误。",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    },
+                    "503": {
+                        "description": "DATABASE_BUSY：数据库忙，本次写入未保存，请稍后手动重提。",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/foods": {
+            "get": {
+                "description": "仅登录用户可用。仅返回 active 食材，按 ID 升序，无分页。仅基础名称，不提供营养或过敏原判定数据。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "个人账户"
+                ],
+                "summary": "列出可选食材",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/api.response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/store.Food"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "INVALID_ARGUMENT：参数、请求体或页面身份断言无效；INVALID_CURRENT_PASSWORD：当前密码错误。",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "AUTH_REQUIRED：未登录或会话失效；INVALID_CREDENTIALS：用户名、密码错误或账号已禁用。",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "CSRF_INVALID：Origin/CSRF 无效；FORBIDDEN：权限不足；PASSWORD_CHANGE_REQUIRED：必须先修改密码。",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "INTERNAL_ERROR：服务内部错误。",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    },
+                    "503": {
+                        "description": "DATABASE_BUSY：数据库忙，本次写入未保存，请稍后手动重提。",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/me": {
+            "get": {
+                "description": "仅登录用户可用。允许处于强制改密状态的用户访问。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "个人账户"
+                ],
+                "summary": "获取当前用户",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/api.response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/store.User"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "INVALID_ARGUMENT：参数、请求体或页面身份断言无效；INVALID_CURRENT_PASSWORD：当前密码错误。",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "AUTH_REQUIRED：未登录或会话失效；INVALID_CREDENTIALS：用户名、密码错误或账号已禁用。",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "CSRF_INVALID：Origin/CSRF 无效；FORBIDDEN：权限不足；PASSWORD_CHANGE_REQUIRED：必须先修改密码。",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "INTERNAL_ERROR：服务内部错误。",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    },
+                    "503": {
+                        "description": "DATABASE_BUSY：数据库忙，本次写入未保存，请稍后手动重提。",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/me/password": {
+            "put": {
+                "description": "仅登录用户可用。新密码不能等于当前密码（400 INVALID_ARGUMENT）。允许强制改密用户访问。成功撤销本人全部会话并要求重新登录；再 GET /auth/csrf 获取匿名令牌。每用户每 15 分钟 5 次、每 IP 每 15 分钟 20 次。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "个人账户"
+                ],
+                "summary": "修改本人密码",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "必须逐字匹配服务配置 Origin；浏览器自动设置，不允许跨站请求。",
+                        "name": "Origin",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "GET /auth/csrf 返回的 token；登录后改用登录响应中的 csrf_token，须与 CSRF Cookie 一致。",
+                        "name": "X-CSRF-Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "表单加载时登录用户 ID 的十进制规范字符串（int64 范围），不是目标用户 ID；不作为认证凭据。身份不一致返回 409。",
+                        "name": "X-Expected-User-ID",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "请求参数；拒绝未知字段，最多 64 KiB",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.passwordChange"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "成功，无响应体"
+                    },
+                    "400": {
+                        "description": "INVALID_ARGUMENT：参数、请求体或页面身份断言无效；INVALID_CURRENT_PASSWORD：当前密码错误。",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "AUTH_REQUIRED：未登录或会话失效；INVALID_CREDENTIALS：用户名、密码错误或账号已禁用。",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "CSRF_INVALID：Origin/CSRF 无效；FORBIDDEN：权限不足；PASSWORD_CHANGE_REQUIRED：必须先修改密码。",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "USERNAME_TAKEN、IDENTITY_CHANGED、SELF_ADMIN_CHANGE_FORBIDDEN 或 LAST_ADMIN_REQUIRED；详见各接口说明。",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    },
+                    "415": {
+                        "description": "UNSUPPORTED_MEDIA_TYPE：请求体必须使用 application/json。",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    },
+                    "429": {
+                        "description": "RATE_LIMITED：请求频率或密码运算并发超限；Retry-After 给出建议等待秒数。",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "type": "integer",
+                                "description": "建议等待的秒数"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "INTERNAL_ERROR：服务内部错误。",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    },
+                    "503": {
+                        "description": "DATABASE_BUSY：数据库忙，本次写入未保存，请稍后手动重提。",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/me/preferences": {
+            "get": {
+                "description": "仅登录用户可用。返回完整设置，包括仍被引用的停用忌口食材。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "个人账户"
+                ],
+                "summary": "读取个人饮食设置",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/api.response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/store.Preferences"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "INVALID_ARGUMENT：参数、请求体或页面身份断言无效；INVALID_CURRENT_PASSWORD：当前密码错误。",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "AUTH_REQUIRED：未登录或会话失效；INVALID_CREDENTIALS：用户名、密码错误或账号已禁用。",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "CSRF_INVALID：Origin/CSRF 无效；FORBIDDEN：权限不足；PASSWORD_CHANGE_REQUIRED：必须先修改密码。",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "INTERNAL_ERROR：服务内部错误。",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    },
+                    "503": {
+                        "description": "DATABASE_BUSY：数据库忙，本次写入未保存，请稍后手动重提。",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "仅登录用户可用。必须提交全部七个输入字段；数组不可为 null，营养目标允许 null。不接受响应中的 excluded_foods、updated_at。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "个人账户"
+                ],
+                "summary": "完整替换个人饮食设置",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "必须逐字匹配服务配置 Origin；浏览器自动设置，不允许跨站请求。",
+                        "name": "Origin",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "GET /auth/csrf 返回的 token；登录后改用登录响应中的 csrf_token，须与 CSRF Cookie 一致。",
+                        "name": "X-CSRF-Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "表单加载时登录用户 ID 的十进制规范字符串（int64 范围），不是目标用户 ID；不作为认证凭据。身份不一致返回 409。",
+                        "name": "X-Expected-User-ID",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "请求参数；拒绝未知字段，最多 64 KiB",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.preferencesInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/api.response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/store.Preferences"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "INVALID_ARGUMENT：参数、请求体或页面身份断言无效；INVALID_CURRENT_PASSWORD：当前密码错误。",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "AUTH_REQUIRED：未登录或会话失效；INVALID_CREDENTIALS：用户名、密码错误或账号已禁用。",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "CSRF_INVALID：Origin/CSRF 无效；FORBIDDEN：权限不足；PASSWORD_CHANGE_REQUIRED：必须先修改密码。",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "USERNAME_TAKEN、IDENTITY_CHANGED、SELF_ADMIN_CHANGE_FORBIDDEN 或 LAST_ADMIN_REQUIRED；详见各接口说明。",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    },
+                    "415": {
+                        "description": "UNSUPPORTED_MEDIA_TYPE：请求体必须使用 application/json。",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "INTERNAL_ERROR：服务内部错误。",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    },
+                    "503": {
+                        "description": "DATABASE_BUSY：数据库忙，本次写入未保存，请稍后手动重提。",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "api.auditPage": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/store.Audit"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "api.credentials": {
+            "type": "object",
+            "required": [
+                "password",
+                "username"
+            ],
+            "properties": {
+                "password": {
+                    "description": "UTF-8 不超过 512 字节，不裁剪或规范化。",
+                    "type": "string",
+                    "maxLength": 128,
+                    "minLength": 12,
+                    "example": "Example-pass-2026"
+                },
+                "username": {
+                    "description": "去除首尾空白后为 3～32 位 ASCII 字母、数字或下划线，保存为小写。",
+                    "type": "string",
+                    "example": "alice_01"
+                }
+            }
+        },
+        "api.csrfResult": {
+            "type": "object",
+            "properties": {
+                "token": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.errorDetail": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "example": "AUTH_REQUIRED"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "请先登录"
+                }
+            }
+        },
+        "api.errorResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "$ref": "#/definitions/api.errorDetail"
+                }
+            }
+        },
+        "api.loginResult": {
+            "type": "object",
+            "properties": {
+                "csrf_token": {
+                    "type": "string"
+                },
+                "user": {
+                    "$ref": "#/definitions/store.User"
+                }
+            }
+        },
+        "api.passwordChange": {
+            "type": "object",
+            "required": [
+                "current_password",
+                "new_password"
+            ],
+            "properties": {
+                "current_password": {
+                    "type": "string",
+                    "maxLength": 128,
+                    "minLength": 12
+                },
+                "new_password": {
+                    "description": "UTF-8 不超过 512 字节，不能与当前密码相同。",
+                    "type": "string",
+                    "maxLength": 128,
+                    "minLength": 12
+                }
+            }
+        },
+        "api.passwordReset": {
+            "type": "object",
+            "required": [
+                "temporary_password"
+            ],
+            "properties": {
+                "temporary_password": {
+                    "description": "UTF-8 不超过 512 字节，不能与目标当前密码相同。",
+                    "type": "string",
+                    "maxLength": 128,
+                    "minLength": 12
+                }
+            }
+        },
+        "api.preferencesInput": {
+            "type": "object",
+            "required": [
+                "allergens",
+                "daily_carbohydrate_g",
+                "daily_energy_kcal",
+                "daily_fat_g",
+                "daily_protein_g",
+                "dietary_preferences",
+                "excluded_food_ids"
+            ],
+            "properties": {
+                "allergens": {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "enum": [
+                            "milk",
+                            "egg",
+                            "fish",
+                            "crustacean",
+                            "mollusc",
+                            "peanut",
+                            "soy",
+                            "wheat",
+                            "tree_nut",
+                            "sesame"
+                        ]
+                    }
+                },
+                "daily_carbohydrate_g": {
+                    "description": "null 或有限正数，不含 0。",
+                    "type": "number",
+                    "maximum": 2000,
+                    "minimum": 0,
+                    "x-nullable": true
+                },
+                "daily_energy_kcal": {
+                    "description": "null 或有限正数，不含 0。",
+                    "type": "number",
+                    "maximum": 20000,
+                    "minimum": 0,
+                    "x-nullable": true
+                },
+                "daily_fat_g": {
+                    "description": "null 或有限正数，不含 0。",
+                    "type": "number",
+                    "maximum": 2000,
+                    "minimum": 0,
+                    "x-nullable": true
+                },
+                "daily_protein_g": {
+                    "description": "null 或有限正数，不含 0。",
+                    "type": "number",
+                    "maximum": 2000,
+                    "minimum": 0,
+                    "x-nullable": true
+                },
+                "dietary_preferences": {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "enum": [
+                            "vegetarian",
+                            "vegan",
+                            "low_salt"
+                        ]
+                    }
+                },
+                "excluded_food_ids": {
+                    "description": "正整数，服务端去重；不能新增停用食材。",
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
+        "api.response": {
+            "type": "object",
+            "properties": {
+                "data": {}
+            }
+        },
+        "api.userPage": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/store.User"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "api.userUpdate": {
+            "type": "object",
+            "properties": {
+                "role": {
+                    "type": "string",
+                    "enum": [
+                        "user",
+                        "admin"
+                    ]
+                },
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "active",
+                        "disabled"
+                    ]
+                }
+            }
+        },
+        "store.Audit": {
+            "type": "object",
+            "properties": {
+                "action": {
+                    "type": "string"
+                },
+                "actor_source": {
+                    "type": "string"
+                },
+                "actor_user_id": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "details": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "target_user_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "store.Food": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "store.Preferences": {
+            "type": "object",
+            "properties": {
+                "allergens": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "daily_carbohydrate_g": {
+                    "type": "number"
+                },
+                "daily_energy_kcal": {
+                    "type": "number"
+                },
+                "daily_fat_g": {
+                    "type": "number"
+                },
+                "daily_protein_g": {
+                    "type": "number"
+                },
+                "dietary_preferences": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "excluded_food_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "excluded_foods": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/store.Food"
+                    }
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "store.User": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "must_change_password": {
+                    "type": "boolean"
+                },
+                "role": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        }
+    }
+}

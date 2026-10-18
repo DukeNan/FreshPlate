@@ -42,6 +42,7 @@ func New(s *logic.Service, cfg appRuntime.Config, key []byte) (*gin.Engine, erro
 		c.Header("Referrer-Policy", "strict-origin-when-cross-origin")
 		c.Next()
 	}, gin.Recovery())
+	mountSwagger(r, cfg.Secure)
 	api := r.Group("/api")
 	api.Use(func(c *gin.Context) { c.Header("Cache-Control", "no-store"); c.Next() }, a.context)
 	api.GET("/auth/csrf", a.csrf)
@@ -49,7 +50,7 @@ func New(s *logic.Service, cfg appRuntime.Config, key []byte) (*gin.Engine, erro
 	api.POST("/auth/login", a.login)
 	api.POST("/auth/logout", a.logout)
 	me := api.Group("", a.protected(false))
-	me.GET("/me", func(c *gin.Context) { success(c, 200, session(c).User) })
+	me.GET("/me", a.me)
 	me.PUT("/me/password", a.password)
 	me.GET("/me/preferences", a.getPreferences)
 	me.PUT("/me/preferences", a.putPreferences)
@@ -70,7 +71,7 @@ func success(c *gin.Context, status int, data any) {
 		c.Status(status)
 		return
 	}
-	c.JSON(status, gin.H{"data": data})
+	c.JSON(status, response{Data: data})
 }
 func (a *API) fail(c *gin.Context, err error) {
 	var app *store.AppError
@@ -95,7 +96,7 @@ func (a *API) fail(c *gin.Context, err error) {
 	if app.Status == 429 && c.Writer.Header().Get("Retry-After") == "" {
 		c.Header("Retry-After", "1")
 	}
-	c.AbortWithStatusJSON(app.Status, gin.H{"error": gin.H{"code": app.Code, "message": app.Message}})
+	c.AbortWithStatusJSON(app.Status, errorResponse{Error: errorDetail{Code: app.Code, Message: app.Message}})
 }
 func (a *API) decode(c *gin.Context, dst any) bool {
 	typ, _, err := mime.ParseMediaType(c.GetHeader("Content-Type"))
@@ -125,6 +126,18 @@ func (a *API) decode(c *gin.Context, dst any) bool {
 	}
 	return true
 }
+
+// csrf godoc
+// @Summary 取得 CSRF 令牌
+// @Description 匿名或登录均可调用；令牌有效期 24 小时并绑定当前会话/匿名状态。服务端同时维护 HttpOnly CSRF Cookie。
+// @Tags 认证
+// @Produce json
+// @Success 200 {object} response{data=csrfResult}
+// @Failure 400 {object} errorResponse "INVALID_ARGUMENT：参数、请求体或页面身份断言无效；INVALID_CURRENT_PASSWORD：当前密码错误。"
+// @Failure 403 {object} errorResponse "CSRF_INVALID：Origin/CSRF 无效；FORBIDDEN：权限不足；PASSWORD_CHANGE_REQUIRED：必须先修改密码。"
+// @Failure 500 {object} errorResponse "INTERNAL_ERROR：服务内部错误。"
+// @Failure 503 {object} errorResponse "DATABASE_BUSY：数据库忙，本次写入未保存，请稍后手动重提。"
+// @Router /auth/csrf [get]
 func (a *API) csrf(c *gin.Context) {
 	token, err := c.Cookie(a.csrfName())
 	if err != nil || !a.validCSRF(c, token) {
@@ -134,16 +147,33 @@ func (a *API) csrf(c *gin.Context) {
 		a.fail(c, err)
 		return
 	}
-	success(c, 200, gin.H{"token": token})
+	success(c, 200, csrfResult{Token: token})
 }
+
+// register godoc
+// @Summary 注册普通用户
+// @Description 始终创建 active 普通用户；注册不会自动登录。用户名重复返回 USERNAME_TAKEN。每 IP 每小时最多 10 次。
+// @Tags 认证
+// @Produce json
+// @Accept json
+// @Param Origin header string true "必须逐字匹配服务配置 Origin；浏览器自动设置，不允许跨站请求。"
+// @Param X-CSRF-Token header string true "GET /auth/csrf 返回的 token；登录后改用登录响应中的 csrf_token，须与 CSRF Cookie 一致。"
+// @Param body body credentials true "请求参数；拒绝未知字段，最多 64 KiB"
+// @Success 201 {object} response{data=store.User}
+// @Failure 400 {object} errorResponse "INVALID_ARGUMENT：参数、请求体或页面身份断言无效；INVALID_CURRENT_PASSWORD：当前密码错误。"
+// @Failure 403 {object} errorResponse "CSRF_INVALID：Origin/CSRF 无效；FORBIDDEN：权限不足；PASSWORD_CHANGE_REQUIRED：必须先修改密码。"
+// @Failure 409 {object} errorResponse "USERNAME_TAKEN、IDENTITY_CHANGED、SELF_ADMIN_CHANGE_FORBIDDEN 或 LAST_ADMIN_REQUIRED；详见各接口说明。"
+// @Failure 415 {object} errorResponse "UNSUPPORTED_MEDIA_TYPE：请求体必须使用 application/json。"
+// @Failure 429 {object} errorResponse "RATE_LIMITED：请求频率或密码运算并发超限；Retry-After 给出建议等待秒数。"
+// @Failure 500 {object} errorResponse "INTERNAL_ERROR：服务内部错误。"
+// @Failure 503 {object} errorResponse "DATABASE_BUSY：数据库忙，本次写入未保存，请稍后手动重提。"
+// @Header 429 {integer} Retry-After "建议等待的秒数"
+// @Router /auth/register [post]
 func (a *API) register(c *gin.Context) {
 	if !a.limit(c, "register:ip:"+c.ClientIP(), 10, time.Hour) {
 		return
 	}
-	var p struct {
-		Username string `json:"username"`
-		Password string `json:"password"`
-	}
+	var p credentials
 	if !a.decode(c, &p) {
 		return
 	}
@@ -154,14 +184,31 @@ func (a *API) register(c *gin.Context) {
 	}
 	success(c, 201, u)
 }
+
+// login godoc
+// @Summary 登录
+// @Description 设置固定有效期 7 天的会话 Cookie，并轮换 CSRF；后续写请求使用此处 csrf_token。每 IP 每 15 分钟 30 次，每规范化用户名每 15 分钟 10 次。must_change_password=true 时仅可访问 /me、/auth/csrf、/auth/logout、/me/password。
+// @Tags 认证
+// @Produce json
+// @Accept json
+// @Param Origin header string true "必须逐字匹配服务配置 Origin；浏览器自动设置，不允许跨站请求。"
+// @Param X-CSRF-Token header string true "GET /auth/csrf 返回的 token；登录后改用登录响应中的 csrf_token，须与 CSRF Cookie 一致。"
+// @Param body body credentials true "请求参数；拒绝未知字段，最多 64 KiB"
+// @Success 200 {object} response{data=loginResult}
+// @Failure 400 {object} errorResponse "INVALID_ARGUMENT：参数、请求体或页面身份断言无效；INVALID_CURRENT_PASSWORD：当前密码错误。"
+// @Failure 401 {object} errorResponse "AUTH_REQUIRED：未登录或会话失效；INVALID_CREDENTIALS：用户名、密码错误或账号已禁用。"
+// @Failure 403 {object} errorResponse "CSRF_INVALID：Origin/CSRF 无效；FORBIDDEN：权限不足；PASSWORD_CHANGE_REQUIRED：必须先修改密码。"
+// @Failure 415 {object} errorResponse "UNSUPPORTED_MEDIA_TYPE：请求体必须使用 application/json。"
+// @Failure 429 {object} errorResponse "RATE_LIMITED：请求频率或密码运算并发超限；Retry-After 给出建议等待秒数。"
+// @Failure 500 {object} errorResponse "INTERNAL_ERROR：服务内部错误。"
+// @Failure 503 {object} errorResponse "DATABASE_BUSY：数据库忙，本次写入未保存，请稍后手动重提。"
+// @Header 429 {integer} Retry-After "建议等待的秒数"
+// @Router /auth/login [post]
 func (a *API) login(c *gin.Context) {
 	if !a.limit(c, "login:ip:"+c.ClientIP(), 30, 15*time.Minute) {
 		return
 	}
-	var p struct {
-		Username string `json:"username"`
-		Password string `json:"password"`
-	}
+	var p credentials
 	if !a.decode(c, &p) {
 		return
 	}
@@ -187,8 +234,22 @@ func (a *API) login(c *gin.Context) {
 		return
 	}
 	a.cookie(c, a.sessionName(), raw, 604800)
-	success(c, 200, gin.H{"user": u, "csrf_token": token})
+	success(c, 200, loginResult{User: u, CSRFToken: token})
 }
+
+// logout godoc
+// @Summary 退出当前会话
+// @Description 不接受任何请求体；匿名也可调用。撤销当前会话、清除会话 Cookie 并设置匿名 CSRF Cookie，随后调用 GET /auth/csrf 获取匿名令牌。无需 X-Expected-User-ID。
+// @Tags 认证
+// @Produce json
+// @Param Origin header string true "必须逐字匹配服务配置 Origin；浏览器自动设置，不允许跨站请求。"
+// @Param X-CSRF-Token header string true "GET /auth/csrf 返回的 token；登录后改用登录响应中的 csrf_token，须与 CSRF Cookie 一致。"
+// @Success 204 "成功，无响应体"
+// @Failure 400 {object} errorResponse "INVALID_ARGUMENT：参数、请求体或页面身份断言无效；INVALID_CURRENT_PASSWORD：当前密码错误。"
+// @Failure 403 {object} errorResponse "CSRF_INVALID：Origin/CSRF 无效；FORBIDDEN：权限不足；PASSWORD_CHANGE_REQUIRED：必须先修改密码。"
+// @Failure 500 {object} errorResponse "INTERNAL_ERROR：服务内部错误。"
+// @Failure 503 {object} errorResponse "DATABASE_BUSY：数据库忙，本次写入未保存，请稍后手动重提。"
+// @Router /auth/logout [post]
 func (a *API) logout(c *gin.Context) {
 	body, err := io.ReadAll(c.Request.Body)
 	if err != nil || len(body) != 0 {
@@ -209,15 +270,34 @@ func (a *API) logout(c *gin.Context) {
 	}
 	success(c, 204, nil)
 }
+
+// password godoc
+// @Summary 修改本人密码
+// @Description 仅登录用户可用。新密码不能等于当前密码（400 INVALID_ARGUMENT）。允许强制改密用户访问。成功撤销本人全部会话并要求重新登录；再 GET /auth/csrf 获取匿名令牌。每用户每 15 分钟 5 次、每 IP 每 15 分钟 20 次。
+// @Tags 个人账户
+// @Produce json
+// @Accept json
+// @Param Origin header string true "必须逐字匹配服务配置 Origin；浏览器自动设置，不允许跨站请求。"
+// @Param X-CSRF-Token header string true "GET /auth/csrf 返回的 token；登录后改用登录响应中的 csrf_token，须与 CSRF Cookie 一致。"
+// @Param X-Expected-User-ID header string true "表单加载时登录用户 ID 的十进制规范字符串（int64 范围），不是目标用户 ID；不作为认证凭据。身份不一致返回 409。"
+// @Param body body passwordChange true "请求参数；拒绝未知字段，最多 64 KiB"
+// @Success 204 "成功，无响应体"
+// @Failure 400 {object} errorResponse "INVALID_ARGUMENT：参数、请求体或页面身份断言无效；INVALID_CURRENT_PASSWORD：当前密码错误。"
+// @Failure 401 {object} errorResponse "AUTH_REQUIRED：未登录或会话失效；INVALID_CREDENTIALS：用户名、密码错误或账号已禁用。"
+// @Failure 403 {object} errorResponse "CSRF_INVALID：Origin/CSRF 无效；FORBIDDEN：权限不足；PASSWORD_CHANGE_REQUIRED：必须先修改密码。"
+// @Failure 409 {object} errorResponse "USERNAME_TAKEN、IDENTITY_CHANGED、SELF_ADMIN_CHANGE_FORBIDDEN 或 LAST_ADMIN_REQUIRED；详见各接口说明。"
+// @Failure 415 {object} errorResponse "UNSUPPORTED_MEDIA_TYPE：请求体必须使用 application/json。"
+// @Failure 429 {object} errorResponse "RATE_LIMITED：请求频率或密码运算并发超限；Retry-After 给出建议等待秒数。"
+// @Failure 500 {object} errorResponse "INTERNAL_ERROR：服务内部错误。"
+// @Failure 503 {object} errorResponse "DATABASE_BUSY：数据库忙，本次写入未保存，请稍后手动重提。"
+// @Header 429 {integer} Retry-After "建议等待的秒数"
+// @Router /me/password [put]
 func (a *API) password(c *gin.Context) {
 	s := session(c)
 	if !a.limit(c, "password:user:"+strconv.FormatInt(s.User.ID, 10), 5, 15*time.Minute) || !a.limit(c, "password:ip:"+c.ClientIP(), 20, 15*time.Minute) {
 		return
 	}
-	var p struct {
-		Current string `json:"current_password"`
-		New     string `json:"new_password"`
-	}
+	var p passwordChange
 	if !a.decode(c, &p) {
 		return
 	}
@@ -233,6 +313,19 @@ func (a *API) password(c *gin.Context) {
 	}
 	success(c, 204, nil)
 }
+
+// getPreferences godoc
+// @Summary 读取个人饮食设置
+// @Description 仅登录用户可用。返回完整设置，包括仍被引用的停用忌口食材。
+// @Tags 个人账户
+// @Produce json
+// @Success 200 {object} response{data=store.Preferences}
+// @Failure 400 {object} errorResponse "INVALID_ARGUMENT：参数、请求体或页面身份断言无效；INVALID_CURRENT_PASSWORD：当前密码错误。"
+// @Failure 401 {object} errorResponse "AUTH_REQUIRED：未登录或会话失效；INVALID_CREDENTIALS：用户名、密码错误或账号已禁用。"
+// @Failure 403 {object} errorResponse "CSRF_INVALID：Origin/CSRF 无效；FORBIDDEN：权限不足；PASSWORD_CHANGE_REQUIRED：必须先修改密码。"
+// @Failure 500 {object} errorResponse "INTERNAL_ERROR：服务内部错误。"
+// @Failure 503 {object} errorResponse "DATABASE_BUSY：数据库忙，本次写入未保存，请稍后手动重提。"
+// @Router /me/preferences [get]
 func (a *API) getPreferences(c *gin.Context) {
 	p, err := a.service.Store.Preferences(c.Request.Context(), session(c).User.ID)
 	if err != nil {
@@ -241,16 +334,28 @@ func (a *API) getPreferences(c *gin.Context) {
 	}
 	success(c, 200, p)
 }
+
+// putPreferences godoc
+// @Summary 完整替换个人饮食设置
+// @Description 仅登录用户可用。必须提交全部七个输入字段；数组不可为 null，营养目标允许 null。不接受响应中的 excluded_foods、updated_at。
+// @Tags 个人账户
+// @Produce json
+// @Accept json
+// @Param Origin header string true "必须逐字匹配服务配置 Origin；浏览器自动设置，不允许跨站请求。"
+// @Param X-CSRF-Token header string true "GET /auth/csrf 返回的 token；登录后改用登录响应中的 csrf_token，须与 CSRF Cookie 一致。"
+// @Param X-Expected-User-ID header string true "表单加载时登录用户 ID 的十进制规范字符串（int64 范围），不是目标用户 ID；不作为认证凭据。身份不一致返回 409。"
+// @Param body body preferencesInput true "请求参数；拒绝未知字段，最多 64 KiB"
+// @Success 200 {object} response{data=store.Preferences}
+// @Failure 400 {object} errorResponse "INVALID_ARGUMENT：参数、请求体或页面身份断言无效；INVALID_CURRENT_PASSWORD：当前密码错误。"
+// @Failure 401 {object} errorResponse "AUTH_REQUIRED：未登录或会话失效；INVALID_CREDENTIALS：用户名、密码错误或账号已禁用。"
+// @Failure 403 {object} errorResponse "CSRF_INVALID：Origin/CSRF 无效；FORBIDDEN：权限不足；PASSWORD_CHANGE_REQUIRED：必须先修改密码。"
+// @Failure 409 {object} errorResponse "USERNAME_TAKEN、IDENTITY_CHANGED、SELF_ADMIN_CHANGE_FORBIDDEN 或 LAST_ADMIN_REQUIRED；详见各接口说明。"
+// @Failure 415 {object} errorResponse "UNSUPPORTED_MEDIA_TYPE：请求体必须使用 application/json。"
+// @Failure 500 {object} errorResponse "INTERNAL_ERROR：服务内部错误。"
+// @Failure 503 {object} errorResponse "DATABASE_BUSY：数据库忙，本次写入未保存，请稍后手动重提。"
+// @Router /me/preferences [put]
 func (a *API) putPreferences(c *gin.Context) {
-	var p struct {
-		Allergens          *[]string       `json:"allergens"`
-		ExcludedFoodIDs    *[]int64        `json:"excluded_food_ids"`
-		DietaryPreferences *[]string       `json:"dietary_preferences"`
-		Energy             json.RawMessage `json:"daily_energy_kcal"`
-		Protein            json.RawMessage `json:"daily_protein_g"`
-		Fat                json.RawMessage `json:"daily_fat_g"`
-		Carbohydrate       json.RawMessage `json:"daily_carbohydrate_g"`
-	}
+	var p preferencesInput
 	if !a.decode(c, &p) {
 		return
 	}
@@ -275,6 +380,19 @@ func (a *API) putPreferences(c *gin.Context) {
 	}
 	success(c, 200, saved)
 }
+
+// foods godoc
+// @Summary 列出可选食材
+// @Description 仅登录用户可用。仅返回 active 食材，按 ID 升序，无分页。仅基础名称，不提供营养或过敏原判定数据。
+// @Tags 个人账户
+// @Produce json
+// @Success 200 {object} response{data=[]store.Food}
+// @Failure 400 {object} errorResponse "INVALID_ARGUMENT：参数、请求体或页面身份断言无效；INVALID_CURRENT_PASSWORD：当前密码错误。"
+// @Failure 401 {object} errorResponse "AUTH_REQUIRED：未登录或会话失效；INVALID_CREDENTIALS：用户名、密码错误或账号已禁用。"
+// @Failure 403 {object} errorResponse "CSRF_INVALID：Origin/CSRF 无效；FORBIDDEN：权限不足；PASSWORD_CHANGE_REQUIRED：必须先修改密码。"
+// @Failure 500 {object} errorResponse "INTERNAL_ERROR：服务内部错误。"
+// @Failure 503 {object} errorResponse "DATABASE_BUSY：数据库忙，本次写入未保存，请稍后手动重提。"
+// @Router /foods [get]
 func (a *API) foods(c *gin.Context) {
 	items, err := a.service.Store.Foods(c.Request.Context())
 	if err != nil {
@@ -283,3 +401,17 @@ func (a *API) foods(c *gin.Context) {
 	}
 	success(c, 200, items)
 }
+
+// me godoc
+// @Summary 获取当前用户
+// @Description 仅登录用户可用。允许处于强制改密状态的用户访问。
+// @Tags 个人账户
+// @Produce json
+// @Success 200 {object} response{data=store.User}
+// @Failure 400 {object} errorResponse "INVALID_ARGUMENT：参数、请求体或页面身份断言无效；INVALID_CURRENT_PASSWORD：当前密码错误。"
+// @Failure 401 {object} errorResponse "AUTH_REQUIRED：未登录或会话失效；INVALID_CREDENTIALS：用户名、密码错误或账号已禁用。"
+// @Failure 403 {object} errorResponse "CSRF_INVALID：Origin/CSRF 无效；FORBIDDEN：权限不足；PASSWORD_CHANGE_REQUIRED：必须先修改密码。"
+// @Failure 500 {object} errorResponse "INTERNAL_ERROR：服务内部错误。"
+// @Failure 503 {object} errorResponse "DATABASE_BUSY：数据库忙，本次写入未保存，请稍后手动重提。"
+// @Router /me [get]
+func (a *API) me(c *gin.Context) { success(c, 200, session(c).User) }
