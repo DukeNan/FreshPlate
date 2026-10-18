@@ -1,0 +1,7 @@
+goos: darwin
+goarch: amd64
+pkg: freshplate/server/internal/logic
+cpu: Intel(R) Core(TM) i7-7820HQ CPU @ 2.90GHz
+BenchmarkPWD003ProductionHash-8   	       1	 262109579 ns/op	67114360 B/op	      51 allocs/op
+PASS
+ok  	freshplate/server/internal/logic	0.948s

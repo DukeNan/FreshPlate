@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "46595dc7-a8d4-456b-8948-679f7f0a35f9",
+  "status": "current",
+  "command": "deliver",
+  "type": "architecture",
+  "input": "/Users/dukenan/Desktop/codeRepository/FreshPlate/.archify/architecture-user-module-20261019-014414/candidate.json",
+  "output": "/Users/dukenan/Desktop/codeRepository/FreshPlate/.archify/architecture-user-module-20261019-014414/user-module.html",
+  "specification": {
+    "sha256": "d58e734afa57efbafc55744ff0b5f805e996f778592de5ece240fd1868c187c0",
+    "bytes": 4130
+  },
+  "artifact": {
+    "sha256": "0853fd114cda44396f44d3b84222f0dc52a4a9cdb6a7d9a18c898d347d4ae535",
+    "bytes": 760372
+  }
+}

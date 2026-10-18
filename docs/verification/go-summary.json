@@ -1,0 +1,73 @@
+[
+  {
+    "name": "go-version",
+    "command": [
+      "version"
+    ],
+    "exit_code": 0,
+    "seconds": 0.038
+  },
+  {
+    "name": "go-test",
+    "command": [
+      "test",
+      "./...",
+      "-count=1",
+      "-timeout=240s",
+      "-json"
+    ],
+    "exit_code": 0,
+    "seconds": 15.225,
+    "passed_tests_and_subtests": 81,
+    "failed_tests_and_subtests": 0
+  },
+  {
+    "name": "go-vet",
+    "command": [
+      "vet",
+      "./..."
+    ],
+    "exit_code": 0,
+    "seconds": 6.535
+  },
+  {
+    "name": "go-race",
+    "command": [
+      "test",
+      "-race",
+      "./...",
+      "-count=1",
+      "-timeout=300s",
+      "-json"
+    ],
+    "exit_code": 0,
+    "seconds": 81.31,
+    "passed_tests_and_subtests": 81,
+    "failed_tests_and_subtests": 0
+  },
+  {
+    "name": "go-benchmark",
+    "command": [
+      "test",
+      "./internal/logic",
+      "-run",
+      "^$",
+      "-bench",
+      "BenchmarkPWD003ProductionHash",
+      "-benchtime=1x",
+      "-benchmem"
+    ],
+    "exit_code": 0,
+    "seconds": 1.61
+  },
+  {
+    "name": "go-build",
+    "command": [
+      "build",
+      "./cmd/server",
+      "./cmd/admin"
+    ],
+    "exit_code": 0,
+    "seconds": 1.742
+  }
+]

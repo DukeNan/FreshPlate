@@ -1,0 +1,6 @@
+CLI-001: hidden input, normalization, atomic defaults/audit and repeated initialization passed
+DEP-001/SEC-004: real server/CLI lock exclusion, DB/key/WAL/SHM permissions passed
+SES-002: valid browser session survived a real service restart
+CLI-002/ADM-002/SES-005: recovery revoked sessions, forced change and new login passed
+SEC-004: missing existing-deployment key rejected without regeneration
+PASS: disposable CLI/process verification complete; no credentials or tokens retained

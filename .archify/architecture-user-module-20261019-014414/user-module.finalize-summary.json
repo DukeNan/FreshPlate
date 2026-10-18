@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "finalize",
+  "status": "pass",
+  "type": "architecture",
+  "quality": "showcase",
+  "specification": {
+    "path": "/Users/dukenan/Desktop/codeRepository/FreshPlate/.archify/architecture-user-module-20261019-014414/candidate.json",
+    "sha256": "d58e734afa57efbafc55744ff0b5f805e996f778592de5ece240fd1868c187c0",
+    "bytes": 4130
+  },
+  "artifact": {
+    "path": "/Users/dukenan/Desktop/codeRepository/FreshPlate/.archify/architecture-user-module-20261019-014414/user-module.html",
+    "sha256": "0853fd114cda44396f44d3b84222f0dc52a4a9cdb6a7d9a18c898d347d4ae535",
+    "bytes": 760372
+  },
+  "gates": {
+    "validate": "pass",
+    "deliver": "pass",
+    "check": "pass",
+    "browser-check": "pass"
+  },
+  "diagnostics": [],
+  "diagnosticSummary": {
+    "total": 0,
+    "shown": 0,
+    "truncated": false
+  },
+  "evidence": {
+    "receipt": "/Users/dukenan/Desktop/codeRepository/FreshPlate/.archify/architecture-user-module-20261019-014414/user-module.finalize.json",
+    "summaryReceipt": "/Users/dukenan/Desktop/codeRepository/FreshPlate/.archify/architecture-user-module-20261019-014414/user-module.finalize-summary.json",
+    "browserCheckReceipt": "/Users/dukenan/Desktop/codeRepository/FreshPlate/.archify/architecture-user-module-20261019-014414/user-module.browser-check.json"
+  },
+  "update": {
+    "status": "update_available",
+    "installedVersion": "3.0.1",
+    "availableVersion": "3.1.0",
+    "releaseNotes": "https://github.com/tt-a1i/archify/releases/tag/v3.1.0",
+    "severity": "normal",
+    "checkedAt": "2026-10-18T17:44:44.874Z",
+    "source": "network",
+    "noticeRequired": true,
+    "noticeText": "Archify update: 3.0.1 → 3.1.0. A newer release is available. Release notes: https://github.com/tt-a1i/archify/releases/tag/v3.1.0. The installed Skill has not changed; ask to snooze or ignore this reminder.",
+    "eventKey": "archify@sha256:ffedc53390c9da6e859f41e432c5d2d0615a23cf00a503181f07efbba88a7ce8"
+  },
+  "visualReview": "not-requested",
+  "durationMs": 7512
+}

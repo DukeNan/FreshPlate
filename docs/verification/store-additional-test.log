@@ -1,0 +1,74 @@
+=== RUN   TestSEC004DatabaseAndSidecarPermissions
+--- PASS: TestSEC004DatabaseAndSidecarPermissions (0.01s)
+=== RUN   TestREG004AtomicDefaultsAndConcurrentUnique
+--- PASS: TestREG004AtomicDefaultsAndConcurrentUnique (0.01s)
+=== RUN   TestDB001PragmasConstraintsAndReconnection
+--- PASS: TestDB001PragmasConstraintsAndReconnection (0.01s)
+=== RUN   TestSESAndCON001PasswordRevocationAndStaleHash
+--- PASS: TestSESAndCON001PasswordRevocationAndStaleHash (0.01s)
+=== RUN   TestPREF003DisabledReferenceRetentionAndMissingSettings
+--- PASS: TestPREF003DisabledReferenceRetentionAndMissingSettings (0.02s)
+=== RUN   TestADM003ConcurrentAdminsCannotRemoveEachOther
+=== RUN   TestADM003ConcurrentAdminsCannotRemoveEachOther/role
+=== RUN   TestADM003ConcurrentAdminsCannotRemoveEachOther/status
+=== RUN   TestADM003ConcurrentAdminsCannotRemoveEachOther/both
+--- PASS: TestADM003ConcurrentAdminsCannotRemoveEachOther (0.03s)
+    --- PASS: TestADM003ConcurrentAdminsCannotRemoveEachOther/role (0.01s)
+    --- PASS: TestADM003ConcurrentAdminsCannotRemoveEachOther/status (0.01s)
+    --- PASS: TestADM003ConcurrentAdminsCannotRemoveEachOther/both (0.01s)
+=== RUN   TestCON003And004ActorRevalidationAndAuditAtomicity
+--- PASS: TestCON003And004ActorRevalidationAndAuditAtomicity (0.01s)
+=== RUN   TestCLIAndPagination
+--- PASS: TestCLIAndPagination (0.01s)
+=== RUN   TestMIG001And002RefuseUnknownOrCorruptHistory
+=== RUN   TestMIG001And002RefuseUnknownOrCorruptHistory/UPDATE_schema_migrations_SET_version=2
+=== RUN   TestMIG001And002RefuseUnknownOrCorruptHistory/UPDATE_schema_migrations_SET_checksum='changed'
+=== RUN   TestMIG001And002RefuseUnknownOrCorruptHistory/DELETE_FROM_schema_migrations
+=== RUN   TestMIG001And002RefuseUnknownOrCorruptHistory/DROP_TABLE_user_preferences
+=== RUN   TestMIG001And002RefuseUnknownOrCorruptHistory/ALTER_TABLE_users_DROP_COLUMN_updated_at
+=== RUN   TestMIG001And002RefuseUnknownOrCorruptHistory/DROP_INDEX_sessions_user
+--- PASS: TestMIG001And002RefuseUnknownOrCorruptHistory (0.09s)
+    --- PASS: TestMIG001And002RefuseUnknownOrCorruptHistory/UPDATE_schema_migrations_SET_version=2 (0.02s)
+    --- PASS: TestMIG001And002RefuseUnknownOrCorruptHistory/UPDATE_schema_migrations_SET_checksum='changed' (0.01s)
+    --- PASS: TestMIG001And002RefuseUnknownOrCorruptHistory/DELETE_FROM_schema_migrations (0.01s)
+    --- PASS: TestMIG001And002RefuseUnknownOrCorruptHistory/DROP_TABLE_user_preferences (0.01s)
+    --- PASS: TestMIG001And002RefuseUnknownOrCorruptHistory/ALTER_TABLE_users_DROP_COLUMN_updated_at (0.01s)
+    --- PASS: TestMIG001And002RefuseUnknownOrCorruptHistory/DROP_INDEX_sessions_user (0.01s)
+=== RUN   TestDB002And004RollbackCancelAndPanic
+=== RUN   TestDB002And004RollbackCancelAndPanic/error
+=== RUN   TestDB002And004RollbackCancelAndPanic/cancel
+=== RUN   TestDB002And004RollbackCancelAndPanic/panic
+--- PASS: TestDB002And004RollbackCancelAndPanic (0.01s)
+    --- PASS: TestDB002And004RollbackCancelAndPanic/error (0.00s)
+    --- PASS: TestDB002And004RollbackCancelAndPanic/cancel (0.00s)
+    --- PASS: TestDB002And004RollbackCancelAndPanic/panic (0.00s)
+=== RUN   TestADM004CombinedUpdateAuditOnceAndNoop
+--- PASS: TestADM004CombinedUpdateAuditOnceAndNoop (0.01s)
+=== RUN   TestSES004ResolveInvalidStates
+=== RUN   TestSES004ResolveInvalidStates/UPDATE_users_SET_auth_version=auth_version+1
+=== RUN   TestSES004ResolveInvalidStates/UPDATE_users_SET_status='disabled'
+=== RUN   TestSES004ResolveInvalidStates/DELETE_FROM_sessions
+=== RUN   TestSES004ResolveInvalidStates/UPDATE_sessions_SET_expires_at=0
+--- PASS: TestSES004ResolveInvalidStates (0.04s)
+    --- PASS: TestSES004ResolveInvalidStates/UPDATE_users_SET_auth_version=auth_version+1 (0.01s)
+    --- PASS: TestSES004ResolveInvalidStates/UPDATE_users_SET_status='disabled' (0.01s)
+    --- PASS: TestSES004ResolveInvalidStates/DELETE_FROM_sessions (0.01s)
+    --- PASS: TestSES004ResolveInvalidStates/UPDATE_sessions_SET_expires_at=0 (0.01s)
+=== RUN   TestPREF004FoodDisableAndSaveSerialize
+--- PASS: TestPREF004FoodDisableAndSaveSerialize (0.01s)
+=== RUN   TestPREF005OrderedCompleteReplacements
+--- PASS: TestPREF005OrderedCompleteReplacements (0.01s)
+=== RUN   TestCON001OriginalHashCheckedIndependentlyOfVersion
+--- PASS: TestCON001OriginalHashCheckedIndependentlyOfVersion (0.01s)
+=== RUN   TestCON004StatusAuditFailureRollsBackRevocation
+--- PASS: TestCON004StatusAuditFailureRollsBackRevocation (0.01s)
+=== RUN   TestDB004And005CommitFailureAndRollbackDiscard
+=== RUN   TestDB004And005CommitFailureAndRollbackDiscard/false
+=== RUN   TestDB004And005CommitFailureAndRollbackDiscard/true
+--- PASS: TestDB004And005CommitFailureAndRollbackDiscard (0.03s)
+    --- PASS: TestDB004And005CommitFailureAndRollbackDiscard/false (0.01s)
+    --- PASS: TestDB004And005CommitFailureAndRollbackDiscard/true (0.01s)
+=== RUN   TestDB003BusyMapsAndRecovers
+--- PASS: TestDB003BusyMapsAndRecovers (5.06s)
+PASS
+ok  	freshplate/server/internal/store	7.210s

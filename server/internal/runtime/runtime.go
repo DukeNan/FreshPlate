@@ -1,0 +1,154 @@
+// Package runtime owns local deployment configuration, secrets and the process lock.
+package runtime
+
+import (
+	"crypto/rand"
+	"errors"
+	"flag"
+	"fmt"
+	"net"
+	"net/url"
+	"os"
+	"path/filepath"
+	"strings"
+	"syscall"
+)
+
+type Config struct {
+	Address, Database, Origin, KeyFile, WebDir string
+	Secure                                     bool
+	TrustedProxies                             []string
+}
+
+func env(key, fallback string) string {
+	if v := os.Getenv(key); v != "" {
+		return v
+	}
+	return fallback
+}
+func Flags(fs *flag.FlagSet) *Config {
+	c := &Config{}
+	fs.StringVar(&c.Address, "addr", env("FRESHPLATE_ADDR", "127.0.0.1:8080"), "listen address")
+	fs.StringVar(&c.Database, "db", env("FRESHPLATE_DB", "../data/freshplate.db"), "SQLite file")
+	fs.StringVar(&c.Origin, "origin", env("FRESHPLATE_ORIGIN", "http://127.0.0.1:8080"), "exact browser origin")
+	fs.StringVar(&c.KeyFile, "key", env("FRESHPLATE_KEY", "../data/csrf.key"), "CSRF key file")
+	fs.StringVar(&c.WebDir, "web", env("FRESHPLATE_WEB", "../web/dist"), "built frontend directory")
+	fs.BoolVar(&c.Secure, "secure", env("FRESHPLATE_SECURE", "false") == "true", "HTTPS cookies")
+	fs.Func("trusted-proxies", "comma separated trusted proxy IPs/CIDRs", func(v string) error {
+		if v != "" {
+			c.TrustedProxies = strings.Split(v, ",")
+		}
+		return nil
+	})
+	return c
+}
+
+func (c Config) Validate() error {
+	u, err := url.Parse(c.Origin)
+	if err != nil || u.Host == "" || u.User != nil || u.RawQuery != "" || u.Fragment != "" || u.Path != "" || u.Opaque != "" || (u.Scheme != "http" && u.Scheme != "https") || c.Origin != u.Scheme+"://"+u.Host {
+		return errors.New("origin must be an exact http(s) scheme, host and optional port")
+	}
+	if c.Secure != (u.Scheme == "https") {
+		return errors.New("secure cookie mode must match origin scheme")
+	}
+	if _, _, err = net.SplitHostPort(c.Address); err != nil {
+		return fmt.Errorf("invalid listen address: %w", err)
+	}
+	if c.Database == "" || c.KeyFile == "" {
+		return errors.New("database and key paths required")
+	}
+	if filepath.Clean(c.Database) == filepath.Clean(c.KeyFile) {
+		return errors.New("database and key must have different paths")
+	}
+	for _, p := range c.TrustedProxies {
+		if net.ParseIP(p) == nil {
+			if _, _, e := net.ParseCIDR(p); e != nil {
+				return errors.New("invalid trusted proxy")
+			}
+		}
+	}
+	if v := os.Getenv("FRESHPLATE_SECURE"); v != "" && v != "true" && v != "false" {
+		return errors.New("FRESHPLATE_SECURE must be true or false")
+	}
+	return nil
+}
+
+// Lock uses the database path so service and maintenance commands exclude each other.
+func Lock(database string) (*os.File, error) {
+	path, err := filepath.Abs(database)
+	if err != nil {
+		return nil, err
+	}
+	if err = os.MkdirAll(filepath.Dir(path), 0700); err != nil {
+		return nil, err
+	}
+	info, statErr := os.Lstat(path)
+	if statErr == nil {
+		if !info.Mode().IsRegular() {
+			return nil, errors.New("database must be a regular file, not a symbolic link")
+		}
+		if stat, ok := info.Sys().(*syscall.Stat_t); ok && stat.Nlink > 1 {
+			return nil, errors.New("database hard links are not supported")
+		}
+	} else if !os.IsNotExist(statErr) {
+		return nil, statErr
+	}
+	f, err := os.OpenFile(path+".lock", os.O_CREATE|os.O_RDWR, 0600)
+	if err != nil {
+		return nil, err
+	}
+	if err = syscall.Flock(int(f.Fd()), syscall.LOCK_EX|syscall.LOCK_NB); err != nil {
+		f.Close()
+		return nil, errors.New("database in use: stop the other service or maintenance command first")
+	}
+	return f, nil
+}
+func Unlock(f *os.File) error {
+	if f == nil {
+		return nil
+	}
+	err := syscall.Flock(int(f.Fd()), syscall.LOCK_UN)
+	closeErr := f.Close()
+	return errors.Join(err, closeErr)
+}
+
+func Key(database, path string) ([]byte, error) {
+	info, err := os.Lstat(path)
+	if err == nil {
+		if !info.Mode().IsRegular() || info.Mode().Perm() != 0600 {
+			return nil, errors.New("CSRF key must be a regular file with mode 0600")
+		}
+		key, e := os.ReadFile(path)
+		if e != nil {
+			return nil, e
+		}
+		if len(key) != 32 {
+			return nil, errors.New("invalid CSRF key length")
+		}
+		return key, nil
+	}
+	if !os.IsNotExist(err) {
+		return nil, err
+	}
+	if _, e := os.Stat(database); !os.IsNotExist(e) {
+		return nil, errors.New("CSRF key missing for existing database; restore the original key before starting")
+	}
+	if err = os.MkdirAll(filepath.Dir(path), 0700); err != nil {
+		return nil, err
+	}
+	key := make([]byte, 32)
+	if _, err = rand.Read(key); err != nil {
+		return nil, err
+	}
+	f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0600)
+	if err != nil {
+		return nil, err
+	}
+	_, writeErr := f.Write(key)
+	syncErr := f.Sync()
+	closeErr := f.Close()
+	if err = errors.Join(writeErr, syncErr, closeErr); err != nil {
+		return nil, err
+	}
+	return key, nil
+}

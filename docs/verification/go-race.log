@@ -1,0 +1,351 @@
+{"Time":"2026-10-19T02:06:40.229774+08:00","Action":"start","Package":"freshplate/server/cmd/admin"}
+{"Time":"2026-10-19T02:06:40.229961+08:00","Action":"output","Package":"freshplate/server/cmd/admin","Output":"?   \tfreshplate/server/cmd/admin\t[no test files]\n"}
+{"Time":"2026-10-19T02:06:40.22998+08:00","Action":"skip","Package":"freshplate/server/cmd/admin","Elapsed":0}
+{"Time":"2026-10-19T02:07:11.500084+08:00","Action":"start","Package":"freshplate/server/cmd/server"}
+{"Time":"2026-10-19T02:07:11.500214+08:00","Action":"output","Package":"freshplate/server/cmd/server","Output":"?   \tfreshplate/server/cmd/server\t[no test files]\n"}
+{"Time":"2026-10-19T02:07:11.500246+08:00","Action":"skip","Package":"freshplate/server/cmd/server","Elapsed":0}
+{"Time":"2026-10-19T02:07:13.3029+08:00","Action":"start","Package":"freshplate/server/internal/api"}
+{"Time":"2026-10-19T02:07:13.30309+08:00","Action":"start","Package":"freshplate/server/internal/logic"}
+{"Time":"2026-10-19T02:07:13.303219+08:00","Action":"start","Package":"freshplate/server/internal/runtime"}
+{"Time":"2026-10-19T02:07:13.303341+08:00","Action":"start","Package":"freshplate/server/internal/store"}
+{"Time":"2026-10-19T02:07:13.30344+08:00","Action":"start","Package":"freshplate/server/migrations"}
+{"Time":"2026-10-19T02:07:13.303577+08:00","Action":"output","Package":"freshplate/server/migrations","Output":"?   \tfreshplate/server/migrations\t[no test files]\n"}
+{"Time":"2026-10-19T02:07:13.303609+08:00","Action":"skip","Package":"freshplate/server/migrations","Elapsed":0}
+{"Time":"2026-10-19T02:07:14.28099+08:00","Action":"run","Package":"freshplate/server/internal/logic","Test":"TestAUTH001AndSES002Login"}
+{"Time":"2026-10-19T02:07:14.281092+08:00","Action":"output","Package":"freshplate/server/internal/logic","Test":"TestAUTH001AndSES002Login","Output":"=== RUN   TestAUTH001AndSES002Login\n"}
+{"Time":"2026-10-19T02:07:14.358115+08:00","Action":"output","Package":"freshplate/server/internal/logic","Test":"TestAUTH001AndSES002Login","Output":"--- PASS: TestAUTH001AndSES002Login (0.08s)\n"}
+{"Time":"2026-10-19T02:07:14.358215+08:00","Action":"pass","Package":"freshplate/server/internal/logic","Test":"TestAUTH001AndSES002Login","Elapsed":0.08}
+{"Time":"2026-10-19T02:07:14.358243+08:00","Action":"run","Package":"freshplate/server/internal/logic","Test":"TestSES005ChangePassword"}
+{"Time":"2026-10-19T02:07:14.35825+08:00","Action":"output","Package":"freshplate/server/internal/logic","Test":"TestSES005ChangePassword","Output":"=== RUN   TestSES005ChangePassword\n"}
+{"Time":"2026-10-19T02:07:14.434105+08:00","Action":"output","Package":"freshplate/server/internal/logic","Test":"TestSES005ChangePassword","Output":"--- PASS: TestSES005ChangePassword (0.08s)\n"}
+{"Time":"2026-10-19T02:07:14.434126+08:00","Action":"pass","Package":"freshplate/server/internal/logic","Test":"TestSES005ChangePassword","Elapsed":0.08}
+{"Time":"2026-10-19T02:07:14.434159+08:00","Action":"run","Package":"freshplate/server/internal/logic","Test":"TestADM002AndCLI001And002Recovery"}
+{"Time":"2026-10-19T02:07:14.434164+08:00","Action":"output","Package":"freshplate/server/internal/logic","Test":"TestADM002AndCLI001And002Recovery","Output":"=== RUN   TestADM002AndCLI001And002Recovery\n"}
+{"Time":"2026-10-19T02:07:14.519416+08:00","Action":"output","Package":"freshplate/server/internal/logic","Test":"TestADM002AndCLI001And002Recovery","Output":"--- PASS: TestADM002AndCLI001And002Recovery (0.09s)\n"}
+{"Time":"2026-10-19T02:07:14.519514+08:00","Action":"pass","Package":"freshplate/server/internal/logic","Test":"TestADM002AndCLI001And002Recovery","Elapsed":0.09}
+{"Time":"2026-10-19T02:07:14.519565+08:00","Action":"run","Package":"freshplate/server/internal/logic","Test":"TestSES002TokenHash"}
+{"Time":"2026-10-19T02:07:14.521606+08:00","Action":"output","Package":"freshplate/server/internal/logic","Test":"TestSES002TokenHash","Output":"=== RUN   TestSES002TokenHash\n"}
+{"Time":"2026-10-19T02:07:14.521648+08:00","Action":"output","Package":"freshplate/server/internal/logic","Test":"TestSES002TokenHash","Output":"--- PASS: TestSES002TokenHash (0.00s)\n"}
+{"Time":"2026-10-19T02:07:14.521656+08:00","Action":"pass","Package":"freshplate/server/internal/logic","Test":"TestSES002TokenHash","Elapsed":0}
+{"Time":"2026-10-19T02:07:14.521662+08:00","Action":"run","Package":"freshplate/server/internal/logic","Test":"TestREG001NormalizeUsername"}
+{"Time":"2026-10-19T02:07:14.521674+08:00","Action":"output","Package":"freshplate/server/internal/logic","Test":"TestREG001NormalizeUsername","Output":"=== RUN   TestREG001NormalizeUsername\n"}
+{"Time":"2026-10-19T02:07:14.52168+08:00","Action":"output","Package":"freshplate/server/internal/logic","Test":"TestREG001NormalizeUsername","Output":"--- PASS: TestREG001NormalizeUsername (0.00s)\n"}
+{"Time":"2026-10-19T02:07:14.521685+08:00","Action":"pass","Package":"freshplate/server/internal/logic","Test":"TestREG001NormalizeUsername","Elapsed":0}
+{"Time":"2026-10-19T02:07:14.521689+08:00","Action":"run","Package":"freshplate/server/internal/logic","Test":"TestPWD001PasswordBoundaries"}
+{"Time":"2026-10-19T02:07:14.521692+08:00","Action":"output","Package":"freshplate/server/internal/logic","Test":"TestPWD001PasswordBoundaries","Output":"=== RUN   TestPWD001PasswordBoundaries\n"}
+{"Time":"2026-10-19T02:07:14.521701+08:00","Action":"output","Package":"freshplate/server/internal/logic","Test":"TestPWD001PasswordBoundaries","Output":"--- PASS: TestPWD001PasswordBoundaries (0.00s)\n"}
+{"Time":"2026-10-19T02:07:14.521737+08:00","Action":"pass","Package":"freshplate/server/internal/logic","Test":"TestPWD001PasswordBoundaries","Elapsed":0}
+{"Time":"2026-10-19T02:07:14.521815+08:00","Action":"run","Package":"freshplate/server/internal/logic","Test":"TestPWD002EncodedHashes"}
+{"Time":"2026-10-19T02:07:14.521823+08:00","Action":"output","Package":"freshplate/server/internal/logic","Test":"TestPWD002EncodedHashes","Output":"=== RUN   TestPWD002EncodedHashes\n"}
+{"Time":"2026-10-19T02:07:14.523118+08:00","Action":"output","Package":"freshplate/server/internal/logic","Test":"TestPWD002EncodedHashes","Output":"--- PASS: TestPWD002EncodedHashes (0.00s)\n"}
+{"Time":"2026-10-19T02:07:14.523153+08:00","Action":"pass","Package":"freshplate/server/internal/logic","Test":"TestPWD002EncodedHashes","Elapsed":0}
+{"Time":"2026-10-19T02:07:14.523183+08:00","Action":"run","Package":"freshplate/server/internal/logic","Test":"TestPWD003ProductionParameters"}
+{"Time":"2026-10-19T02:07:14.523188+08:00","Action":"output","Package":"freshplate/server/internal/logic","Test":"TestPWD003ProductionParameters","Output":"=== RUN   TestPWD003ProductionParameters\n"}
+{"Time":"2026-10-19T02:07:14.892177+08:00","Action":"run","Package":"freshplate/server/internal/runtime","Test":"TestDEP001Configuration"}
+{"Time":"2026-10-19T02:07:14.892216+08:00","Action":"output","Package":"freshplate/server/internal/runtime","Test":"TestDEP001Configuration","Output":"=== RUN   TestDEP001Configuration\n"}
+{"Time":"2026-10-19T02:07:14.892314+08:00","Action":"run","Package":"freshplate/server/internal/runtime","Test":"TestDEP001Configuration/null"}
+{"Time":"2026-10-19T02:07:14.892321+08:00","Action":"output","Package":"freshplate/server/internal/runtime","Test":"TestDEP001Configuration/null","Output":"=== RUN   TestDEP001Configuration/null\n"}
+{"Time":"2026-10-19T02:07:14.892372+08:00","Action":"output","Package":"freshplate/server/internal/runtime","Test":"TestDEP001Configuration/null","Output":"--- PASS: TestDEP001Configuration/null (0.00s)\n"}
+{"Time":"2026-10-19T02:07:14.892402+08:00","Action":"pass","Package":"freshplate/server/internal/runtime","Test":"TestDEP001Configuration/null","Elapsed":0}
+{"Time":"2026-10-19T02:07:14.892454+08:00","Action":"run","Package":"freshplate/server/internal/runtime","Test":"TestDEP001Configuration/https://127.0.0.1:8080"}
+{"Time":"2026-10-19T02:07:14.892462+08:00","Action":"output","Package":"freshplate/server/internal/runtime","Test":"TestDEP001Configuration/https://127.0.0.1:8080","Output":"=== RUN   TestDEP001Configuration/https://127.0.0.1:8080\n"}
+{"Time":"2026-10-19T02:07:14.892586+08:00","Action":"output","Package":"freshplate/server/internal/runtime","Test":"TestDEP001Configuration/https://127.0.0.1:8080","Output":"--- PASS: TestDEP001Configuration/https://127.0.0.1:8080 (0.00s)\n"}
+{"Time":"2026-10-19T02:07:14.892763+08:00","Action":"pass","Package":"freshplate/server/internal/runtime","Test":"TestDEP001Configuration/https://127.0.0.1:8080","Elapsed":0}
+{"Time":"2026-10-19T02:07:14.892772+08:00","Action":"run","Package":"freshplate/server/internal/runtime","Test":"TestDEP001Configuration/http://127.0.0.1:8080/"}
+{"Time":"2026-10-19T02:07:14.892776+08:00","Action":"output","Package":"freshplate/server/internal/runtime","Test":"TestDEP001Configuration/http://127.0.0.1:8080/","Output":"=== RUN   TestDEP001Configuration/http://127.0.0.1:8080/\n"}
+{"Time":"2026-10-19T02:07:14.892853+08:00","Action":"output","Package":"freshplate/server/internal/runtime","Test":"TestDEP001Configuration/http://127.0.0.1:8080/","Output":"--- PASS: TestDEP001Configuration/http://127.0.0.1:8080/ (0.00s)\n"}
+{"Time":"2026-10-19T02:07:14.892922+08:00","Action":"pass","Package":"freshplate/server/internal/runtime","Test":"TestDEP001Configuration/http://127.0.0.1:8080/","Elapsed":0}
+{"Time":"2026-10-19T02:07:14.892996+08:00","Action":"run","Package":"freshplate/server/internal/runtime","Test":"TestDEP001Configuration/http://user@localhost"}
+{"Time":"2026-10-19T02:07:14.893066+08:00","Action":"output","Package":"freshplate/server/internal/runtime","Test":"TestDEP001Configuration/http://user@localhost","Output":"=== RUN   TestDEP001Configuration/http://user@localhost\n"}
+{"Time":"2026-10-19T02:07:14.89308+08:00","Action":"output","Package":"freshplate/server/internal/runtime","Test":"TestDEP001Configuration/http://user@localhost","Output":"--- PASS: TestDEP001Configuration/http://user@localhost (0.00s)\n"}
+{"Time":"2026-10-19T02:07:14.893085+08:00","Action":"pass","Package":"freshplate/server/internal/runtime","Test":"TestDEP001Configuration/http://user@localhost","Elapsed":0}
+{"Time":"2026-10-19T02:07:14.893091+08:00","Action":"run","Package":"freshplate/server/internal/runtime","Test":"TestDEP001Configuration/http://localhost?x=1"}
+{"Time":"2026-10-19T02:07:14.893095+08:00","Action":"output","Package":"freshplate/server/internal/runtime","Test":"TestDEP001Configuration/http://localhost?x=1","Output":"=== RUN   TestDEP001Configuration/http://localhost?x=1\n"}
+{"Time":"2026-10-19T02:07:14.893217+08:00","Action":"output","Package":"freshplate/server/internal/runtime","Test":"TestDEP001Configuration/http://localhost?x=1","Output":"--- PASS: TestDEP001Configuration/http://localhost?x=1 (0.00s)\n"}
+{"Time":"2026-10-19T02:07:14.893301+08:00","Action":"pass","Package":"freshplate/server/internal/runtime","Test":"TestDEP001Configuration/http://localhost?x=1","Elapsed":0}
+{"Time":"2026-10-19T02:07:14.893309+08:00","Action":"run","Package":"freshplate/server/internal/runtime","Test":"TestDEP001Configuration/http://localhost#x"}
+{"Time":"2026-10-19T02:07:14.893313+08:00","Action":"output","Package":"freshplate/server/internal/runtime","Test":"TestDEP001Configuration/http://localhost#x","Output":"=== RUN   TestDEP001Configuration/http://localhost#x\n"}
+{"Time":"2026-10-19T02:07:14.893553+08:00","Action":"output","Package":"freshplate/server/internal/runtime","Test":"TestDEP001Configuration/http://localhost#x","Output":"--- PASS: TestDEP001Configuration/http://localhost#x (0.00s)\n"}
+{"Time":"2026-10-19T02:07:14.893564+08:00","Action":"pass","Package":"freshplate/server/internal/runtime","Test":"TestDEP001Configuration/http://localhost#x","Elapsed":0}
+{"Time":"2026-10-19T02:07:14.893574+08:00","Action":"run","Package":"freshplate/server/internal/runtime","Test":"TestDEP001Configuration///localhost"}
+{"Time":"2026-10-19T02:07:14.893578+08:00","Action":"output","Package":"freshplate/server/internal/runtime","Test":"TestDEP001Configuration///localhost","Output":"=== RUN   TestDEP001Configuration///localhost\n"}
+{"Time":"2026-10-19T02:07:14.893583+08:00","Action":"output","Package":"freshplate/server/internal/runtime","Test":"TestDEP001Configuration///localhost","Output":"--- PASS: TestDEP001Configuration///localhost (0.00s)\n"}
+{"Time":"2026-10-19T02:07:14.893587+08:00","Action":"pass","Package":"freshplate/server/internal/runtime","Test":"TestDEP001Configuration///localhost","Elapsed":0}
+{"Time":"2026-10-19T02:07:14.893681+08:00","Action":"output","Package":"freshplate/server/internal/runtime","Test":"TestDEP001Configuration","Output":"--- PASS: TestDEP001Configuration (0.00s)\n"}
+{"Time":"2026-10-19T02:07:14.893688+08:00","Action":"pass","Package":"freshplate/server/internal/runtime","Test":"TestDEP001Configuration","Elapsed":0}
+{"Time":"2026-10-19T02:07:14.893695+08:00","Action":"run","Package":"freshplate/server/internal/runtime","Test":"TestSEC004PersistentSecret"}
+{"Time":"2026-10-19T02:07:14.893699+08:00","Action":"output","Package":"freshplate/server/internal/runtime","Test":"TestSEC004PersistentSecret","Output":"=== RUN   TestSEC004PersistentSecret\n"}
+{"Time":"2026-10-19T02:07:14.902758+08:00","Action":"output","Package":"freshplate/server/internal/runtime","Test":"TestSEC004PersistentSecret","Output":"--- PASS: TestSEC004PersistentSecret (0.01s)\n"}
+{"Time":"2026-10-19T02:07:14.902793+08:00","Action":"pass","Package":"freshplate/server/internal/runtime","Test":"TestSEC004PersistentSecret","Elapsed":0.01}
+{"Time":"2026-10-19T02:07:14.902816+08:00","Action":"run","Package":"freshplate/server/internal/runtime","Test":"TestDEP001ExclusiveLock"}
+{"Time":"2026-10-19T02:07:14.902822+08:00","Action":"output","Package":"freshplate/server/internal/runtime","Test":"TestDEP001ExclusiveLock","Output":"=== RUN   TestDEP001ExclusiveLock\n"}
+{"Time":"2026-10-19T02:07:14.904137+08:00","Action":"output","Package":"freshplate/server/internal/runtime","Test":"TestDEP001ExclusiveLock","Output":"--- PASS: TestDEP001ExclusiveLock (0.00s)\n"}
+{"Time":"2026-10-19T02:07:14.904196+08:00","Action":"pass","Package":"freshplate/server/internal/runtime","Test":"TestDEP001ExclusiveLock","Elapsed":0}
+{"Time":"2026-10-19T02:07:14.904249+08:00","Action":"run","Package":"freshplate/server/internal/runtime","Test":"TestDEP001FlagDefaults"}
+{"Time":"2026-10-19T02:07:14.904272+08:00","Action":"output","Package":"freshplate/server/internal/runtime","Test":"TestDEP001FlagDefaults","Output":"=== RUN   TestDEP001FlagDefaults\n"}
+{"Time":"2026-10-19T02:07:14.904513+08:00","Action":"output","Package":"freshplate/server/internal/runtime","Test":"TestDEP001FlagDefaults","Output":"--- PASS: TestDEP001FlagDefaults (0.00s)\n"}
+{"Time":"2026-10-19T02:07:14.904545+08:00","Action":"pass","Package":"freshplate/server/internal/runtime","Test":"TestDEP001FlagDefaults","Elapsed":0}
+{"Time":"2026-10-19T02:07:14.904573+08:00","Action":"run","Package":"freshplate/server/internal/runtime","Test":"TestDEP001RejectDatabaseAliases"}
+{"Time":"2026-10-19T02:07:14.904587+08:00","Action":"output","Package":"freshplate/server/internal/runtime","Test":"TestDEP001RejectDatabaseAliases","Output":"=== RUN   TestDEP001RejectDatabaseAliases\n"}
+{"Time":"2026-10-19T02:07:14.908375+08:00","Action":"output","Package":"freshplate/server/internal/runtime","Test":"TestDEP001RejectDatabaseAliases","Output":"--- PASS: TestDEP001RejectDatabaseAliases (0.00s)\n"}
+{"Time":"2026-10-19T02:07:14.908464+08:00","Action":"pass","Package":"freshplate/server/internal/runtime","Test":"TestDEP001RejectDatabaseAliases","Elapsed":0}
+{"Time":"2026-10-19T02:07:14.908482+08:00","Action":"run","Package":"freshplate/server/internal/runtime","Test":"TestDEP002FinalPageHeaders"}
+{"Time":"2026-10-19T02:07:14.908499+08:00","Action":"output","Package":"freshplate/server/internal/runtime","Test":"TestDEP002FinalPageHeaders","Output":"=== RUN   TestDEP002FinalPageHeaders\n"}
+{"Time":"2026-10-19T02:07:14.930227+08:00","Action":"output","Package":"freshplate/server/internal/runtime","Test":"TestDEP002FinalPageHeaders","Output":"--- PASS: TestDEP002FinalPageHeaders (0.02s)\n"}
+{"Time":"2026-10-19T02:07:14.930284+08:00","Action":"pass","Package":"freshplate/server/internal/runtime","Test":"TestDEP002FinalPageHeaders","Elapsed":0.02}
+{"Time":"2026-10-19T02:07:14.931271+08:00","Action":"output","Package":"freshplate/server/internal/runtime","Output":"PASS\n"}
+{"Time":"2026-10-19T02:07:15.226279+08:00","Action":"output","Package":"freshplate/server/internal/logic","Test":"TestPWD003ProductionParameters","Output":"    passwords_test.go:93: production hash: 327.139578ms, Argon2 memory: 64 MiB per slot, maximum concurrent memory: 128 MiB plus runtime\n"}
+{"Time":"2026-10-19T02:07:15.226305+08:00","Action":"output","Package":"freshplate/server/internal/logic","Test":"TestPWD003ProductionParameters","Output":"--- PASS: TestPWD003ProductionParameters (0.70s)\n"}
+{"Time":"2026-10-19T02:07:15.226328+08:00","Action":"pass","Package":"freshplate/server/internal/logic","Test":"TestPWD003ProductionParameters","Elapsed":0.7}
+{"Time":"2026-10-19T02:07:15.226334+08:00","Action":"run","Package":"freshplate/server/internal/logic","Test":"TestLIMIT003HashSlots"}
+{"Time":"2026-10-19T02:07:15.226339+08:00","Action":"output","Package":"freshplate/server/internal/logic","Test":"TestLIMIT003HashSlots","Output":"=== RUN   TestLIMIT003HashSlots\n"}
+{"Time":"2026-10-19T02:07:15.226922+08:00","Action":"output","Package":"freshplate/server/internal/logic","Test":"TestLIMIT003HashSlots","Output":"--- PASS: TestLIMIT003HashSlots (0.00s)\n"}
+{"Time":"2026-10-19T02:07:15.226933+08:00","Action":"pass","Package":"freshplate/server/internal/logic","Test":"TestLIMIT003HashSlots","Elapsed":0}
+{"Time":"2026-10-19T02:07:15.226938+08:00","Action":"run","Package":"freshplate/server/internal/logic","Test":"TestLIMIT001And003Limiter"}
+{"Time":"2026-10-19T02:07:15.226941+08:00","Action":"output","Package":"freshplate/server/internal/logic","Test":"TestLIMIT001And003Limiter","Output":"=== RUN   TestLIMIT001And003Limiter\n"}
+{"Time":"2026-10-19T02:07:15.226978+08:00","Action":"output","Package":"freshplate/server/internal/logic","Test":"TestLIMIT001And003Limiter","Output":"--- PASS: TestLIMIT001And003Limiter (0.00s)\n"}
+{"Time":"2026-10-19T02:07:15.227006+08:00","Action":"pass","Package":"freshplate/server/internal/logic","Test":"TestLIMIT001And003Limiter","Elapsed":0}
+{"Time":"2026-10-19T02:07:15.227019+08:00","Action":"run","Package":"freshplate/server/internal/logic","Test":"TestLIMIT003ConcurrentLimiter"}
+{"Time":"2026-10-19T02:07:15.227025+08:00","Action":"output","Package":"freshplate/server/internal/logic","Test":"TestLIMIT003ConcurrentLimiter","Output":"=== RUN   TestLIMIT003ConcurrentLimiter\n"}
+{"Time":"2026-10-19T02:07:15.227922+08:00","Action":"output","Package":"freshplate/server/internal/logic","Test":"TestLIMIT003ConcurrentLimiter","Output":"--- PASS: TestLIMIT003ConcurrentLimiter (0.00s)\n"}
+{"Time":"2026-10-19T02:07:15.227935+08:00","Action":"pass","Package":"freshplate/server/internal/logic","Test":"TestLIMIT003ConcurrentLimiter","Elapsed":0}
+{"Time":"2026-10-19T02:07:15.227952+08:00","Action":"run","Package":"freshplate/server/internal/logic","Test":"TestPREF002Validation"}
+{"Time":"2026-10-19T02:07:15.227965+08:00","Action":"output","Package":"freshplate/server/internal/logic","Test":"TestPREF002Validation","Output":"=== RUN   TestPREF002Validation\n"}
+{"Time":"2026-10-19T02:07:15.228081+08:00","Action":"output","Package":"freshplate/server/internal/logic","Test":"TestPREF002Validation","Output":"--- PASS: TestPREF002Validation (0.00s)\n"}
+{"Time":"2026-10-19T02:07:15.228092+08:00","Action":"pass","Package":"freshplate/server/internal/logic","Test":"TestPREF002Validation","Elapsed":0}
+{"Time":"2026-10-19T02:07:15.228104+08:00","Action":"run","Package":"freshplate/server/internal/logic","Test":"TestREC001RestrictionReuse"}
+{"Time":"2026-10-19T02:07:15.228109+08:00","Action":"output","Package":"freshplate/server/internal/logic","Test":"TestREC001RestrictionReuse","Output":"=== RUN   TestREC001RestrictionReuse\n"}
+{"Time":"2026-10-19T02:07:15.228154+08:00","Action":"output","Package":"freshplate/server/internal/logic","Test":"TestREC001RestrictionReuse","Output":"--- PASS: TestREC001RestrictionReuse (0.00s)\n"}
+{"Time":"2026-10-19T02:07:15.228161+08:00","Action":"pass","Package":"freshplate/server/internal/logic","Test":"TestREC001RestrictionReuse","Elapsed":0}
+{"Time":"2026-10-19T02:07:15.22821+08:00","Action":"output","Package":"freshplate/server/internal/logic","Output":"PASS\n"}
+{"Time":"2026-10-19T02:07:15.749537+08:00","Action":"run","Package":"freshplate/server/internal/store","Test":"TestSEC004DatabaseAndSidecarPermissions"}
+{"Time":"2026-10-19T02:07:15.749569+08:00","Action":"output","Package":"freshplate/server/internal/store","Test":"TestSEC004DatabaseAndSidecarPermissions","Output":"=== RUN   TestSEC004DatabaseAndSidecarPermissions\n"}
+{"Time":"2026-10-19T02:07:15.839521+08:00","Action":"output","Package":"freshplate/server/internal/store","Test":"TestSEC004DatabaseAndSidecarPermissions","Output":"--- PASS: TestSEC004DatabaseAndSidecarPermissions (0.09s)\n"}
+{"Time":"2026-10-19T02:07:15.839551+08:00","Action":"pass","Package":"freshplate/server/internal/store","Test":"TestSEC004DatabaseAndSidecarPermissions","Elapsed":0.09}
+{"Time":"2026-10-19T02:07:15.83956+08:00","Action":"run","Package":"freshplate/server/internal/store","Test":"TestREG004AtomicDefaultsAndConcurrentUnique"}
+{"Time":"2026-10-19T02:07:15.839564+08:00","Action":"output","Package":"freshplate/server/internal/store","Test":"TestREG004AtomicDefaultsAndConcurrentUnique","Output":"=== RUN   TestREG004AtomicDefaultsAndConcurrentUnique\n"}
+{"Time":"2026-10-19T02:07:15.911099+08:00","Action":"output","Package":"freshplate/server/internal/store","Test":"TestREG004AtomicDefaultsAndConcurrentUnique","Output":"--- PASS: TestREG004AtomicDefaultsAndConcurrentUnique (0.07s)\n"}
+{"Time":"2026-10-19T02:07:15.911124+08:00","Action":"pass","Package":"freshplate/server/internal/store","Test":"TestREG004AtomicDefaultsAndConcurrentUnique","Elapsed":0.07}
+{"Time":"2026-10-19T02:07:15.91116+08:00","Action":"run","Package":"freshplate/server/internal/store","Test":"TestDB001PragmasConstraintsAndReconnection"}
+{"Time":"2026-10-19T02:07:15.911167+08:00","Action":"output","Package":"freshplate/server/internal/store","Test":"TestDB001PragmasConstraintsAndReconnection","Output":"=== RUN   TestDB001PragmasConstraintsAndReconnection\n"}
+{"Time":"2026-10-19T02:07:15.937143+08:00","Action":"output","Package":"freshplate/server/internal/runtime","Output":"ok  \tfreshplate/server/internal/runtime\t2.634s\n"}
+{"Time":"2026-10-19T02:07:15.937215+08:00","Action":"pass","Package":"freshplate/server/internal/runtime","Elapsed":2.634}
+{"Time":"2026-10-19T02:07:15.995985+08:00","Action":"output","Package":"freshplate/server/internal/store","Test":"TestDB001PragmasConstraintsAndReconnection","Output":"--- PASS: TestDB001PragmasConstraintsAndReconnection (0.08s)\n"}
+{"Time":"2026-10-19T02:07:15.996105+08:00","Action":"pass","Package":"freshplate/server/internal/store","Test":"TestDB001PragmasConstraintsAndReconnection","Elapsed":0.08}
+{"Time":"2026-10-19T02:07:15.996153+08:00","Action":"run","Package":"freshplate/server/internal/store","Test":"TestSESAndCON001PasswordRevocationAndStaleHash"}
+{"Time":"2026-10-19T02:07:15.996178+08:00","Action":"output","Package":"freshplate/server/internal/store","Test":"TestSESAndCON001PasswordRevocationAndStaleHash","Output":"=== RUN   TestSESAndCON001PasswordRevocationAndStaleHash\n"}
+{"Time":"2026-10-19T02:07:16.074908+08:00","Action":"output","Package":"freshplate/server/internal/store","Test":"TestSESAndCON001PasswordRevocationAndStaleHash","Output":"--- PASS: TestSESAndCON001PasswordRevocationAndStaleHash (0.08s)\n"}
+{"Time":"2026-10-19T02:07:16.074951+08:00","Action":"pass","Package":"freshplate/server/internal/store","Test":"TestSESAndCON001PasswordRevocationAndStaleHash","Elapsed":0.08}
+{"Time":"2026-10-19T02:07:16.074962+08:00","Action":"run","Package":"freshplate/server/internal/store","Test":"TestPREF003DisabledReferenceRetentionAndMissingSettings"}
+{"Time":"2026-10-19T02:07:16.074967+08:00","Action":"output","Package":"freshplate/server/internal/store","Test":"TestPREF003DisabledReferenceRetentionAndMissingSettings","Output":"=== RUN   TestPREF003DisabledReferenceRetentionAndMissingSettings\n"}
+{"Time":"2026-10-19T02:07:16.168172+08:00","Action":"output","Package":"freshplate/server/internal/store","Test":"TestPREF003DisabledReferenceRetentionAndMissingSettings","Output":"--- PASS: TestPREF003DisabledReferenceRetentionAndMissingSettings (0.09s)\n"}
+{"Time":"2026-10-19T02:07:16.168225+08:00","Action":"pass","Package":"freshplate/server/internal/store","Test":"TestPREF003DisabledReferenceRetentionAndMissingSettings","Elapsed":0.09}
+{"Time":"2026-10-19T02:07:16.168249+08:00","Action":"run","Package":"freshplate/server/internal/store","Test":"TestADM003ConcurrentAdminsCannotRemoveEachOther"}
+{"Time":"2026-10-19T02:07:16.168264+08:00","Action":"output","Package":"freshplate/server/internal/store","Test":"TestADM003ConcurrentAdminsCannotRemoveEachOther","Output":"=== RUN   TestADM003ConcurrentAdminsCannotRemoveEachOther\n"}
+{"Time":"2026-10-19T02:07:16.168312+08:00","Action":"run","Package":"freshplate/server/internal/store","Test":"TestADM003ConcurrentAdminsCannotRemoveEachOther/role"}
+{"Time":"2026-10-19T02:07:16.168341+08:00","Action":"output","Package":"freshplate/server/internal/store","Test":"TestADM003ConcurrentAdminsCannotRemoveEachOther/role","Output":"=== RUN   TestADM003ConcurrentAdminsCannotRemoveEachOther/role\n"}
+{"Time":"2026-10-19T02:07:16.242559+08:00","Action":"output","Package":"freshplate/server/internal/store","Test":"TestADM003ConcurrentAdminsCannotRemoveEachOther/role","Output":"--- PASS: TestADM003ConcurrentAdminsCannotRemoveEachOther/role (0.07s)\n"}
+{"Time":"2026-10-19T02:07:16.242591+08:00","Action":"pass","Package":"freshplate/server/internal/store","Test":"TestADM003ConcurrentAdminsCannotRemoveEachOther/role","Elapsed":0.07}
+{"Time":"2026-10-19T02:07:16.24264+08:00","Action":"run","Package":"freshplate/server/internal/store","Test":"TestADM003ConcurrentAdminsCannotRemoveEachOther/status"}
+{"Time":"2026-10-19T02:07:16.242648+08:00","Action":"output","Package":"freshplate/server/internal/store","Test":"TestADM003ConcurrentAdminsCannotRemoveEachOther/status","Output":"=== RUN   TestADM003ConcurrentAdminsCannotRemoveEachOther/status\n"}
+{"Time":"2026-10-19T02:07:16.282961+08:00","Action":"output","Package":"freshplate/server/internal/logic","Output":"ok  \tfreshplate/server/internal/logic\t2.979s\n"}
+{"Time":"2026-10-19T02:07:16.283032+08:00","Action":"pass","Package":"freshplate/server/internal/logic","Elapsed":2.98}
+{"Time":"2026-10-19T02:07:16.326202+08:00","Action":"output","Package":"freshplate/server/internal/store","Test":"TestADM003ConcurrentAdminsCannotRemoveEachOther/status","Output":"--- PASS: TestADM003ConcurrentAdminsCannotRemoveEachOther/status (0.08s)\n"}
+{"Time":"2026-10-19T02:07:16.326236+08:00","Action":"pass","Package":"freshplate/server/internal/store","Test":"TestADM003ConcurrentAdminsCannotRemoveEachOther/status","Elapsed":0.08}
+{"Time":"2026-10-19T02:07:16.32625+08:00","Action":"run","Package":"freshplate/server/internal/store","Test":"TestADM003ConcurrentAdminsCannotRemoveEachOther/both"}
+{"Time":"2026-10-19T02:07:16.326278+08:00","Action":"output","Package":"freshplate/server/internal/store","Test":"TestADM003ConcurrentAdminsCannotRemoveEachOther/both","Output":"=== RUN   TestADM003ConcurrentAdminsCannotRemoveEachOther/both\n"}
+{"Time":"2026-10-19T02:07:16.421314+08:00","Action":"output","Package":"freshplate/server/internal/store","Test":"TestADM003ConcurrentAdminsCannotRemoveEachOther/both","Output":"--- PASS: TestADM003ConcurrentAdminsCannotRemoveEachOther/both (0.09s)\n"}
+{"Time":"2026-10-19T02:07:16.421343+08:00","Action":"pass","Package":"freshplate/server/internal/store","Test":"TestADM003ConcurrentAdminsCannotRemoveEachOther/both","Elapsed":0.09}
+{"Time":"2026-10-19T02:07:16.42141+08:00","Action":"output","Package":"freshplate/server/internal/store","Test":"TestADM003ConcurrentAdminsCannotRemoveEachOther","Output":"--- PASS: TestADM003ConcurrentAdminsCannotRemoveEachOther (0.25s)\n"}
+{"Time":"2026-10-19T02:07:16.421422+08:00","Action":"pass","Package":"freshplate/server/internal/store","Test":"TestADM003ConcurrentAdminsCannotRemoveEachOther","Elapsed":0.25}
+{"Time":"2026-10-19T02:07:16.421464+08:00","Action":"run","Package":"freshplate/server/internal/store","Test":"TestCON003And004ActorRevalidationAndAuditAtomicity"}
+{"Time":"2026-10-19T02:07:16.42147+08:00","Action":"output","Package":"freshplate/server/internal/store","Test":"TestCON003And004ActorRevalidationAndAuditAtomicity","Output":"=== RUN   TestCON003And004ActorRevalidationAndAuditAtomicity\n"}
+{"Time":"2026-10-19T02:07:16.519877+08:00","Action":"output","Package":"freshplate/server/internal/store","Test":"TestCON003And004ActorRevalidationAndAuditAtomicity","Output":"--- PASS: TestCON003And004ActorRevalidationAndAuditAtomicity (0.10s)\n"}
+{"Time":"2026-10-19T02:07:16.519901+08:00","Action":"pass","Package":"freshplate/server/internal/store","Test":"TestCON003And004ActorRevalidationAndAuditAtomicity","Elapsed":0.1}
+{"Time":"2026-10-19T02:07:16.519918+08:00","Action":"run","Package":"freshplate/server/internal/store","Test":"TestCLIAndPagination"}
+{"Time":"2026-10-19T02:07:16.519925+08:00","Action":"output","Package":"freshplate/server/internal/store","Test":"TestCLIAndPagination","Output":"=== RUN   TestCLIAndPagination\n"}
+{"Time":"2026-10-19T02:07:16.589531+08:00","Action":"output","Package":"freshplate/server/internal/store","Test":"TestCLIAndPagination","Output":"--- PASS: TestCLIAndPagination (0.07s)\n"}
+{"Time":"2026-10-19T02:07:16.589554+08:00","Action":"pass","Package":"freshplate/server/internal/store","Test":"TestCLIAndPagination","Elapsed":0.07}
+{"Time":"2026-10-19T02:07:16.58956+08:00","Action":"run","Package":"freshplate/server/internal/store","Test":"TestMIG001And002RefuseUnknownOrCorruptHistory"}
+{"Time":"2026-10-19T02:07:16.589564+08:00","Action":"output","Package":"freshplate/server/internal/store","Test":"TestMIG001And002RefuseUnknownOrCorruptHistory","Output":"=== RUN   TestMIG001And002RefuseUnknownOrCorruptHistory\n"}
+{"Time":"2026-10-19T02:07:16.589706+08:00","Action":"run","Package":"freshplate/server/internal/store","Test":"TestMIG001And002RefuseUnknownOrCorruptHistory/UPDATE_schema_migrations_SET_version=2"}
+{"Time":"2026-10-19T02:07:16.589742+08:00","Action":"output","Package":"freshplate/server/internal/store","Test":"TestMIG001And002RefuseUnknownOrCorruptHistory/UPDATE_schema_migrations_SET_version=2","Output":"=== RUN   TestMIG001And002RefuseUnknownOrCorruptHistory/UPDATE_schema_migrations_SET_version=2\n"}
+{"Time":"2026-10-19T02:07:16.664693+08:00","Action":"output","Package":"freshplate/server/internal/store","Test":"TestMIG001And002RefuseUnknownOrCorruptHistory/UPDATE_schema_migrations_SET_version=2","Output":"--- PASS: TestMIG001And002RefuseUnknownOrCorruptHistory/UPDATE_schema_migrations_SET_version=2 (0.07s)\n"}
+{"Time":"2026-10-19T02:07:16.664725+08:00","Action":"pass","Package":"freshplate/server/internal/store","Test":"TestMIG001And002RefuseUnknownOrCorruptHistory/UPDATE_schema_migrations_SET_version=2","Elapsed":0.07}
+{"Time":"2026-10-19T02:07:16.664746+08:00","Action":"run","Package":"freshplate/server/internal/store","Test":"TestMIG001And002RefuseUnknownOrCorruptHistory/UPDATE_schema_migrations_SET_checksum='changed'"}
+{"Time":"2026-10-19T02:07:16.664753+08:00","Action":"output","Package":"freshplate/server/internal/store","Test":"TestMIG001And002RefuseUnknownOrCorruptHistory/UPDATE_schema_migrations_SET_checksum='changed'","Output":"=== RUN   TestMIG001And002RefuseUnknownOrCorruptHistory/UPDATE_schema_migrations_SET_checksum='changed'\n"}
+{"Time":"2026-10-19T02:07:16.727945+08:00","Action":"output","Package":"freshplate/server/internal/store","Test":"TestMIG001And002RefuseUnknownOrCorruptHistory/UPDATE_schema_migrations_SET_checksum='changed'","Output":"--- PASS: TestMIG001And002RefuseUnknownOrCorruptHistory/UPDATE_schema_migrations_SET_checksum='changed' (0.06s)\n"}
+{"Time":"2026-10-19T02:07:16.727973+08:00","Action":"pass","Package":"freshplate/server/internal/store","Test":"TestMIG001And002RefuseUnknownOrCorruptHistory/UPDATE_schema_migrations_SET_checksum='changed'","Elapsed":0.06}
+{"Time":"2026-10-19T02:07:16.727984+08:00","Action":"run","Package":"freshplate/server/internal/store","Test":"TestMIG001And002RefuseUnknownOrCorruptHistory/DELETE_FROM_schema_migrations"}
+{"Time":"2026-10-19T02:07:16.727989+08:00","Action":"output","Package":"freshplate/server/internal/store","Test":"TestMIG001And002RefuseUnknownOrCorruptHistory/DELETE_FROM_schema_migrations","Output":"=== RUN   TestMIG001And002RefuseUnknownOrCorruptHistory/DELETE_FROM_schema_migrations\n"}
+{"Time":"2026-10-19T02:07:16.795229+08:00","Action":"output","Package":"freshplate/server/internal/store","Test":"TestMIG001And002RefuseUnknownOrCorruptHistory/DELETE_FROM_schema_migrations","Output":"--- PASS: TestMIG001And002RefuseUnknownOrCorruptHistory/DELETE_FROM_schema_migrations (0.07s)\n"}
+{"Time":"2026-10-19T02:07:16.795269+08:00","Action":"pass","Package":"freshplate/server/internal/store","Test":"TestMIG001And002RefuseUnknownOrCorruptHistory/DELETE_FROM_schema_migrations","Elapsed":0.07}
+{"Time":"2026-10-19T02:07:16.795304+08:00","Action":"run","Package":"freshplate/server/internal/store","Test":"TestMIG001And002RefuseUnknownOrCorruptHistory/DROP_TABLE_user_preferences"}
+{"Time":"2026-10-19T02:07:16.795311+08:00","Action":"output","Package":"freshplate/server/internal/store","Test":"TestMIG001And002RefuseUnknownOrCorruptHistory/DROP_TABLE_user_preferences","Output":"=== RUN   TestMIG001And002RefuseUnknownOrCorruptHistory/DROP_TABLE_user_preferences\n"}
+{"Time":"2026-10-19T02:07:16.874218+08:00","Action":"output","Package":"freshplate/server/internal/store","Test":"TestMIG001And002RefuseUnknownOrCorruptHistory/DROP_TABLE_user_preferences","Output":"--- PASS: TestMIG001And002RefuseUnknownOrCorruptHistory/DROP_TABLE_user_preferences (0.08s)\n"}
+{"Time":"2026-10-19T02:07:16.874269+08:00","Action":"pass","Package":"freshplate/server/internal/store","Test":"TestMIG001And002RefuseUnknownOrCorruptHistory/DROP_TABLE_user_preferences","Elapsed":0.08}
+{"Time":"2026-10-19T02:07:16.874342+08:00","Action":"run","Package":"freshplate/server/internal/store","Test":"TestMIG001And002RefuseUnknownOrCorruptHistory/ALTER_TABLE_users_DROP_COLUMN_updated_at"}
+{"Time":"2026-10-19T02:07:16.874352+08:00","Action":"output","Package":"freshplate/server/internal/store","Test":"TestMIG001And002RefuseUnknownOrCorruptHistory/ALTER_TABLE_users_DROP_COLUMN_updated_at","Output":"=== RUN   TestMIG001And002RefuseUnknownOrCorruptHistory/ALTER_TABLE_users_DROP_COLUMN_updated_at\n"}
+{"Time":"2026-10-19T02:07:16.911384+08:00","Action":"run","Package":"freshplate/server/internal/api","Test":"TestREG001_REG003_AUTH001_SES003_SES004"}
+{"Time":"2026-10-19T02:07:16.911409+08:00","Action":"output","Package":"freshplate/server/internal/api","Test":"TestREG001_REG003_AUTH001_SES003_SES004","Output":"=== RUN   TestREG001_REG003_AUTH001_SES003_SES004\n"}
+{"Time":"2026-10-19T02:07:16.983949+08:00","Action":"output","Package":"freshplate/server/internal/store","Test":"TestMIG001And002RefuseUnknownOrCorruptHistory/ALTER_TABLE_users_DROP_COLUMN_updated_at","Output":"--- PASS: TestMIG001And002RefuseUnknownOrCorruptHistory/ALTER_TABLE_users_DROP_COLUMN_updated_at (0.11s)\n"}
+{"Time":"2026-10-19T02:07:16.984+08:00","Action":"pass","Package":"freshplate/server/internal/store","Test":"TestMIG001And002RefuseUnknownOrCorruptHistory/ALTER_TABLE_users_DROP_COLUMN_updated_at","Elapsed":0.11}
+{"Time":"2026-10-19T02:07:16.984049+08:00","Action":"run","Package":"freshplate/server/internal/store","Test":"TestMIG001And002RefuseUnknownOrCorruptHistory/DROP_INDEX_sessions_user"}
+{"Time":"2026-10-19T02:07:16.984062+08:00","Action":"output","Package":"freshplate/server/internal/store","Test":"TestMIG001And002RefuseUnknownOrCorruptHistory/DROP_INDEX_sessions_user","Output":"=== RUN   TestMIG001And002RefuseUnknownOrCorruptHistory/DROP_INDEX_sessions_user\n"}
+{"Time":"2026-10-19T02:07:17.067855+08:00","Action":"output","Package":"freshplate/server/internal/store","Test":"TestMIG001And002RefuseUnknownOrCorruptHistory/DROP_INDEX_sessions_user","Output":"--- PASS: TestMIG001And002RefuseUnknownOrCorruptHistory/DROP_INDEX_sessions_user (0.08s)\n"}
+{"Time":"2026-10-19T02:07:17.067889+08:00","Action":"pass","Package":"freshplate/server/internal/store","Test":"TestMIG001And002RefuseUnknownOrCorruptHistory/DROP_INDEX_sessions_user","Elapsed":0.08}
+{"Time":"2026-10-19T02:07:17.080462+08:00","Action":"output","Package":"freshplate/server/internal/store","Test":"TestMIG001And002RefuseUnknownOrCorruptHistory","Output":"--- PASS: TestMIG001And002RefuseUnknownOrCorruptHistory (0.49s)\n"}
+{"Time":"2026-10-19T02:07:17.08051+08:00","Action":"pass","Package":"freshplate/server/internal/store","Test":"TestMIG001And002RefuseUnknownOrCorruptHistory","Elapsed":0.49}
+{"Time":"2026-10-19T02:07:17.08053+08:00","Action":"run","Package":"freshplate/server/internal/store","Test":"TestDB002And004RollbackCancelAndPanic"}
+{"Time":"2026-10-19T02:07:17.080536+08:00","Action":"output","Package":"freshplate/server/internal/store","Test":"TestDB002And004RollbackCancelAndPanic","Output":"=== RUN   TestDB002And004RollbackCancelAndPanic\n"}
+{"Time":"2026-10-19T02:07:17.126434+08:00","Action":"run","Package":"freshplate/server/internal/store","Test":"TestDB002And004RollbackCancelAndPanic/error"}
+{"Time":"2026-10-19T02:07:17.12647+08:00","Action":"output","Package":"freshplate/server/internal/store","Test":"TestDB002And004RollbackCancelAndPanic/error","Output":"=== RUN   TestDB002And004RollbackCancelAndPanic/error\n"}
+{"Time":"2026-10-19T02:07:17.128928+08:00","Action":"output","Package":"freshplate/server/internal/store","Test":"TestDB002And004RollbackCancelAndPanic/error","Output":"--- PASS: TestDB002And004RollbackCancelAndPanic/error (0.00s)\n"}
+{"Time":"2026-10-19T02:07:17.129518+08:00","Action":"pass","Package":"freshplate/server/internal/store","Test":"TestDB002And004RollbackCancelAndPanic/error","Elapsed":0}
+{"Time":"2026-10-19T02:07:17.129562+08:00","Action":"run","Package":"freshplate/server/internal/store","Test":"TestDB002And004RollbackCancelAndPanic/cancel"}
+{"Time":"2026-10-19T02:07:17.129569+08:00","Action":"output","Package":"freshplate/server/internal/store","Test":"TestDB002And004RollbackCancelAndPanic/cancel","Output":"=== RUN   TestDB002And004RollbackCancelAndPanic/cancel\n"}
+{"Time":"2026-10-19T02:07:17.132756+08:00","Action":"output","Package":"freshplate/server/internal/store","Test":"TestDB002And004RollbackCancelAndPanic/cancel","Output":"--- PASS: TestDB002And004RollbackCancelAndPanic/cancel (0.00s)\n"}
+{"Time":"2026-10-19T02:07:17.132817+08:00","Action":"pass","Package":"freshplate/server/internal/store","Test":"TestDB002And004RollbackCancelAndPanic/cancel","Elapsed":0}
+{"Time":"2026-10-19T02:07:17.132855+08:00","Action":"run","Package":"freshplate/server/internal/store","Test":"TestDB002And004RollbackCancelAndPanic/panic"}
+{"Time":"2026-10-19T02:07:17.132865+08:00","Action":"output","Package":"freshplate/server/internal/store","Test":"TestDB002And004RollbackCancelAndPanic/panic","Output":"=== RUN   TestDB002And004RollbackCancelAndPanic/panic\n"}
+{"Time":"2026-10-19T02:07:17.135187+08:00","Action":"output","Package":"freshplate/server/internal/store","Test":"TestDB002And004RollbackCancelAndPanic/panic","Output":"--- PASS: TestDB002And004RollbackCancelAndPanic/panic (0.00s)\n"}
+{"Time":"2026-10-19T02:07:17.135218+08:00","Action":"pass","Package":"freshplate/server/internal/store","Test":"TestDB002And004RollbackCancelAndPanic/panic","Elapsed":0}
+{"Time":"2026-10-19T02:07:17.138915+08:00","Action":"output","Package":"freshplate/server/internal/store","Test":"TestDB002And004RollbackCancelAndPanic","Output":"--- PASS: TestDB002And004RollbackCancelAndPanic (0.06s)\n"}
+{"Time":"2026-10-19T02:07:17.138949+08:00","Action":"pass","Package":"freshplate/server/internal/store","Test":"TestDB002And004RollbackCancelAndPanic","Elapsed":0.06}
+{"Time":"2026-10-19T02:07:17.138969+08:00","Action":"run","Package":"freshplate/server/internal/store","Test":"TestADM004CombinedUpdateAuditOnceAndNoop"}
+{"Time":"2026-10-19T02:07:17.138975+08:00","Action":"output","Package":"freshplate/server/internal/store","Test":"TestADM004CombinedUpdateAuditOnceAndNoop","Output":"=== RUN   TestADM004CombinedUpdateAuditOnceAndNoop\n"}
+{"Time":"2026-10-19T02:07:17.207972+08:00","Action":"output","Package":"freshplate/server/internal/store","Test":"TestADM004CombinedUpdateAuditOnceAndNoop","Output":"--- PASS: TestADM004CombinedUpdateAuditOnceAndNoop (0.07s)\n"}
+{"Time":"2026-10-19T02:07:17.207999+08:00","Action":"pass","Package":"freshplate/server/internal/store","Test":"TestADM004CombinedUpdateAuditOnceAndNoop","Elapsed":0.07}
+{"Time":"2026-10-19T02:07:17.208008+08:00","Action":"run","Package":"freshplate/server/internal/store","Test":"TestSES004ResolveInvalidStates"}
+{"Time":"2026-10-19T02:07:17.208014+08:00","Action":"output","Package":"freshplate/server/internal/store","Test":"TestSES004ResolveInvalidStates","Output":"=== RUN   TestSES004ResolveInvalidStates\n"}
+{"Time":"2026-10-19T02:07:17.208053+08:00","Action":"run","Package":"freshplate/server/internal/store","Test":"TestSES004ResolveInvalidStates/UPDATE_users_SET_auth_version=auth_version+1"}
+{"Time":"2026-10-19T02:07:17.208063+08:00","Action":"output","Package":"freshplate/server/internal/store","Test":"TestSES004ResolveInvalidStates/UPDATE_users_SET_auth_version=auth_version+1","Output":"=== RUN   TestSES004ResolveInvalidStates/UPDATE_users_SET_auth_version=auth_version+1\n"}
+{"Time":"2026-10-19T02:07:17.260376+08:00","Action":"output","Package":"freshplate/server/internal/store","Test":"TestSES004ResolveInvalidStates/UPDATE_users_SET_auth_version=auth_version+1","Output":"--- PASS: TestSES004ResolveInvalidStates/UPDATE_users_SET_auth_version=auth_version+1 (0.05s)\n"}
+{"Time":"2026-10-19T02:07:17.260398+08:00","Action":"pass","Package":"freshplate/server/internal/store","Test":"TestSES004ResolveInvalidStates/UPDATE_users_SET_auth_version=auth_version+1","Elapsed":0.05}
+{"Time":"2026-10-19T02:07:17.260414+08:00","Action":"run","Package":"freshplate/server/internal/store","Test":"TestSES004ResolveInvalidStates/UPDATE_users_SET_status='disabled'"}
+{"Time":"2026-10-19T02:07:17.260418+08:00","Action":"output","Package":"freshplate/server/internal/store","Test":"TestSES004ResolveInvalidStates/UPDATE_users_SET_status='disabled'","Output":"=== RUN   TestSES004ResolveInvalidStates/UPDATE_users_SET_status='disabled'\n"}
+{"Time":"2026-10-19T02:07:17.317586+08:00","Action":"output","Package":"freshplate/server/internal/store","Test":"TestSES004ResolveInvalidStates/UPDATE_users_SET_status='disabled'","Output":"--- PASS: TestSES004ResolveInvalidStates/UPDATE_users_SET_status='disabled' (0.06s)\n"}
+{"Time":"2026-10-19T02:07:17.317609+08:00","Action":"pass","Package":"freshplate/server/internal/store","Test":"TestSES004ResolveInvalidStates/UPDATE_users_SET_status='disabled'","Elapsed":0.06}
+{"Time":"2026-10-19T02:07:17.317651+08:00","Action":"run","Package":"freshplate/server/internal/store","Test":"TestSES004ResolveInvalidStates/DELETE_FROM_sessions"}
+{"Time":"2026-10-19T02:07:17.317658+08:00","Action":"output","Package":"freshplate/server/internal/store","Test":"TestSES004ResolveInvalidStates/DELETE_FROM_sessions","Output":"=== RUN   TestSES004ResolveInvalidStates/DELETE_FROM_sessions\n"}
+{"Time":"2026-10-19T02:07:17.375922+08:00","Action":"output","Package":"freshplate/server/internal/store","Test":"TestSES004ResolveInvalidStates/DELETE_FROM_sessions","Output":"--- PASS: TestSES004ResolveInvalidStates/DELETE_FROM_sessions (0.06s)\n"}
+{"Time":"2026-10-19T02:07:17.375955+08:00","Action":"pass","Package":"freshplate/server/internal/store","Test":"TestSES004ResolveInvalidStates/DELETE_FROM_sessions","Elapsed":0.06}
+{"Time":"2026-10-19T02:07:17.375966+08:00","Action":"run","Package":"freshplate/server/internal/store","Test":"TestSES004ResolveInvalidStates/UPDATE_sessions_SET_expires_at=0"}
+{"Time":"2026-10-19T02:07:17.375971+08:00","Action":"output","Package":"freshplate/server/internal/store","Test":"TestSES004ResolveInvalidStates/UPDATE_sessions_SET_expires_at=0","Output":"=== RUN   TestSES004ResolveInvalidStates/UPDATE_sessions_SET_expires_at=0\n"}
+{"Time":"2026-10-19T02:07:17.428567+08:00","Action":"output","Package":"freshplate/server/internal/store","Test":"TestSES004ResolveInvalidStates/UPDATE_sessions_SET_expires_at=0","Output":"--- PASS: TestSES004ResolveInvalidStates/UPDATE_sessions_SET_expires_at=0 (0.05s)\n"}
+{"Time":"2026-10-19T02:07:17.428589+08:00","Action":"pass","Package":"freshplate/server/internal/store","Test":"TestSES004ResolveInvalidStates/UPDATE_sessions_SET_expires_at=0","Elapsed":0.05}
+{"Time":"2026-10-19T02:07:17.428614+08:00","Action":"output","Package":"freshplate/server/internal/store","Test":"TestSES004ResolveInvalidStates","Output":"--- PASS: TestSES004ResolveInvalidStates (0.22s)\n"}
+{"Time":"2026-10-19T02:07:17.428627+08:00","Action":"pass","Package":"freshplate/server/internal/store","Test":"TestSES004ResolveInvalidStates","Elapsed":0.22}
+{"Time":"2026-10-19T02:07:17.428641+08:00","Action":"run","Package":"freshplate/server/internal/store","Test":"TestDB004And005CommitFailureAndRollbackDiscard"}
+{"Time":"2026-10-19T02:07:17.428645+08:00","Action":"output","Package":"freshplate/server/internal/store","Test":"TestDB004And005CommitFailureAndRollbackDiscard","Output":"=== RUN   TestDB004And005CommitFailureAndRollbackDiscard\n"}
+{"Time":"2026-10-19T02:07:17.428715+08:00","Action":"run","Package":"freshplate/server/internal/store","Test":"TestDB004And005CommitFailureAndRollbackDiscard/false"}
+{"Time":"2026-10-19T02:07:17.428723+08:00","Action":"output","Package":"freshplate/server/internal/store","Test":"TestDB004And005CommitFailureAndRollbackDiscard/false","Output":"=== RUN   TestDB004And005CommitFailureAndRollbackDiscard/false\n"}
+{"Time":"2026-10-19T02:07:17.49768+08:00","Action":"output","Package":"freshplate/server/internal/store","Test":"TestDB004And005CommitFailureAndRollbackDiscard/false","Output":"--- PASS: TestDB004And005CommitFailureAndRollbackDiscard/false (0.07s)\n"}
+{"Time":"2026-10-19T02:07:17.497747+08:00","Action":"pass","Package":"freshplate/server/internal/store","Test":"TestDB004And005CommitFailureAndRollbackDiscard/false","Elapsed":0.07}
+{"Time":"2026-10-19T02:07:17.49776+08:00","Action":"run","Package":"freshplate/server/internal/store","Test":"TestDB004And005CommitFailureAndRollbackDiscard/true"}
+{"Time":"2026-10-19T02:07:17.497766+08:00","Action":"output","Package":"freshplate/server/internal/store","Test":"TestDB004And005CommitFailureAndRollbackDiscard/true","Output":"=== RUN   TestDB004And005CommitFailureAndRollbackDiscard/true\n"}
+{"Time":"2026-10-19T02:07:17.576913+08:00","Action":"output","Package":"freshplate/server/internal/store","Test":"TestDB004And005CommitFailureAndRollbackDiscard/true","Output":"--- PASS: TestDB004And005CommitFailureAndRollbackDiscard/true (0.08s)\n"}
+{"Time":"2026-10-19T02:07:17.576964+08:00","Action":"pass","Package":"freshplate/server/internal/store","Test":"TestDB004And005CommitFailureAndRollbackDiscard/true","Elapsed":0.08}
+{"Time":"2026-10-19T02:07:17.576994+08:00","Action":"output","Package":"freshplate/server/internal/store","Test":"TestDB004And005CommitFailureAndRollbackDiscard","Output":"--- PASS: TestDB004And005CommitFailureAndRollbackDiscard (0.15s)\n"}
+{"Time":"2026-10-19T02:07:17.577045+08:00","Action":"pass","Package":"freshplate/server/internal/store","Test":"TestDB004And005CommitFailureAndRollbackDiscard","Elapsed":0.15}
+{"Time":"2026-10-19T02:07:17.57708+08:00","Action":"run","Package":"freshplate/server/internal/store","Test":"TestDB003BusyMapsAndRecovers"}
+{"Time":"2026-10-19T02:07:17.577088+08:00","Action":"output","Package":"freshplate/server/internal/store","Test":"TestDB003BusyMapsAndRecovers","Output":"=== RUN   TestDB003BusyMapsAndRecovers\n"}
+{"Time":"2026-10-19T02:07:19.519086+08:00","Action":"output","Package":"freshplate/server/internal/api","Test":"TestREG001_REG003_AUTH001_SES003_SES004","Output":"--- PASS: TestREG001_REG003_AUTH001_SES003_SES004 (2.61s)\n"}
+{"Time":"2026-10-19T02:07:19.519122+08:00","Action":"pass","Package":"freshplate/server/internal/api","Test":"TestREG001_REG003_AUTH001_SES003_SES004","Elapsed":2.61}
+{"Time":"2026-10-19T02:07:19.519128+08:00","Action":"run","Package":"freshplate/server/internal/api","Test":"TestREG002_PWD001_SEC002_SEC003_StrictJSON"}
+{"Time":"2026-10-19T02:07:19.519131+08:00","Action":"output","Package":"freshplate/server/internal/api","Test":"TestREG002_PWD001_SEC002_SEC003_StrictJSON","Output":"=== RUN   TestREG002_PWD001_SEC002_SEC003_StrictJSON\n"}
+{"Time":"2026-10-19T02:07:19.924715+08:00","Action":"run","Package":"freshplate/server/internal/api","Test":"TestREG002_PWD001_SEC002_SEC003_StrictJSON/unknown"}
+{"Time":"2026-10-19T02:07:19.924734+08:00","Action":"output","Package":"freshplate/server/internal/api","Test":"TestREG002_PWD001_SEC002_SEC003_StrictJSON/unknown","Output":"=== RUN   TestREG002_PWD001_SEC002_SEC003_StrictJSON/unknown\n"}
+{"Time":"2026-10-19T02:07:19.924949+08:00","Action":"output","Package":"freshplate/server/internal/api","Test":"TestREG002_PWD001_SEC002_SEC003_StrictJSON/unknown","Output":"--- PASS: TestREG002_PWD001_SEC002_SEC003_StrictJSON/unknown (0.00s)\n"}
+{"Time":"2026-10-19T02:07:19.92496+08:00","Action":"pass","Package":"freshplate/server/internal/api","Test":"TestREG002_PWD001_SEC002_SEC003_StrictJSON/unknown","Elapsed":0}
+{"Time":"2026-10-19T02:07:19.92502+08:00","Action":"run","Package":"freshplate/server/internal/api","Test":"TestREG002_PWD001_SEC002_SEC003_StrictJSON/trailing"}
+{"Time":"2026-10-19T02:07:19.92503+08:00","Action":"output","Package":"freshplate/server/internal/api","Test":"TestREG002_PWD001_SEC002_SEC003_StrictJSON/trailing","Output":"=== RUN   TestREG002_PWD001_SEC002_SEC003_StrictJSON/trailing\n"}
+{"Time":"2026-10-19T02:07:19.92531+08:00","Action":"output","Package":"freshplate/server/internal/api","Test":"TestREG002_PWD001_SEC002_SEC003_StrictJSON/trailing","Output":"--- PASS: TestREG002_PWD001_SEC002_SEC003_StrictJSON/trailing (0.00s)\n"}
+{"Time":"2026-10-19T02:07:19.925323+08:00","Action":"pass","Package":"freshplate/server/internal/api","Test":"TestREG002_PWD001_SEC002_SEC003_StrictJSON/trailing","Elapsed":0}
+{"Time":"2026-10-19T02:07:19.925354+08:00","Action":"run","Package":"freshplate/server/internal/api","Test":"TestREG002_PWD001_SEC002_SEC003_StrictJSON/empty"}
+{"Time":"2026-10-19T02:07:19.925363+08:00","Action":"output","Package":"freshplate/server/internal/api","Test":"TestREG002_PWD001_SEC002_SEC003_StrictJSON/empty","Output":"=== RUN   TestREG002_PWD001_SEC002_SEC003_StrictJSON/empty\n"}
+{"Time":"2026-10-19T02:07:19.925631+08:00","Action":"output","Package":"freshplate/server/internal/api","Test":"TestREG002_PWD001_SEC002_SEC003_StrictJSON/empty","Output":"--- PASS: TestREG002_PWD001_SEC002_SEC003_StrictJSON/empty (0.00s)\n"}
+{"Time":"2026-10-19T02:07:19.92564+08:00","Action":"pass","Package":"freshplate/server/internal/api","Test":"TestREG002_PWD001_SEC002_SEC003_StrictJSON/empty","Elapsed":0}
+{"Time":"2026-10-19T02:07:19.925644+08:00","Action":"run","Package":"freshplate/server/internal/api","Test":"TestREG002_PWD001_SEC002_SEC003_StrictJSON/null"}
+{"Time":"2026-10-19T02:07:19.925646+08:00","Action":"output","Package":"freshplate/server/internal/api","Test":"TestREG002_PWD001_SEC002_SEC003_StrictJSON/null","Output":"=== RUN   TestREG002_PWD001_SEC002_SEC003_StrictJSON/null\n"}
+{"Time":"2026-10-19T02:07:19.925857+08:00","Action":"output","Package":"freshplate/server/internal/api","Test":"TestREG002_PWD001_SEC002_SEC003_StrictJSON/null","Output":"--- PASS: TestREG002_PWD001_SEC002_SEC003_StrictJSON/null (0.00s)\n"}
+{"Time":"2026-10-19T02:07:19.925866+08:00","Action":"pass","Package":"freshplate/server/internal/api","Test":"TestREG002_PWD001_SEC002_SEC003_StrictJSON/null","Elapsed":0}
+{"Time":"2026-10-19T02:07:19.92587+08:00","Action":"run","Package":"freshplate/server/internal/api","Test":"TestREG002_PWD001_SEC002_SEC003_StrictJSON/invalid_utf8"}
+{"Time":"2026-10-19T02:07:19.925872+08:00","Action":"output","Package":"freshplate/server/internal/api","Test":"TestREG002_PWD001_SEC002_SEC003_StrictJSON/invalid_utf8","Output":"=== RUN   TestREG002_PWD001_SEC002_SEC003_StrictJSON/invalid_utf8\n"}
+{"Time":"2026-10-19T02:07:19.926059+08:00","Action":"output","Package":"freshplate/server/internal/api","Test":"TestREG002_PWD001_SEC002_SEC003_StrictJSON/invalid_utf8","Output":"--- PASS: TestREG002_PWD001_SEC002_SEC003_StrictJSON/invalid_utf8 (0.00s)\n"}
+{"Time":"2026-10-19T02:07:19.926069+08:00","Action":"pass","Package":"freshplate/server/internal/api","Test":"TestREG002_PWD001_SEC002_SEC003_StrictJSON/invalid_utf8","Elapsed":0}
+{"Time":"2026-10-19T02:07:19.926074+08:00","Action":"run","Package":"freshplate/server/internal/api","Test":"TestREG002_PWD001_SEC002_SEC003_StrictJSON/oversize"}
+{"Time":"2026-10-19T02:07:19.926086+08:00","Action":"output","Package":"freshplate/server/internal/api","Test":"TestREG002_PWD001_SEC002_SEC003_StrictJSON/oversize","Output":"=== RUN   TestREG002_PWD001_SEC002_SEC003_StrictJSON/oversize\n"}
+{"Time":"2026-10-19T02:07:19.926212+08:00","Action":"output","Package":"freshplate/server/internal/api","Test":"TestREG002_PWD001_SEC002_SEC003_StrictJSON/oversize","Output":"--- PASS: TestREG002_PWD001_SEC002_SEC003_StrictJSON/oversize (0.00s)\n"}
+{"Time":"2026-10-19T02:07:19.926221+08:00","Action":"pass","Package":"freshplate/server/internal/api","Test":"TestREG002_PWD001_SEC002_SEC003_StrictJSON/oversize","Elapsed":0}
+{"Time":"2026-10-19T02:07:19.926224+08:00","Action":"run","Package":"freshplate/server/internal/api","Test":"TestREG002_PWD001_SEC002_SEC003_StrictJSON/plain"}
+{"Time":"2026-10-19T02:07:19.926227+08:00","Action":"output","Package":"freshplate/server/internal/api","Test":"TestREG002_PWD001_SEC002_SEC003_StrictJSON/plain","Output":"=== RUN   TestREG002_PWD001_SEC002_SEC003_StrictJSON/plain\n"}
+{"Time":"2026-10-19T02:07:19.926422+08:00","Action":"output","Package":"freshplate/server/internal/api","Test":"TestREG002_PWD001_SEC002_SEC003_StrictJSON/plain","Output":"--- PASS: TestREG002_PWD001_SEC002_SEC003_StrictJSON/plain (0.00s)\n"}
+{"Time":"2026-10-19T02:07:19.926431+08:00","Action":"pass","Package":"freshplate/server/internal/api","Test":"TestREG002_PWD001_SEC002_SEC003_StrictJSON/plain","Elapsed":0}
+{"Time":"2026-10-19T02:07:19.926437+08:00","Action":"run","Package":"freshplate/server/internal/api","Test":"TestREG002_PWD001_SEC002_SEC003_StrictJSON/missing_type"}
+{"Time":"2026-10-19T02:07:19.926439+08:00","Action":"output","Package":"freshplate/server/internal/api","Test":"TestREG002_PWD001_SEC002_SEC003_StrictJSON/missing_type","Output":"=== RUN   TestREG002_PWD001_SEC002_SEC003_StrictJSON/missing_type\n"}
+{"Time":"2026-10-19T02:07:19.926635+08:00","Action":"output","Package":"freshplate/server/internal/api","Test":"TestREG002_PWD001_SEC002_SEC003_StrictJSON/missing_type","Output":"--- PASS: TestREG002_PWD001_SEC002_SEC003_StrictJSON/missing_type (0.00s)\n"}
+{"Time":"2026-10-19T02:07:19.926648+08:00","Action":"pass","Package":"freshplate/server/internal/api","Test":"TestREG002_PWD001_SEC002_SEC003_StrictJSON/missing_type","Elapsed":0}
+{"Time":"2026-10-19T02:07:20.269523+08:00","Action":"output","Package":"freshplate/server/internal/api","Test":"TestREG002_PWD001_SEC002_SEC003_StrictJSON","Output":"--- PASS: TestREG002_PWD001_SEC002_SEC003_StrictJSON (0.75s)\n"}
+{"Time":"2026-10-19T02:07:20.26969+08:00","Action":"pass","Package":"freshplate/server/internal/api","Test":"TestREG002_PWD001_SEC002_SEC003_StrictJSON","Elapsed":0.75}
+{"Time":"2026-10-19T02:07:20.269703+08:00","Action":"run","Package":"freshplate/server/internal/api","Test":"TestCSRF001_CSRF002_CSRF003_CSRF005_SEC001"}
+{"Time":"2026-10-19T02:07:20.269707+08:00","Action":"output","Package":"freshplate/server/internal/api","Test":"TestCSRF001_CSRF002_CSRF003_CSRF005_SEC001","Output":"=== RUN   TestCSRF001_CSRF002_CSRF003_CSRF005_SEC001\n"}
+{"Time":"2026-10-19T02:07:21.82155+08:00","Action":"output","Package":"freshplate/server/internal/api","Test":"TestCSRF001_CSRF002_CSRF003_CSRF005_SEC001","Output":"--- PASS: TestCSRF001_CSRF002_CSRF003_CSRF005_SEC001 (1.55s)\n"}
+{"Time":"2026-10-19T02:07:21.821577+08:00","Action":"pass","Package":"freshplate/server/internal/api","Test":"TestCSRF001_CSRF002_CSRF003_CSRF005_SEC001","Elapsed":1.55}
+{"Time":"2026-10-19T02:07:21.821599+08:00","Action":"run","Package":"freshplate/server/internal/api","Test":"TestID001_PREF001_PREF002_ISO001_ACL001"}
+{"Time":"2026-10-19T02:07:21.821618+08:00","Action":"output","Package":"freshplate/server/internal/api","Test":"TestID001_PREF001_PREF002_ISO001_ACL001","Output":"=== RUN   TestID001_PREF001_PREF002_ISO001_ACL001\n"}
+{"Time":"2026-10-19T02:07:22.669157+08:00","Action":"output","Package":"freshplate/server/internal/store","Test":"TestDB003BusyMapsAndRecovers","Output":"--- PASS: TestDB003BusyMapsAndRecovers (5.09s)\n"}
+{"Time":"2026-10-19T02:07:22.669185+08:00","Action":"pass","Package":"freshplate/server/internal/store","Test":"TestDB003BusyMapsAndRecovers","Elapsed":5.09}
+{"Time":"2026-10-19T02:07:22.669193+08:00","Action":"output","Package":"freshplate/server/internal/store","Output":"PASS\n"}
+{"Time":"2026-10-19T02:07:23.667675+08:00","Action":"output","Package":"freshplate/server/internal/api","Test":"TestID001_PREF001_PREF002_ISO001_ACL001","Output":"--- PASS: TestID001_PREF001_PREF002_ISO001_ACL001 (1.85s)\n"}
+{"Time":"2026-10-19T02:07:23.667704+08:00","Action":"pass","Package":"freshplate/server/internal/api","Test":"TestID001_PREF001_PREF002_ISO001_ACL001","Elapsed":1.85}
+{"Time":"2026-10-19T02:07:23.667712+08:00","Action":"run","Package":"freshplate/server/internal/api","Test":"TestADM001_ADM002_SES005_PasswordGate"}
+{"Time":"2026-10-19T02:07:23.667717+08:00","Action":"output","Package":"freshplate/server/internal/api","Test":"TestADM001_ADM002_SES005_PasswordGate","Output":"=== RUN   TestADM001_ADM002_SES005_PasswordGate\n"}
+{"Time":"2026-10-19T02:07:23.681844+08:00","Action":"output","Package":"freshplate/server/internal/store","Output":"ok  \tfreshplate/server/internal/store\t10.378s\n"}
+{"Time":"2026-10-19T02:07:23.681927+08:00","Action":"pass","Package":"freshplate/server/internal/store","Elapsed":10.378}
+{"Time":"2026-10-19T02:07:28.533896+08:00","Action":"output","Package":"freshplate/server/internal/api","Test":"TestADM001_ADM002_SES005_PasswordGate","Output":"--- PASS: TestADM001_ADM002_SES005_PasswordGate (4.87s)\n"}
+{"Time":"2026-10-19T02:07:28.53398+08:00","Action":"pass","Package":"freshplate/server/internal/api","Test":"TestADM001_ADM002_SES005_PasswordGate","Elapsed":4.87}
+{"Time":"2026-10-19T02:07:28.533996+08:00","Action":"run","Package":"freshplate/server/internal/api","Test":"TestSES001_SES002_FixedExpiry"}
+{"Time":"2026-10-19T02:07:28.534004+08:00","Action":"output","Package":"freshplate/server/internal/api","Test":"TestSES001_SES002_FixedExpiry","Output":"=== RUN   TestSES001_SES002_FixedExpiry\n"}
+{"Time":"2026-10-19T02:07:30.016472+08:00","Action":"output","Package":"freshplate/server/internal/api","Test":"TestSES001_SES002_FixedExpiry","Output":"--- PASS: TestSES001_SES002_FixedExpiry (1.48s)\n"}
+{"Time":"2026-10-19T02:07:30.016523+08:00","Action":"pass","Package":"freshplate/server/internal/api","Test":"TestSES001_SES002_FixedExpiry","Elapsed":1.48}
+{"Time":"2026-10-19T02:07:30.016615+08:00","Action":"run","Package":"freshplate/server/internal/api","Test":"TestLIMIT001_LIMIT002_SEC004_NoTrustedXFF"}
+{"Time":"2026-10-19T02:07:30.016629+08:00","Action":"output","Package":"freshplate/server/internal/api","Test":"TestLIMIT001_LIMIT002_SEC004_NoTrustedXFF","Output":"=== RUN   TestLIMIT001_LIMIT002_SEC004_NoTrustedXFF\n"}
+{"Time":"2026-10-19T02:07:30.016639+08:00","Action":"run","Package":"freshplate/server/internal/api","Test":"TestLIMIT001_LIMIT002_SEC004_NoTrustedXFF/register"}
+{"Time":"2026-10-19T02:07:30.016646+08:00","Action":"output","Package":"freshplate/server/internal/api","Test":"TestLIMIT001_LIMIT002_SEC004_NoTrustedXFF/register","Output":"=== RUN   TestLIMIT001_LIMIT002_SEC004_NoTrustedXFF/register\n"}
+{"Time":"2026-10-19T02:07:30.436197+08:00","Action":"output","Package":"freshplate/server/internal/api","Test":"TestLIMIT001_LIMIT002_SEC004_NoTrustedXFF/register","Output":"--- PASS: TestLIMIT001_LIMIT002_SEC004_NoTrustedXFF/register (0.42s)\n"}
+{"Time":"2026-10-19T02:07:30.436223+08:00","Action":"pass","Package":"freshplate/server/internal/api","Test":"TestLIMIT001_LIMIT002_SEC004_NoTrustedXFF/register","Elapsed":0.42}
+{"Time":"2026-10-19T02:07:30.436252+08:00","Action":"run","Package":"freshplate/server/internal/api","Test":"TestLIMIT001_LIMIT002_SEC004_NoTrustedXFF/normalized_username"}
+{"Time":"2026-10-19T02:07:30.436258+08:00","Action":"output","Package":"freshplate/server/internal/api","Test":"TestLIMIT001_LIMIT002_SEC004_NoTrustedXFF/normalized_username","Output":"=== RUN   TestLIMIT001_LIMIT002_SEC004_NoTrustedXFF/normalized_username\n"}
+{"Time":"2026-10-19T02:07:30.879954+08:00","Action":"output","Package":"freshplate/server/internal/api","Test":"TestLIMIT001_LIMIT002_SEC004_NoTrustedXFF/normalized_username","Output":"--- PASS: TestLIMIT001_LIMIT002_SEC004_NoTrustedXFF/normalized_username (0.44s)\n"}
+{"Time":"2026-10-19T02:07:30.879994+08:00","Action":"pass","Package":"freshplate/server/internal/api","Test":"TestLIMIT001_LIMIT002_SEC004_NoTrustedXFF/normalized_username","Elapsed":0.44}
+{"Time":"2026-10-19T02:07:30.880009+08:00","Action":"run","Package":"freshplate/server/internal/api","Test":"TestLIMIT001_LIMIT002_SEC004_NoTrustedXFF/login_ip"}
+{"Time":"2026-10-19T02:07:30.880015+08:00","Action":"output","Package":"freshplate/server/internal/api","Test":"TestLIMIT001_LIMIT002_SEC004_NoTrustedXFF/login_ip","Output":"=== RUN   TestLIMIT001_LIMIT002_SEC004_NoTrustedXFF/login_ip\n"}
+{"Time":"2026-10-19T02:07:31.360001+08:00","Action":"output","Package":"freshplate/server/internal/api","Test":"TestLIMIT001_LIMIT002_SEC004_NoTrustedXFF/login_ip","Output":"--- PASS: TestLIMIT001_LIMIT002_SEC004_NoTrustedXFF/login_ip (0.48s)\n"}
+{"Time":"2026-10-19T02:07:31.360029+08:00","Action":"pass","Package":"freshplate/server/internal/api","Test":"TestLIMIT001_LIMIT002_SEC004_NoTrustedXFF/login_ip","Elapsed":0.48}
+{"Time":"2026-10-19T02:07:31.360065+08:00","Action":"run","Package":"freshplate/server/internal/api","Test":"TestLIMIT001_LIMIT002_SEC004_NoTrustedXFF/password_user"}
+{"Time":"2026-10-19T02:07:31.360079+08:00","Action":"output","Package":"freshplate/server/internal/api","Test":"TestLIMIT001_LIMIT002_SEC004_NoTrustedXFF/password_user","Output":"=== RUN   TestLIMIT001_LIMIT002_SEC004_NoTrustedXFF/password_user\n"}
+{"Time":"2026-10-19T02:07:32.486283+08:00","Action":"output","Package":"freshplate/server/internal/api","Test":"TestLIMIT001_LIMIT002_SEC004_NoTrustedXFF/password_user","Output":"--- PASS: TestLIMIT001_LIMIT002_SEC004_NoTrustedXFF/password_user (1.13s)\n"}
+{"Time":"2026-10-19T02:07:32.486503+08:00","Action":"pass","Package":"freshplate/server/internal/api","Test":"TestLIMIT001_LIMIT002_SEC004_NoTrustedXFF/password_user","Elapsed":1.13}
+{"Time":"2026-10-19T02:07:32.486734+08:00","Action":"output","Package":"freshplate/server/internal/api","Test":"TestLIMIT001_LIMIT002_SEC004_NoTrustedXFF","Output":"--- PASS: TestLIMIT001_LIMIT002_SEC004_NoTrustedXFF (2.47s)\n"}
+{"Time":"2026-10-19T02:07:32.486816+08:00","Action":"pass","Package":"freshplate/server/internal/api","Test":"TestLIMIT001_LIMIT002_SEC004_NoTrustedXFF","Elapsed":2.47}
+{"Time":"2026-10-19T02:07:32.486828+08:00","Action":"run","Package":"freshplate/server/internal/api","Test":"TestCSRF002_AllWriteEntrypointsRejectBeforeMutation"}
+{"Time":"2026-10-19T02:07:32.486846+08:00","Action":"output","Package":"freshplate/server/internal/api","Test":"TestCSRF002_AllWriteEntrypointsRejectBeforeMutation","Output":"=== RUN   TestCSRF002_AllWriteEntrypointsRejectBeforeMutation\n"}
+{"Time":"2026-10-19T02:07:33.667086+08:00","Action":"output","Package":"freshplate/server/internal/api","Test":"TestCSRF002_AllWriteEntrypointsRejectBeforeMutation","Output":"--- PASS: TestCSRF002_AllWriteEntrypointsRejectBeforeMutation (1.18s)\n"}
+{"Time":"2026-10-19T02:07:33.66711+08:00","Action":"pass","Package":"freshplate/server/internal/api","Test":"TestCSRF002_AllWriteEntrypointsRejectBeforeMutation","Elapsed":1.18}
+{"Time":"2026-10-19T02:07:33.667125+08:00","Action":"run","Package":"freshplate/server/internal/api","Test":"TestSES003_DEP002_SecureCookieAndSecurityHeaders"}
+{"Time":"2026-10-19T02:07:33.667145+08:00","Action":"output","Package":"freshplate/server/internal/api","Test":"TestSES003_DEP002_SecureCookieAndSecurityHeaders","Output":"=== RUN   TestSES003_DEP002_SecureCookieAndSecurityHeaders\n"}
+{"Time":"2026-10-19T02:07:34.762194+08:00","Action":"output","Package":"freshplate/server/internal/api","Test":"TestSES003_DEP002_SecureCookieAndSecurityHeaders","Output":"--- PASS: TestSES003_DEP002_SecureCookieAndSecurityHeaders (1.09s)\n"}
+{"Time":"2026-10-19T02:07:34.762246+08:00","Action":"pass","Package":"freshplate/server/internal/api","Test":"TestSES003_DEP002_SecureCookieAndSecurityHeaders","Elapsed":1.09}
+{"Time":"2026-10-19T02:07:34.76226+08:00","Action":"run","Package":"freshplate/server/internal/api","Test":"TestSEC003_InternalFailuresStayPrivate"}
+{"Time":"2026-10-19T02:07:34.762265+08:00","Action":"output","Package":"freshplate/server/internal/api","Test":"TestSEC003_InternalFailuresStayPrivate","Output":"=== RUN   TestSEC003_InternalFailuresStayPrivate\n"}
+{"Time":"2026-10-19T02:07:35.785547+08:00","Action":"output","Package":"freshplate/server/internal/api","Test":"TestSEC003_InternalFailuresStayPrivate","Output":"2026/10/19 02:07:35 request failed (*errors.errorString)\n"}
+{"Time":"2026-10-19T02:07:35.786155+08:00","Action":"output","Package":"freshplate/server/internal/api","Test":"TestSEC003_InternalFailuresStayPrivate","Output":"--- PASS: TestSEC003_InternalFailuresStayPrivate (1.02s)\n"}
+{"Time":"2026-10-19T02:07:35.786167+08:00","Action":"pass","Package":"freshplate/server/internal/api","Test":"TestSEC003_InternalFailuresStayPrivate","Elapsed":1.02}
+{"Time":"2026-10-19T02:07:35.786175+08:00","Action":"run","Package":"freshplate/server/internal/api","Test":"TestSEC003_SES004_BodyLimitAndLogoutPreserveSession"}
+{"Time":"2026-10-19T02:07:35.786179+08:00","Action":"output","Package":"freshplate/server/internal/api","Test":"TestSEC003_SES004_BodyLimitAndLogoutPreserveSession","Output":"=== RUN   TestSEC003_SES004_BodyLimitAndLogoutPreserveSession\n"}
+{"Time":"2026-10-19T02:07:36.935605+08:00","Action":"output","Package":"freshplate/server/internal/api","Test":"TestSEC003_SES004_BodyLimitAndLogoutPreserveSession","Output":"--- PASS: TestSEC003_SES004_BodyLimitAndLogoutPreserveSession (1.15s)\n"}
+{"Time":"2026-10-19T02:07:36.935629+08:00","Action":"pass","Package":"freshplate/server/internal/api","Test":"TestSEC003_SES004_BodyLimitAndLogoutPreserveSession","Elapsed":1.15}
+{"Time":"2026-10-19T02:07:36.935637+08:00","Action":"output","Package":"freshplate/server/internal/api","Output":"PASS\n"}
+{"Time":"2026-10-19T02:07:38.031219+08:00","Action":"output","Package":"freshplate/server/internal/api","Output":"ok  \tfreshplate/server/internal/api\t24.727s\n"}
+{"Time":"2026-10-19T02:07:38.03127+08:00","Action":"pass","Package":"freshplate/server/internal/api","Elapsed":24.728}

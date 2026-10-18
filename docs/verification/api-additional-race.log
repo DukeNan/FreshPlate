@@ -1,0 +1,10 @@
+=== RUN   TestLIMIT002_PasswordIPThreshold
+--- PASS: TestLIMIT002_PasswordIPThreshold (5.83s)
+=== RUN   TestSEC004_TrustedProxyControlsClientIP
+=== RUN   TestSEC004_TrustedProxyControlsClientIP/trusted_false
+=== RUN   TestSEC004_TrustedProxyControlsClientIP/trusted_true
+--- PASS: TestSEC004_TrustedProxyControlsClientIP (1.15s)
+    --- PASS: TestSEC004_TrustedProxyControlsClientIP/trusted_false (0.58s)
+    --- PASS: TestSEC004_TrustedProxyControlsClientIP/trusted_true (0.57s)
+PASS
+ok  	freshplate/server/internal/api	9.352s

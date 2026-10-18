@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "FreshPlate 用户模块 · 待实现设计架构",
+    "locale": "zh-CN",
+    "output": ".archify/architecture-user-module-20261019-014414/user-module.html",
+    "quality_profile": "showcase"
+  },
+  "components": [
+    {"id":"browser-ui","type":"frontend","label":"Vue 页面与身份状态","sublabel":"views / api.js / auth.js / router.js","pos":[40,80],"size":[260,84]},
+    {"id":"request-gates","type":"security","label":"Gin 请求安全与权限门禁","sublabel":"Origin / CSRF / Session / 角色 / 改密","pos":[440,80],"size":[260,84]},
+    {"id":"api-handlers","type":"backend","label":"API 接口层","sublabel":"auth.go / users.go / preferences.go","pos":[840,80],"size":[260,84]},
+    {"id":"account-rules","type":"backend","label":"logic 账号与设置规则","sublabel":"密码 / 会话 / 设置 / 最后管理员","pos":[840,370],"size":[260,84]},
+    {"id":"transaction-store","type":"backend","label":"store 专用连接与事务","sublabel":"BEGIN IMMEDIATE / 原子审计 / 回滚","pos":[440,370],"size":[260,84]},
+    {"id":"sqlite-state","type":"database","label":"SQLite 持久化","sublabel":"用户 / Session / 设置 / 审计 / 迁移","pos":[40,370],"size":[260,84]},
+    {"id":"local-admin","type":"external","label":"停服本地 admin CLI","sublabel":"init / recover-password · 隐藏密码输入","pos":[840,660],"size":[260,84]},
+    {"id":"future-business","type":"backend","label":"后续业务模块（未实现）","sublabel":"库存 / 食谱 / 推荐 / 记餐 / 营养","pos":[440,660],"size":[260,84]}
+  ],
+  "connections": [
+    {"id":"ui-http","from":"browser-ui","to":"request-gates","label":"同站点 /api","variant":"emphasis"},
+    {"id":"gates-api","from":"request-gates","to":"api-handlers","label":"安全检查通过","variant":"security"},
+    {"id":"api-logic","from":"api-handlers","to":"account-rules","label":"可信身份与参数"},
+    {"id":"rules-store","from":"account-rules","to":"transaction-store","label":"事务内复核并写入"},
+    {"id":"store-sqlite","from":"transaction-store","to":"sqlite-state","label":"SQL / 单连接 WAL"},
+    {"id":"cli-rules","from":"local-admin","to":"account-rules","label":"停服复用账号规则"},
+    {"id":"business-store","from":"future-business","to":"transaction-store","label":"后续：按 userID 隔离","variant":"dashed"}
+  ],
+  "cards": [
+    {"dot":"cyan","title":"设计依据与实施状态","items":["依据 docs/USER_MODULE_TECHNICAL_DESIGN.md 第 4～9 节推导；仓库尚无功能代码。","本图供架构评审，不代表接口、数据库或安全能力已交付；待评审通过后实施。"]},
+    {"dot":"rose","title":"HTTP 信任边界","items":["写请求先校验精确 Origin、CSRF、JSON 与请求体；限流先于密码哈希。","Session 每次读取当前状态、auth_version 和角色；强制改密只允许白名单接口。","受保护写入检查 X-Expected-User-ID；业务归属只来自有效 Session。","前端路由守卫用于交互；权限最终由服务端判断。"]},
+    {"dot":"emerald","title":"规则、事务与持久化","items":["Argon2id 在写事务外计算；事务内再次复核密码、版本、操作者和最后管理员约束。","注册同时创建默认设置；账号变更、会话撤销和审计同事务提交。","SQLite 单进程单连接、逐连接外键和忙等待；失败独立上下文回滚，回滚失败丢弃连接。","CLI 要求先停服务，直接复用 logic/store；不经过 HTTP Origin/CSRF，不提供网络旁路。"]},
+    {"dot":"amber","title":"前端与后续业务边界","items":["身份和 CSRF 只保存在内存；跨标签页身份复核失败时暂停提交，丢弃旧身份响应和表单。","后续业务查询必须同时约束资源 ID 与 userID；管理员也没有直接读取他人私有数据的接口。","推荐和烹饪确认将复用饮食限制规则；设置读取失败不得退化为无限制。","库存、食谱、推荐、记餐、营养和烹饪幂等尚待相应模块实施与验收。"]}
+  ]
+}

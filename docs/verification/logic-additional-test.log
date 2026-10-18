@@ -1,0 +1,4 @@
+=== RUN   TestREG001NormalizeUsername
+--- PASS: TestREG001NormalizeUsername (0.00s)
+PASS
+ok  	freshplate/server/internal/logic	0.646s

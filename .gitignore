@@ -1,0 +1,10 @@
+/data/
+.env
+.env.*
+!.env.example
+web/node_modules/
+web/dist/
+web/coverage/
+server/coverage.out
+.DS_Store
+__pycache__/
