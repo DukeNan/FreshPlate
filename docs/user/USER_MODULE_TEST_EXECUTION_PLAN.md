@@ -28,7 +28,7 @@
 
 ## 3. 正式执行命令
 
-在仓库根目录创建 `docs/verification/` 保存脱敏结果。以下 Go 命令在 `server/` 执行；若 goenv 已安装1.26.4，可使用正常 go，否则本机统一前缀：
+在仓库根目录创建 `docs/user/verification/` 保存脱敏结果。以下 Go 命令在 `server/` 执行；若 goenv 已安装1.26.4，可使用正常 go，否则本机统一前缀：
 
 ```sh
 env -u GOROOT GOPROXY=https://goproxy.cn GOTOOLCHAIN=go1.26.4 /Users/dukenan/.goenv/versions/1.26.0/bin/go version

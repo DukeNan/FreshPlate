@@ -312,7 +312,7 @@ web/src/
   api.js
   auth.js                          # 当前身份及初始化状态
   router.js
-docs/USER_MODULE_TECHNICAL_DESIGN.md
+docs/user/USER_MODULE_TECHNICAL_DESIGN.md
 ```
 
 测试放在被测 Go 文件旁边，目录和文件随实现创建。复用总方案的数据库连接与迁移入口。

@@ -27,7 +27,7 @@
     {"id":"business-store","from":"future-business","to":"transaction-store","label":"后续：按 userID 隔离","variant":"dashed"}
   ],
   "cards": [
-    {"dot":"cyan","title":"设计依据与实施状态","items":["依据 docs/USER_MODULE_TECHNICAL_DESIGN.md 第 4～9 节推导；仓库尚无功能代码。","本图供架构评审，不代表接口、数据库或安全能力已交付；待评审通过后实施。"]},
+    {"dot":"cyan","title":"设计依据与实施状态","items":["依据 docs/user/USER_MODULE_TECHNICAL_DESIGN.md 第 4～9 节推导；仓库尚无功能代码。","本图供架构评审，不代表接口、数据库或安全能力已交付；待评审通过后实施。"]},
     {"dot":"rose","title":"HTTP 信任边界","items":["写请求先校验精确 Origin、CSRF、JSON 与请求体；限流先于密码哈希。","Session 每次读取当前状态、auth_version 和角色；强制改密只允许白名单接口。","受保护写入检查 X-Expected-User-ID；业务归属只来自有效 Session。","前端路由守卫用于交互；权限最终由服务端判断。"]},
     {"dot":"emerald","title":"规则、事务与持久化","items":["Argon2id 在写事务外计算；事务内再次复核密码、版本、操作者和最后管理员约束。","注册同时创建默认设置；账号变更、会话撤销和审计同事务提交。","SQLite 单进程单连接、逐连接外键和忙等待；失败独立上下文回滚，回滚失败丢弃连接。","CLI 要求先停服务，直接复用 logic/store；不经过 HTTP Origin/CSRF，不提供网络旁路。"]},
     {"dot":"amber","title":"前端与后续业务边界","items":["身份和 CSRF 只保存在内存；跨标签页身份复核失败时暂停提交，丢弃旧身份响应和表单。","后续业务查询必须同时约束资源 ID 与 userID；管理员也没有直接读取他人私有数据的接口。","推荐和烹饪确认将复用饮食限制规则；设置读取失败不得退化为无限制。","库存、食谱、推荐、记餐、营养和烹饪幂等尚待相应模块实施与验收。"]}

@@ -2,8 +2,8 @@
 
 | 项目 | 内容 |
 | --- | --- |
-| 复审对象 | `docs/USER_MODULE_TECHNICAL_DESIGN.md`（第二轮更新后版本） |
-| 上轮报告 | `docs/USER_MODULE_TECHNICAL_DESIGN_REVIEW_ROUND2.md` |
+| 复审对象 | `docs/user/USER_MODULE_TECHNICAL_DESIGN.md`（第二轮更新后版本） |
+| 上轮报告 | `docs/user/USER_MODULE_TECHNICAL_DESIGN_REVIEW_ROUND2.md` |
 | 复审日期 | 2026-10-19 |
 | 复审结论 | 上轮 3 项 P1、4 项 P2 全部闭环；无新的阻断问题，方案可以进入实现。剩余事项均为 P2/P3 的契约澄清与运维细节 |
 

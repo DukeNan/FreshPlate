@@ -9,14 +9,14 @@
 | 交付 | 位置 |
 | --- | --- |
 | 架构说明与范围 | [USER_MODULE_ARCHITECTURE.md](USER_MODULE_ARCHITECTURE.md) |
-| 架构图 | [交互HTML](../.archify/architecture-user-module-20261019-014414/user-module.html)（方案阶段图，不能作为功能验证证据） |
+| 架构图 | [交互HTML](../../.archify/architecture-user-module-20261019-014414/user-module.html)（方案阶段图，不能作为功能验证证据） |
 | 用例与追踪 | [USER_MODULE_TEST_CASES.md](USER_MODULE_TEST_CASES.md) |
 | 后端与CLI/部署测试方案 | [USER_MODULE_TEST_EXECUTION_PLAN.md](USER_MODULE_TEST_EXECUTION_PLAN.md) |
 | 真实浏览器测试方案与过程 | [USER_MODULE_BROWSER_TEST_PLAN.md](USER_MODULE_BROWSER_TEST_PLAN.md) |
-| 启动、配置与运维 | [README.md](../README.md)、[配置示例](../.env.example) |
-| 后端与迁移 | [server/](../server/) |
-| Vue与前端测试 | [web/](../web/) |
-| 可重复CLI/进程演练 | [verify_cli.py](../scripts/verify_cli.py) |
+| 启动、配置与运维 | [README.md](../../README.md)、[配置示例](../../.env.example) |
+| 后端与迁移 | [server/](../../server/) |
+| Vue与前端测试 | [web/](../../web/) |
+| 可重复CLI/进程演练 | [verify_cli.py](../../scripts/verify_cli.py) |
 | 脱敏验证证据 | [verification/](verification/) |
 | 最终源码摘要 | [source-manifest.json](verification/source-manifest.json)（未提交工作区快照，不伪称HEAD已包含本轮实现） |
 

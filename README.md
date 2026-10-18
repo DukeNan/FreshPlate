@@ -12,7 +12,7 @@ FreshPlate（鲜食记）是饮食管理项目，当前已完成用户模块，�
 
 ## 技术架构与目录
 
-前端使用 Vue 3、Vue Router 和 Vite，后端使用 Go、Gin 和 SQLite。浏览器通过 `/api` 访问接口，API 层负责请求与安全校验，logic 层处理业务规则，store 层负责数据库读写。本地管理员 CLI 复用业务与存储层。完整架构图与说明见 [用户模块架构](docs/USER_MODULE_ARCHITECTURE.md)。
+前端使用 Vue 3、Vue Router 和 Vite，后端使用 Go、Gin 和 SQLite。浏览器通过 `/api` 访问接口，API 层负责请求与安全校验，logic 层处理业务规则，store 层负责数据库读写。本地管理员 CLI 复用业务与存储层。完整架构图与说明见 [用户模块架构](docs/user/USER_MODULE_ARCHITECTURE.md)。
 
 ```text
 FreshPlate/
@@ -26,7 +26,8 @@ FreshPlate/
 │       └── runtime/      # 配置、密钥、进程锁与静态文件
 ├── web/                  # Vue 页面、单元测试与浏览器测试
 ├── scripts/              # CLI 与进程验证脚本
-├── docs/                 # 设计、测试方案、总结与验证记录
+├── docs/                 # 按模块组织文档
+│   └── user/             # 用户模块设计、测试方案、总结与验证记录
 ├── data/                 # 运行时数据库和密钥，自动创建且不入库
 └── .env.example          # 环境变量示例
 ```
@@ -104,7 +105,7 @@ HTTPS部署需显式 `--origin https://你的域名 --secure`，仅信任明确�
 
 ## 接口约定
 
-接口契约见 [技术设计](docs/USER_MODULE_TECHNICAL_DESIGN.md)。补充登录后只读 `GET /api/foods`，响应 `{"data":[{"id":1,"name":"鸡蛋","status":"active"}]}`，用于忌口选择；已有停用忌口在设置的excluded_foods中继续返回。迁移内置12种基础食材名称，不含营养或过敏原判定数据，不可用于营养计算。
+接口契约见 [技术设计](docs/user/USER_MODULE_TECHNICAL_DESIGN.md)。补充登录后只读 `GET /api/foods`，响应 `{"data":[{"id":1,"name":"鸡蛋","status":"active"}]}`，用于忌口选择；已有停用忌口在设置的excluded_foods中继续返回。迁移内置12种基础食材名称，不含营养或过敏原判定数据，不可用于营养计算。
 
 受保护写请求必须传有效Origin、CSRF和表单加载时的 `X-Expected-User-ID`；该值不用于认证。身份变化丢弃旧表单，CSRF失败只刷新/核对后提示重提，不自动重放。登录返回新csrf_token；退出/改密后取得匿名令牌。所有API响应no-store；管理列表按id DESC、offset分页。PATCH同时变更role/status只写一条user_updated审计，单字段使用role_changed/status_changed；未改变值成功返回且不写审计。
 
@@ -137,7 +138,7 @@ npm run test:e2e
 
 端到端测试会构建前端并启动真实 Go 服务，使用临时数据库、Python 3 终端夹具初始化管理员，结束后清理服务与临时数据。需保持 `127.0.0.1:18080` 空闲；测试不会复用已有服务。Go 默认从 PATH 查找，也可通过 `FRESHPLATE_E2E_GO` 指定可执行文件。旧系统若无法运行 Playwright 默认浏览器，可用 `FRESHPLATE_E2E_CHROMIUM` 指定兼容的 Chromium 完整路径，其结果仅代表该浏览器版本。
 
-结果写入 `web/playwright-report/results.json`，失败截图与 trace 位于 `web/test-results/`。详细步骤见 [浏览器测试方案](docs/USER_MODULE_BROWSER_TEST_PLAN.md)。
+结果写入 `web/playwright-report/results.json`，失败截图与 trace 位于 `web/test-results/`。详细步骤见 [浏览器测试方案](docs/user/USER_MODULE_BROWSER_TEST_PLAN.md)。
 
 CLI 和进程行为验证，从仓库根目录执行：
 
@@ -151,12 +152,12 @@ python3 scripts/verify_cli.py --go go
 
 | 文档 | 内容 |
 | --- | --- |
-| [用户模块技术设计](docs/USER_MODULE_TECHNICAL_DESIGN.md) | 需求、数据模型与接口契约 |
-| [用户模块架构](docs/USER_MODULE_ARCHITECTURE.md) | 已确认的架构图、职责与实现范围 |
-| [测试用例](docs/USER_MODULE_TEST_CASES.md) | 按需求组织的验证场景 |
-| [测试实施方案](docs/USER_MODULE_TEST_EXECUTION_PLAN.md) | 测试环境、实施步骤及验收条件 |
-| [浏览器测试方案](docs/USER_MODULE_BROWSER_TEST_PLAN.md) | 页面交互与端到端验证 |
-| [实现与测试总结](docs/USER_MODULE_IMPLEMENTATION_SUMMARY.md) | 实现结果、验证记录及已知限制 |
-| [验证记录](docs/verification/) | 测试日志与结果文件 |
+| [用户模块技术设计](docs/user/USER_MODULE_TECHNICAL_DESIGN.md) | 需求、数据模型与接口契约 |
+| [用户模块架构](docs/user/USER_MODULE_ARCHITECTURE.md) | 已确认的架构图、职责与实现范围 |
+| [测试用例](docs/user/USER_MODULE_TEST_CASES.md) | 按需求组织的验证场景 |
+| [测试实施方案](docs/user/USER_MODULE_TEST_EXECUTION_PLAN.md) | 测试环境、实施步骤及验收条件 |
+| [浏览器测试方案](docs/user/USER_MODULE_BROWSER_TEST_PLAN.md) | 页面交互与端到端验证 |
+| [实现与测试总结](docs/user/USER_MODULE_IMPLEMENTATION_SUMMARY.md) | 实现结果、验证记录及已知限制 |
+| [验证记录](docs/user/verification/) | 测试日志与结果文件 |
 
 当前交付范围为用户模块。历史测试结果和执行环境以总结文档为准；未实现的业务、旧库迁移、真实 HTTPS/代理部署仍需后续验收。浏览器验证使用兼容的 Chromium，尚未覆盖 Safari、Firefox 和实体移动设备。

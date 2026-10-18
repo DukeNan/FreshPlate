@@ -6,7 +6,7 @@ FreshPlate 根据冰箱现有食材推荐可做的菜，记录实际饮食，并
 
 首版包含：用户注册登录、普通用户与管理员权限、用户数据隔离、个人设置、食材库存、保质期提醒、个人饮食限制、食谱推荐、烹饪确认、饮食记录、每日和每周营养概览。
 
-用户模块的数据库、接口、安全规则、前端、迁移和验收详见 [用户模块完整实现技术方案](docs/USER_MODULE_TECHNICAL_DESIGN.md)。
+用户模块的数据库、接口、安全规则、前端、迁移和验收详见 [用户模块完整实现技术方案](docs/user/USER_MODULE_TECHNICAL_DESIGN.md)。
 
 首版采用公开注册，能够访问站点的人可创建普通账号；公共食谱由管理员独立维护，不提供用户投稿或私有食谱转公共流程。
 
@@ -44,7 +44,8 @@ FreshPlate/
 │       └── api.js                  # 请求后端接口
 ├── data/                           # 本地 SQLite 文件与密钥，不提交
 ├── docs/
-│   └── USER_MODULE_TECHNICAL_DESIGN.md
+│   └── user/
+│       └── USER_MODULE_TECHNICAL_DESIGN.md
 ├── IMPLEMENTATION_PLAN.md
 └── README.md
 ```

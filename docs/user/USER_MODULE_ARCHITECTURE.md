@@ -2,7 +2,7 @@
 
 日期：2026-10-19。架构已由用户确认；下文保留方案阶段基线与实施边界。后续实现及验证见 [本轮总结](USER_MODULE_IMPLEMENTATION_SUMMARY.md)。
 
-依据：[技术设计](USER_MODULE_TECHNICAL_DESIGN.md)、[总实施方案](../IMPLEMENTATION_PLAN.md)、[第三轮评审](USER_MODULE_TECHNICAL_DESIGN_REVIEW_ROUND3.md)。
+依据：[技术设计](USER_MODULE_TECHNICAL_DESIGN.md)、[总实施方案](../../IMPLEMENTATION_PLAN.md)、[第三轮评审](USER_MODULE_TECHNICAL_DESIGN_REVIEW_ROUND3.md)。
 
 ## 1. 实际基线
 
@@ -27,7 +27,7 @@ flowchart TD
     Future[后续库存 / 食谱 / 推荐 / 记餐 / 营养] -.->|接入同一权限、归属与饮食限制规则| Rules
 ```
 
-[交互 HTML 架构图](../.archify/architecture-user-module-20261019-014414/user-module.html)及[自动检查回执](../.archify/architecture-user-module-20261019-014414/user-module.finalize-summary.json)由同轮独立产物提供。架构类型为 architecture；validate、deliver、strict check 和 browser-check 均通过，零诊断；未做截图或人工视觉验收。这些仅是图产物检查，不是应用功能测试。图中的后续业务节点表示接入要求，不表示已经实现这些功能。
+[交互 HTML 架构图](../../.archify/architecture-user-module-20261019-014414/user-module.html)及[自动检查回执](../../.archify/architecture-user-module-20261019-014414/user-module.finalize-summary.json)由同轮独立产物提供。架构类型为 architecture；validate、deliver、strict check 和 browser-check 均通过，零诊断；未做截图或人工视觉验收。这些仅是图产物检查，不是应用功能测试。图中的后续业务节点表示接入要求，不表示已经实现这些功能。
 
 ## 3. 每层职责及调用边界
 

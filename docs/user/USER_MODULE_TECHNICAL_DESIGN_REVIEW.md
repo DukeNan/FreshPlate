@@ -2,7 +2,7 @@
 
 | 项目 | 内容 |
 | --- | --- |
-| 评审对象 | `docs/USER_MODULE_TECHNICAL_DESIGN.md` |
+| 评审对象 | `docs/user/USER_MODULE_TECHNICAL_DESIGN.md` |
 | 对照文档 | `IMPLEMENTATION_PLAN.md` |
 | 评审日期 | 2026-10-19 |
 | 评审范围 | 架构、数据模型、认证与授权、请求安全、API 契约、迁移与测试 |
@@ -59,7 +59,7 @@
 
 **现状**
 
-`docs/USER_MODULE_TECHNICAL_DESIGN.md:120-132` 规定：
+`docs/user/USER_MODULE_TECHNICAL_DESIGN.md:120-132` 规定：
 
 - CSRF Cookie 为 host-only、`HttpOnly`、`SameSite=Lax`、`Path=/`；
 - 前端把 token 保存在内存，写请求通过 `X-CSRF-Token` 发送；

@@ -2,8 +2,8 @@
 
 | 项目 | 内容 |
 | --- | --- |
-| 复审对象 | `docs/USER_MODULE_TECHNICAL_DESIGN.md`（更新后版本） |
-| 上轮报告 | `docs/USER_MODULE_TECHNICAL_DESIGN_REVIEW.md` |
+| 复审对象 | `docs/user/USER_MODULE_TECHNICAL_DESIGN.md`（更新后版本） |
+| 上轮报告 | `docs/user/USER_MODULE_TECHNICAL_DESIGN_REVIEW.md` |
 | 复审日期 | 2026-10-19 |
 | 复审范围 | 上轮 P0/P1/P2 闭环情况、更新引入的新问题、可实施性 |
 | 复审结论 | 上轮 5 项 P0 全部闭环；方案可进入实现，但需先明确 3 项新发现（CSRF 认证上下文判定、管理员重置的威胁模型、多标签页身份切换机制） |
