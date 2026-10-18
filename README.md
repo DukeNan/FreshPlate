@@ -4,7 +4,7 @@ FreshPlate（鲜食记）是饮食管理项目，当前已完成用户模块，�
 
 ## 当前功能
 
-- 注册、登录、退出及持久化 Cookie 会话；密码使用 Argon2id 哈希，会话固定有效期为 7 天。
+- 注册、登录、退出；access JWT 有效期 15 分钟，HttpOnly refresh Cookie 固定有效期 7 天，支持轮换、重放检测及即时撤销。密码使用 Argon2id 哈希。
 - 个人饮食设置及忌口食材选择，内置 12 种基础食材名称。
 - 普通用户与管理员权限；管理员可查询用户、调整角色和状态、重置密码及查询审计日志。
 - 本地管理员初始化和密码恢复；重置或恢复密码后要求用户修改密码。
@@ -72,13 +72,14 @@ npm run dev --prefix web
 
 ## 配置与维护
 
-配置示例见 [.env.example](.env.example)。服务读取导出的环境变量或命令行参数，命令行参数优先，**不自动加载 `.env`**。在server目录运行时，默认数据库 `../data/freshplate.db`、CSRF密钥 `../data/csrf.key`、静态目录 `../web/dist`。路径相对当前工作目录解析；自定义部署应使用绝对路径。
+配置示例见 [.env.example](.env.example)。服务读取导出的环境变量或命令行参数，命令行参数优先，**不自动加载 `.env`**。在server目录运行时，默认数据库 `../data/freshplate.db`、CSRF密钥 `../data/csrf.key`、JWT密钥 `../data/jwt.key`、静态目录 `../web/dist`。路径相对当前工作目录解析；自定义部署应使用绝对路径。
 
 | Flag | 环境变量 | 默认值 |
 | --- | --- | --- |
 | --addr | FRESHPLATE_ADDR | 127.0.0.1:8080 |
 | --db | FRESHPLATE_DB | ../data/freshplate.db |
 | --key | FRESHPLATE_KEY | ../data/csrf.key |
+| --jwt-key | FRESHPLATE_JWT_KEY | ../data/jwt.key |
 | --origin | FRESHPLATE_ORIGIN | http://127.0.0.1:8080 |
 | --secure | FRESHPLATE_SECURE | false |
 | --web | FRESHPLATE_WEB | ../web/dist |
@@ -97,19 +98,19 @@ go run ./cmd/admin recover-password --username admin
 
 恢复撤销该账号全部Session并要求登录后改密。不能用该命令启用disabled账号或提升普通用户。普通账号由网页管理员重置，临时密码通过独立渠道交付；系统不自动发消息。管理员能通过重置接管账号，首版信任管理员，审计只能追责。
 
-数据库、密钥和本地环境文件已忽略；密钥仅首次新部署生成32字节、0600，后续复用。已有数据库缺密钥时拒绝启动，先恢复原密钥备份；不能直接重启让系统静默换密钥。确实无备份时须由运维明确决定轮换：停服、完成一致性数据库备份、在受限目录生成新的32字节0600密钥并替换，再启动并验证登录及CSRF；原CSRF全部失效，Session本身不因密钥轮换失效。该恢复是人工运维操作，不提供HTTP旁路。
+JWT 升级及密钥预置步骤见 [JWT 认证说明](docs/user/JWT_AUTHENTICATION.md)。数据库、密钥和本地环境文件已忽略；密钥仅首次新部署生成32字节、0600，后续复用。已有数据库缺密钥时拒绝启动，先恢复原密钥备份；不能直接重启让系统静默换密钥。确实无备份时须由运维明确决定轮换：停服、完成一致性数据库备份、在受限目录生成新的32字节0600密钥并替换，再启动并验证登录及CSRF；原CSRF全部失效，Session本身不因密钥轮换失效。该恢复是人工运维操作，不提供HTTP旁路。
 
 迁移仅支持当前新库结构，启动监听前完成迁移及校验；未知旧库、版本超前、脚本校验不符或结构不完整均拒绝启动。没有旧单人数据库格式，当前不提供猜测式导入。不要自动降级删除用户列。
 
-备份须先停服，使用SQLite一致性备份（例如sqlite3的`.backup`）并同时备份CSRF密钥，运行integrity_check和foreign_key_check；不能只复制主库遗漏WAL。恢复时配套恢复数据库、密钥及对应程序版本，确认权限0600、外键与行数再启动。旧备份不能自动保留备份后新增数据；不要把该说明当作已演练的旧库迁移。
+备份须先停服，使用SQLite一致性备份（例如sqlite3的`.backup`）并同时备份CSRF与JWT密钥，运行integrity_check和foreign_key_check；不能只复制主库遗漏WAL。恢复时配套恢复数据库、密钥及对应程序版本，确认权限0600、外键与行数再启动。旧备份不能自动保留备份后新增数据；不要把该说明当作已演练的旧库迁移。
 
 HTTPS部署需显式 `--origin https://你的域名 --secure`，仅信任明确列出的反向代理IP/CIDR。最终HTML应由当前服务或设置同等CSP/禁止嵌入/nosniff/Referrer-Policy的代理提供，HTTPS入口设置HSTS `max-age=31536000`；真实代理、TLS和公网开放需另做部署验收。不要同时暴露绕过HTTPS的明文入口。
 
 ## 接口约定
 
-接口契约见 [技术设计](docs/user/USER_MODULE_TECHNICAL_DESIGN.md)。补充登录后只读 `GET /api/foods`，响应 `{"data":[{"id":1,"name":"鸡蛋","status":"active"}]}`，用于忌口选择；已有停用忌口在设置的excluded_foods中继续返回。迁移内置12种基础食材名称，不含营养或过敏原判定数据，不可用于营养计算。
+当前认证契约见 [JWT 认证说明](docs/user/JWT_AUTHENTICATION.md)，原始业务接口设计见 [技术设计](docs/user/USER_MODULE_TECHNICAL_DESIGN.md)。补充登录后只读 `GET /api/foods`，响应 `{"data":[{"id":1,"name":"鸡蛋","status":"active"}]}`，用于忌口选择；已有停用忌口在设置的excluded_foods中继续返回。迁移内置12种基础食材名称，不含营养或过敏原判定数据，不可用于营养计算。
 
-受保护写请求必须传有效Origin、CSRF和表单加载时的 `X-Expected-User-ID`；该值不用于认证。身份变化丢弃旧表单，CSRF失败只刷新/核对后提示重提，不自动重放。登录返回新csrf_token；退出/改密后取得匿名令牌。所有API响应no-store；管理列表按id DESC、offset分页。PATCH同时变更role/status只写一条user_updated审计，单字段使用role_changed/status_changed；未改变值成功返回且不写审计。
+受保护请求使用 `Authorization: Bearer <access_token>`，写请求另传表单加载时的 `X-Expected-User-ID`。登录、刷新、注销保留 Origin/CSRF；普通业务写接口无需 CSRF。access JWT 仅保存在内存，过期时通过 refresh Cookie 刷新，原身份未变化时最多重试一次；身份变化丢弃旧表单。Web Locks 和 BroadcastChannel 协调多标签页刷新。登录返回新 csrf_token；退出/改密后取得匿名令牌。所有API响应no-store；管理列表按id DESC、offset分页。PATCH同时变更role/status只写一条user_updated审计，单字段使用role_changed/status_changed；未改变值成功返回且不写审计。
 
 ## 测试验证
 
@@ -155,7 +156,7 @@ python3 scripts/verify_cli.py --go go
 | 文档 | 内容 |
 | --- | --- |
 | [用户模块 API 使用说明](docs/user/API.md) | 认证、错误处理、接口索引与 curl 示例 |
-| [自动生成的 Swagger 规范](server/docs/swagger.yaml) | Gin handler 注释生成的 13 个接口，可导入 API 工具 |
+| [自动生成的 Swagger 规范](server/docs/swagger.yaml) | Gin handler 注释生成的 14 个接口，可导入 API 工具 |
 | [用户模块技术设计](docs/user/USER_MODULE_TECHNICAL_DESIGN.md) | 需求、数据模型与接口契约 |
 | [用户模块架构](docs/user/USER_MODULE_ARCHITECTURE.md) | 已确认的架构图、职责与实现范围 |
 | [测试用例](docs/user/USER_MODULE_TEST_CASES.md) | 按需求组织的验证场景 |

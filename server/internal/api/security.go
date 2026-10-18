@@ -6,7 +6,7 @@ import (
 	"crypto/sha256"
 	"crypto/subtle"
 	"encoding/base64"
-	"encoding/hex"
+
 	"fmt"
 	"net/http"
 	"strconv"
@@ -20,9 +20,9 @@ import (
 
 func (a *API) sessionName() string {
 	if a.config.Secure {
-		return "__Host-freshplate_session"
+		return "__Host-freshplate_refresh"
 	}
-	return "freshplate_session"
+	return "freshplate_refresh"
 }
 func (a *API) csrfName() string {
 	if a.config.Secure {
@@ -40,7 +40,7 @@ func session(c *gin.Context) *store.Session {
 }
 func (a *API) binding(c *gin.Context) string {
 	if s := session(c); s != nil {
-		return "session:" + hex.EncodeToString(s.TokenHash)
+		return "session:" + fmt.Sprintf("%x", s.TokenHash)
 	}
 	return "anonymous"
 }
@@ -88,32 +88,40 @@ func (a *API) context(c *gin.Context) {
 		return
 	}
 	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, 64<<10)
-	raw, err := c.Cookie(a.sessionName())
-	if err == nil {
-		hash, e := logic.HashToken(raw)
-		if e == nil {
-			s, e := a.service.Store.ResolveSession(c.Request.Context(), hash, a.service.Now())
-			if e != nil {
-				a.fail(c, e)
-				return
+	path := c.Request.URL.Path
+	cookieAuth := path == "/api/auth/csrf" || path == "/api/auth/login" || path == "/api/auth/refresh" || path == "/api/auth/logout"
+	if cookieAuth {
+		if raw, e := c.Cookie(a.sessionName()); e == nil {
+			hash, e := logic.HashToken(raw)
+			if e == nil {
+				s, e := a.service.Store.ResolveRefresh(c.Request.Context(), hash, a.service.Now())
+				if e != nil {
+					a.fail(c, e)
+					return
+				}
+				if s != nil {
+					c.Set("session", s)
+				}
 			}
-			if s != nil {
-				c.Set("session", s)
-			} else {
-				a.cookie(c, a.sessionName(), "", -1)
-			}
-		} else {
-			a.cookie(c, a.sessionName(), "", -1)
+		}
+	} else if auth := c.GetHeader("Authorization"); auth != "" {
+		if len(c.Request.Header.Values("Authorization")) != 1 || !strings.HasPrefix(auth, "Bearer ") || strings.ContainsAny(strings.TrimPrefix(auth, "Bearer "), " \t\r\n") {
+			a.fail(c, store.E(401, "AUTH_REQUIRED", "请重新登录"))
+			return
+		}
+		if e := a.authenticate(c, strings.TrimPrefix(auth, "Bearer ")); e != nil {
+			a.fail(c, e)
+			return
 		}
 	}
 	if s := session(c); s != nil && s.User.MustChangePassword {
 		p := c.Request.URL.Path
-		if p != "/api/me" && p != "/api/auth/csrf" && p != "/api/auth/logout" && p != "/api/me/password" {
+		if p != "/api/me" && p != "/api/auth/csrf" && p != "/api/auth/logout" && p != "/api/auth/refresh" && p != "/api/auth/login" && p != "/api/me/password" {
 			a.fail(c, store.E(403, "PASSWORD_CHANGE_REQUIRED", "请先修改密码"))
 			return
 		}
 	}
-	if c.Request.Method != "GET" && c.Request.Method != "HEAD" && c.Request.Method != "OPTIONS" {
+	if c.Request.Method == "POST" && (path == "/api/auth/login" || path == "/api/auth/refresh" || path == "/api/auth/logout") {
 		values := c.Request.Header.Values("Origin")
 		origin := ""
 		if len(values) == 1 {

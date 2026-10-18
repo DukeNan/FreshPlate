@@ -76,10 +76,10 @@ def main():
     env.setdefault('GOPROXY', 'https://goproxy.cn')
     with tempfile.TemporaryDirectory(prefix='freshplate-cli-') as tmp:
         tmp = Path(tmp)
-        admin, server, db, key = (tmp / p for p in ('admin', 'server', 'db', 'key'))
+        admin, server, db, key, jwt_key = (tmp / p for p in ('admin', 'server', 'db', 'key', 'jwt.key'))
         for cmd, destination in (('admin', admin), ('server', server)):
             subprocess.run([args.go, 'build', '-o', str(destination), f'./cmd/{cmd}'], cwd=ROOT/'server', env=env, check=True)
-        common = ['--db', str(db), '--key', str(key)]
+        common = ['--db', str(db), '--key', str(key), '--jwt-key', str(jwt_key)]
         first, temporary, final = 'Initial-fixture-2026', 'Temporary-fixture-2026', 'Final-fixture-2026'
         hidden_command([str(admin), 'init', '--username', ' Admin_One ', *common], first, env)
         hidden_command([str(admin), 'init', '--username', 'other_admin', *common], first, env, expected=1)
@@ -95,8 +95,11 @@ def main():
         jar = http.cookiejar.CookieJar()
         client = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(jar))
 
+        access_token = None
+
         def request(method, path, body=None, csrf=None, user=None):
             headers = {'Origin': origin}
+            if access_token: headers['Authorization'] = 'Bearer ' + access_token
             if csrf: headers['X-CSRF-Token'] = csrf
             if user: headers['X-Expected-User-ID'] = str(user)
             if body is not None: headers['Content-Type'] = 'application/json'
@@ -134,19 +137,23 @@ def main():
             try:
                 status, payload = request('POST', '/auth/login', {'username':'admin_one','password':first}, csrf())
                 assert status == 200
+                access_token = payload['data']['access_token']
                 user = payload['data']['user']['id']
                 for duplicate in (server_args, [str(admin), 'recover-password', '--username', 'admin_one', *common]):
                     result = subprocess.run(duplicate, stdin=subprocess.DEVNULL, capture_output=True, env=env, timeout=15)
                     assert result.returncode != 0 and b'database in use' in result.stderr
                 status, _ = request('GET', '/me')
                 assert status == 200
-                for file in (db, key, Path(str(db)+'-wal'), Path(str(db)+'-shm')):
+                for file in (db, key, jwt_key, Path(str(db)+'-wal'), Path(str(db)+'-shm')):
                     assert file.stat().st_mode & 0o777 == 0o600, 'database/key permissions too broad'
                 print('DEP-001/SEC-004: real server/CLI lock exclusion, DB/key/WAL/SHM permissions passed')
             finally: stop(process)
             process = start()
             try:
-                assert request('GET', '/me')[0] == 200, 'valid persisted session lost on restart'
+                assert request('GET', '/me')[0] == 200, 'valid access JWT/session lost on restart'
+                status, payload = request('POST', '/auth/refresh', csrf=csrf())
+                assert status == 200
+                access_token = payload['data']['access_token']
                 print('SES-002: valid browser session survived a real service restart')
             finally: stop(process)
             hidden_command([str(admin), 'recover-password', '--username', ' ADMIN_ONE ', *common], temporary, env)
@@ -156,6 +163,7 @@ def main():
                 assert request('POST', '/auth/login', {'username':'admin_one','password':first}, csrf())[0] == 401
                 status, payload = request('POST', '/auth/login', {'username':'admin_one','password':temporary}, csrf())
                 assert status == 200 and payload['data']['user']['must_change_password']
+                access_token = payload['data']['access_token']
                 user = payload['data']['user']['id']
                 token = payload['data']['csrf_token']
                 assert request('GET', '/me/preferences')[0] == 403
@@ -165,6 +173,12 @@ def main():
                 assert status == 200 and not payload['data']['user']['must_change_password']
                 print('CLI-002/ADM-002/SES-005: recovery revoked sessions, forced change and new login passed')
             finally: stop(process)
+        jwt_key.unlink()
+        result = subprocess.run(server_args, capture_output=True, env=env, timeout=15)
+        assert result.returncode != 0 and b'JWT key missing' in result.stderr and not jwt_key.exists()
+        print('JWT-KEY: missing existing-deployment JWT key rejected without regeneration')
+        jwt_key.write_bytes(os.urandom(32))
+        jwt_key.chmod(0o600)
         key.unlink()
         result = subprocess.run(server_args, capture_output=True, env=env, timeout=15)
         assert result.returncode != 0 and b'CSRF key missing' in result.stderr and not key.exists()

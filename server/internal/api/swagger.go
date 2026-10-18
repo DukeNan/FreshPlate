@@ -12,8 +12,11 @@ import (
 
 // @title FreshPlate 用户模块 API
 // @version 0.1.0
-// @description 使用 HttpOnly Cookie 会话，不使用 Bearer Token。会话固定有效期 7 天，CSRF 有效期 24 小时。写请求须有匹配的 Origin、CSRF Cookie 与 X-CSRF-Token；受保护写请求另需表单加载时的 X-Expected-User-ID。登录后改用响应中的 csrf_token。强制改密期间只允许 /me、/auth/csrf、/auth/logout、/me/password。成功返回 data（204 无响应体），失败返回 error.code/message。JSON 最多 64 KiB，拒绝未知字段。所有 API 响应 no-store。不启用 CORS。密码任务最多同时两个，超限 429。Swagger 2.0 不支持 cookie 类型的 security scheme，Cookie 由同源浏览器自动维护。
+// @description 使用 Authorization: Bearer access JWT（15 分钟），每次查会话确保即时撤销。refresh HttpOnly Cookie 固定有效 7 天，轮换并检测重放。登录、刷新和注销要求精确 Origin 与 CSRF；其他写接口无需 CSRF，受保护写接口仍要求 X-Expected-User-ID。JWT 仅保存前端内存。强制改密期间允许 /me、/auth/csrf、/auth/refresh、/auth/logout、/me/password。成功返回 data，失败返回 error.code/message。所有 API no-store，不启用 CORS。
 // @BasePath /api
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
 func swaggerHeaders(c *gin.Context) {
 	// Swagger UI's embedded SVG uses a style attribute; scripts and stylesheets remain same-origin.
 	c.Header("Content-Security-Policy", appRuntime.CSP+"; style-src-attr 'unsafe-inline'")

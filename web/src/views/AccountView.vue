@@ -3,7 +3,7 @@ import { ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { api } from '../api.js'
 import { passwordError } from '../validation.js'
-import { auth, acceptLogin, checkIdentity } from '../auth.js'
+import { auth, login, checkIdentity } from '../auth.js'
 import { router } from '../router.js'
 import { safeReturn } from '../navigation.js'
 const props = defineProps({ register: Boolean })
@@ -16,10 +16,10 @@ async function submit() {
   try {
     if (!await checkIdentity()) throw new Error('身份检查失败，请重试。')
     if (auth.user) { await router.replace('/settings'); return }
-    const result = await api(props.register ? '/auth/register' : '/auth/login', { method: 'POST', body: { username: username.value, password: password.value } })
+    const result = props.register ? await api('/auth/register', { method: 'POST', body: { username: username.value, password: password.value } }) : await login({ username: username.value, password: password.value })
     password.value = ''
     if (props.register) { message.value = '注册成功，请登录。'; await router.push({ path: '/login', query: { registered: '1' } }) }
-    else { acceptLogin(result); await router.replace(result.user.must_change_password ? '/password' : safeReturn(route.query.return)) }
+    else { await router.replace(result.user.must_change_password ? '/password' : safeReturn(route.query.return)) }
   } catch (e) { error.value = e.message } finally { busy.value = false }
 }
 </script>

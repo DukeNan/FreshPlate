@@ -32,6 +32,10 @@ func run() error {
 	if err != nil {
 		return err
 	}
+	cfg.JWTKey, err = appRuntime.JWTKey(cfg.Database, cfg.JWTKeyFile)
+	if err != nil {
+		return err
+	}
 	st, err := store.Open(cfg.Database)
 	if err != nil {
 		return err

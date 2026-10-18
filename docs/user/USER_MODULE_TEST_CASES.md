@@ -1,5 +1,7 @@
 # 用户模块测试用例与需求追踪
 
+> 认证已迁移到 JWT；本文保留早期设计和验证背景。当前认证契约、迁移与测试范围以 [JWT 认证说明](JWT_AUTHENTICATION.md) 和 [API 文档](API.md) 为准。
+
 后续执行记录见 [实施与测试总结](USER_MODULE_IMPLEMENTATION_SUMMARY.md) 及 [正式实施方案](USER_MODULE_TEST_EXECUTION_PLAN.md)；下文“未执行”为用例编写时的初始状态。
 
 ## 1. 基线、范围与执行状态

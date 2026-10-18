@@ -48,8 +48,11 @@ type csrfResult struct {
 	Token string `json:"token"`
 }
 type loginResult struct {
-	User      store.User `json:"user"`
-	CSRFToken string     `json:"csrf_token"`
+	AccessToken string     `json:"access_token"`
+	TokenType   string     `json:"token_type"`
+	ExpiresIn   int        `json:"expires_in"`
+	User        store.User `json:"user"`
+	CSRFToken   string     `json:"csrf_token"`
 }
 type userPage struct {
 	Items []store.User `json:"items"`

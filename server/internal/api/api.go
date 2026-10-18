@@ -29,6 +29,9 @@ func New(s *logic.Service, cfg appRuntime.Config, key []byte) (*gin.Engine, erro
 	if err := cfg.Validate(); err != nil {
 		return nil, err
 	}
+	if len(cfg.JWTKey) != 32 {
+		return nil, errors.New("JWT key must contain 32 bytes")
+	}
 	if len(key) != 32 {
 		return nil, errors.New("CSRF key must contain 32 bytes")
 	}
@@ -49,6 +52,7 @@ func New(s *logic.Service, cfg appRuntime.Config, key []byte) (*gin.Engine, erro
 	api.POST("/auth/register", a.register)
 	api.POST("/auth/login", a.login)
 	api.POST("/auth/logout", a.logout)
+	api.POST("/auth/refresh", a.refresh)
 	me := api.Group("", a.protected(false))
 	me.GET("/me", a.me)
 	me.PUT("/me/password", a.password)
@@ -156,8 +160,6 @@ func (a *API) csrf(c *gin.Context) {
 // @Tags 认证
 // @Produce json
 // @Accept json
-// @Param Origin header string true "必须逐字匹配服务配置 Origin；浏览器自动设置，不允许跨站请求。"
-// @Param X-CSRF-Token header string true "GET /auth/csrf 返回的 token；登录后改用登录响应中的 csrf_token，须与 CSRF Cookie 一致。"
 // @Param body body credentials true "请求参数；拒绝未知字段，最多 64 KiB"
 // @Success 201 {object} response{data=store.User}
 // @Failure 400 {object} errorResponse "INVALID_ARGUMENT：参数、请求体或页面身份断言无效；INVALID_CURRENT_PASSWORD：当前密码错误。"
@@ -187,7 +189,7 @@ func (a *API) register(c *gin.Context) {
 
 // login godoc
 // @Summary 登录
-// @Description 设置固定有效期 7 天的会话 Cookie，并轮换 CSRF；后续写请求使用此处 csrf_token。每 IP 每 15 分钟 30 次，每规范化用户名每 15 分钟 10 次。must_change_password=true 时仅可访问 /me、/auth/csrf、/auth/logout、/me/password。
+// @Description 返回有效 15 分钟的 access JWT，设置固定有效期 7 天的 refresh Cookie；登录、刷新与注销使用 csrf_token。每 IP 每 15 分钟 30 次，每规范化用户名每 15 分钟 10 次。must_change_password=true 时仅可访问 /me、/auth/csrf、/auth/logout、/me/password。
 // @Tags 认证
 // @Produce json
 // @Accept json
@@ -226,7 +228,7 @@ func (a *API) login(c *gin.Context) {
 		a.fail(c, err)
 		return
 	}
-	c.Set("session", &store.Session{User: u, TokenHash: hash})
+	c.Set("session", &store.Session{User: u, TokenHash: hash, ExpiresAt: a.service.Now().Add(7 * 24 * time.Hour)})
 	token, err := a.issueCSRF(c)
 	if err != nil {
 		_ = a.service.Store.DeleteSession(c.Request.Context(), hash)
@@ -234,7 +236,13 @@ func (a *API) login(c *gin.Context) {
 		return
 	}
 	a.cookie(c, a.sessionName(), raw, 604800)
-	success(c, 200, loginResult{User: u, CSRFToken: token})
+	access, expires, err := a.access(session(c))
+	if err != nil {
+		_ = a.service.Store.DeleteSession(c.Request.Context(), hash)
+		a.fail(c, err)
+		return
+	}
+	success(c, 200, loginResult{User: u, CSRFToken: token, AccessToken: access, TokenType: "Bearer", ExpiresIn: expires})
 }
 
 // logout godoc
@@ -277,8 +285,6 @@ func (a *API) logout(c *gin.Context) {
 // @Tags 个人账户
 // @Produce json
 // @Accept json
-// @Param Origin header string true "必须逐字匹配服务配置 Origin；浏览器自动设置，不允许跨站请求。"
-// @Param X-CSRF-Token header string true "GET /auth/csrf 返回的 token；登录后改用登录响应中的 csrf_token，须与 CSRF Cookie 一致。"
 // @Param X-Expected-User-ID header string true "表单加载时登录用户 ID 的十进制规范字符串（int64 范围），不是目标用户 ID；不作为认证凭据。身份不一致返回 409。"
 // @Param body body passwordChange true "请求参数；拒绝未知字段，最多 64 KiB"
 // @Success 204 "成功，无响应体"
@@ -291,6 +297,7 @@ func (a *API) logout(c *gin.Context) {
 // @Failure 500 {object} errorResponse "INTERNAL_ERROR：服务内部错误。"
 // @Failure 503 {object} errorResponse "DATABASE_BUSY：数据库忙，本次写入未保存，请稍后手动重提。"
 // @Header 429 {integer} Retry-After "建议等待的秒数"
+// @Security BearerAuth
 // @Router /me/password [put]
 func (a *API) password(c *gin.Context) {
 	s := session(c)
@@ -325,6 +332,7 @@ func (a *API) password(c *gin.Context) {
 // @Failure 403 {object} errorResponse "CSRF_INVALID：Origin/CSRF 无效；FORBIDDEN：权限不足；PASSWORD_CHANGE_REQUIRED：必须先修改密码。"
 // @Failure 500 {object} errorResponse "INTERNAL_ERROR：服务内部错误。"
 // @Failure 503 {object} errorResponse "DATABASE_BUSY：数据库忙，本次写入未保存，请稍后手动重提。"
+// @Security BearerAuth
 // @Router /me/preferences [get]
 func (a *API) getPreferences(c *gin.Context) {
 	p, err := a.service.Store.Preferences(c.Request.Context(), session(c).User.ID)
@@ -341,8 +349,6 @@ func (a *API) getPreferences(c *gin.Context) {
 // @Tags 个人账户
 // @Produce json
 // @Accept json
-// @Param Origin header string true "必须逐字匹配服务配置 Origin；浏览器自动设置，不允许跨站请求。"
-// @Param X-CSRF-Token header string true "GET /auth/csrf 返回的 token；登录后改用登录响应中的 csrf_token，须与 CSRF Cookie 一致。"
 // @Param X-Expected-User-ID header string true "表单加载时登录用户 ID 的十进制规范字符串（int64 范围），不是目标用户 ID；不作为认证凭据。身份不一致返回 409。"
 // @Param body body preferencesInput true "请求参数；拒绝未知字段，最多 64 KiB"
 // @Success 200 {object} response{data=store.Preferences}
@@ -353,6 +359,7 @@ func (a *API) getPreferences(c *gin.Context) {
 // @Failure 415 {object} errorResponse "UNSUPPORTED_MEDIA_TYPE：请求体必须使用 application/json。"
 // @Failure 500 {object} errorResponse "INTERNAL_ERROR：服务内部错误。"
 // @Failure 503 {object} errorResponse "DATABASE_BUSY：数据库忙，本次写入未保存，请稍后手动重提。"
+// @Security BearerAuth
 // @Router /me/preferences [put]
 func (a *API) putPreferences(c *gin.Context) {
 	var p preferencesInput
@@ -392,6 +399,7 @@ func (a *API) putPreferences(c *gin.Context) {
 // @Failure 403 {object} errorResponse "CSRF_INVALID：Origin/CSRF 无效；FORBIDDEN：权限不足；PASSWORD_CHANGE_REQUIRED：必须先修改密码。"
 // @Failure 500 {object} errorResponse "INTERNAL_ERROR：服务内部错误。"
 // @Failure 503 {object} errorResponse "DATABASE_BUSY：数据库忙，本次写入未保存，请稍后手动重提。"
+// @Security BearerAuth
 // @Router /foods [get]
 func (a *API) foods(c *gin.Context) {
 	items, err := a.service.Store.Foods(c.Request.Context())
@@ -413,5 +421,6 @@ func (a *API) foods(c *gin.Context) {
 // @Failure 403 {object} errorResponse "CSRF_INVALID：Origin/CSRF 无效；FORBIDDEN：权限不足；PASSWORD_CHANGE_REQUIRED：必须先修改密码。"
 // @Failure 500 {object} errorResponse "INTERNAL_ERROR：服务内部错误。"
 // @Failure 503 {object} errorResponse "DATABASE_BUSY：数据库忙，本次写入未保存，请稍后手动重提。"
+// @Security BearerAuth
 // @Router /me [get]
 func (a *API) me(c *gin.Context) { success(c, 200, session(c).User) }

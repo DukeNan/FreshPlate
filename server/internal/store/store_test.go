@@ -331,7 +331,7 @@ func TestCLIAndPagination(t *testing.T) {
 	}
 }
 func TestMIG001And002RefuseUnknownOrCorruptHistory(t *testing.T) {
-	for _, mutation := range []string{"UPDATE schema_migrations SET version=2", "UPDATE schema_migrations SET checksum='changed'", "DELETE FROM schema_migrations", "DROP TABLE user_preferences", "ALTER TABLE users DROP COLUMN updated_at", "DROP INDEX sessions_user"} {
+	for _, mutation := range []string{"UPDATE schema_migrations SET version=99 WHERE version=2", "UPDATE schema_migrations SET checksum='changed'", "DELETE FROM schema_migrations", "DROP TABLE user_preferences", "ALTER TABLE users DROP COLUMN updated_at", "DROP INDEX sessions_user"} {
 		t.Run(mutation, func(t *testing.T) {
 			path := filepath.Join(t.TempDir(), "test.db")
 			s, err := Open(path)

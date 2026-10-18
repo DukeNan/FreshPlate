@@ -12,9 +12,12 @@ async function login(page, username, secret = password) {
   await page.goto('/login')
   await page.getByLabel('用户名', { exact: true }).fill(username)
   await page.getByLabel('密码', { exact: true }).fill(secret)
+  const response = page.waitForResponse(result => result.url().endsWith('/api/auth/login') && result.request().method() === 'POST')
   await page.getByRole('button', { name: '登录', exact: true }).click()
+  const result = (await (await response).json()).data
   await expect(page.getByRole('heading', { name: '个人饮食设置' })).toBeVisible()
   await expect(page.getByRole('button', { name: '保存完整设置' })).toBeEnabled()
+  return result
 }
 async function logout(page) {
   await page.getByRole('button', { name: /^退出 / }).click()
@@ -22,7 +25,7 @@ async function logout(page) {
 }
 test('REG-001 SES-001/004/005 FE-001/002 · real registration, settings, reload, password and logout', async ({ page, context }) => {
   await register(page, 'browser_alice')
-  await login(page, 'browser_alice')
+  const originalLogin = await login(page, 'browser_alice')
   await page.getByLabel('乳', { exact: true }).check()
   await page.getByLabel('花生', { exact: true }).last().check()
   await page.getByLabel('能量（千卡）').fill('2100')
@@ -41,7 +44,7 @@ test('REG-001 SES-001/004/005 FE-001/002 · real registration, settings, reload,
   await expect(page).toHaveURL(/\/login/)
   const oldContext = await context.browser().newContext()
   await oldContext.addCookies(oldSession)
-  const stale = await oldContext.request.get('http://127.0.0.1:18080/api/me')
+  const stale = await oldContext.request.get('http://127.0.0.1:18080/api/me', { headers: { Authorization: `Bearer ${originalLogin.access_token}` } })
   expect(stale.status()).toBe(401)
   await oldContext.close()
   await page.getByLabel('用户名', { exact: true }).fill('browser_alice')
@@ -63,12 +66,12 @@ test('FE-003/004 ID-001 · another tab switching accounts clears the old unsaved
   await expect(other.getByRole('button', { name: /^退出 / })).toBeVisible()
   await logout(other)
   await register(other, 'browser_tab_b')
-  await login(other, 'browser_tab_b')
+  const currentLogin = await login(other, 'browser_tab_b')
   await page.bringToFront()
   await expect(page.getByRole('button', { name: '退出 browser_tab_b', exact: true })).toBeVisible()
   await expect(page.getByLabel('能量（千卡）')).toHaveValue('')
   await expect(page.getByRole('button', { name: '保存完整设置' })).toBeEnabled()
-  const saved = await page.request.get('/api/me/preferences')
+  const saved = await page.request.get('/api/me/preferences', { headers: { Authorization: `Bearer ${currentLogin.access_token}` } })
   expect((await saved.json()).data.daily_energy_kcal).toBeNull()
 })
 test('FE-002 · mobile keyboard login and settings remain usable', async ({ page }) => {
@@ -106,9 +109,9 @@ test('SEC-004 FE-005 · final HTML headers, CSP, no inline code and private API 
   await expect(page).toHaveURL(/\/register/)
   expect(await page.evaluate(() => window.__xss)).toBe(false)
   await register(page, 'browser_security')
-  await login(page, 'browser_security')
+  const currentLogin = await login(page, 'browser_security')
   for (const endpoint of ['/api/me', '/api/me/preferences', '/api/auth/csrf']) {
-    const result = await page.request.get(endpoint)
+    const result = await page.request.get(endpoint, { headers: { Authorization: `Bearer ${currentLogin.access_token}` } })
     expect(result.ok()).toBe(true)
     expect(result.headers()['cache-control']).toBe('no-store')
   }
@@ -116,9 +119,9 @@ test('SEC-004 FE-005 · final HTML headers, CSP, no inline code and private API 
     scripts: document.querySelectorAll('script:not([src])').length,
     styles: document.querySelectorAll('style,[style]').length,
     handlers: [...document.querySelectorAll('*')].flatMap(node => [...node.attributes]).filter(attribute => /^on/i.test(attribute.name)).length,
-    storage: { ...localStorage },
+    storageKeys: Object.keys(localStorage).filter(key => key !== 'freshplate-auth-revision'), session: { ...sessionStorage },
   }))
-  expect(inline).toEqual({ scripts: 0, styles: 0, handlers: 0, storage: {} })
+  expect(inline).toEqual({ scripts: 0, styles: 0, handlers: 0, storageKeys: [], session: {} })
   expect(violations).toEqual([])
 })
 test('FE-003 · failed identity recheck pauses all submissions including logout, then retries', async ({ page, context }) => {
@@ -217,4 +220,84 @@ test('ADM-001/002/004 FE-005 · real admin UI controls, audit and mandatory pass
   await page.getByRole('button', { name: '修改并重新登录', exact: true }).click()
   await expect(page).toHaveURL(/\/login/)
   await login(page, 'browser_managed', fixture.finalPassword)
+})
+
+test('JWT · bearer-only writes, refresh rotation, replay revocation and cookie boundaries', async ({ page, context }) => {
+  await register(page, 'browser_jwt')
+  const session = await login(page, 'browser_jwt')
+  expect(session.token_type).toBe('Bearer')
+  expect(session.expires_in).toBeGreaterThan(0)
+  expect(session.expires_in).toBeLessThanOrEqual(900)
+  const claims = JSON.parse(Buffer.from(session.access_token.split('.')[1], 'base64url').toString())
+  expect(claims.sid).toBeTruthy()
+  const cookies = await context.cookies()
+  const refresh = cookies.find(cookie => cookie.name === 'freshplate_refresh')
+  expect(refresh).toMatchObject({ httpOnly: true, sameSite: 'Lax', path: '/' })
+  expect(cookies.some(cookie => cookie.name === 'freshplate_session')).toBe(false)
+  expect((await page.request.get('/api/me')).status()).toBe(401)
+  const headers = { Authorization: `Bearer ${session.access_token}`, 'X-Expected-User-ID': String(session.user.id) }
+  const preferences = await page.request.get('/api/me/preferences', { headers })
+  const body = (await preferences.json()).data
+  delete body.excluded_foods
+  delete body.updated_at
+  const save = await page.request.put('/api/me/preferences', { headers, data: body })
+  expect(save.status()).toBe(200)
+  expect((await page.request.post('/api/auth/refresh')).status()).toBe(403)
+  const bootstrap = await page.request.get('/api/auth/csrf')
+  const csrf = (await bootstrap.json()).data.token
+  const cookieHeaders = { Origin: 'http://127.0.0.1:18080', 'X-CSRF-Token': csrf }
+  const rotated = await page.request.post('/api/auth/refresh', { headers: cookieHeaders })
+  expect(rotated.status()).toBe(200)
+  const next = (await rotated.json()).data
+  expect((await context.cookies()).find(cookie => cookie.name === refresh.name).value).not.toBe(refresh.value)
+  const replayContext = await context.browser().newContext()
+  try {
+    await replayContext.addCookies(cookies)
+    const replay = await replayContext.request.post('http://127.0.0.1:18080/api/auth/refresh', { headers: { ...cookieHeaders, 'X-CSRF-Token': session.csrf_token } })
+    expect(replay.status()).toBe(401)
+    expect((await replay.json()).error.code).toBe('REFRESH_TOKEN_REUSED')
+    for (const token of [session.access_token, next.access_token]) {
+      expect((await page.request.get('/api/me', { headers: { Authorization: `Bearer ${token}` } })).status()).toBe(401)
+    }
+  } finally { await replayContext.close() }
+})
+
+test('JWT · concurrent tab reloads serialize refresh without revoking the shared session', async ({ page, context }) => {
+  await register(page, 'browser_jwt_tabs')
+  await login(page, 'browser_jwt_tabs')
+  const other = await context.newPage()
+  await other.goto('/settings')
+  await expect(other.getByRole('button', { name: '保存完整设置' })).toBeEnabled()
+  const failures = []
+  context.on('response', response => {
+    if (response.url().endsWith('/api/auth/refresh') && response.status() !== 200) failures.push(response.status())
+  })
+  await Promise.all([page.reload(), other.reload()])
+  for (const tab of [page, other]) {
+    await expect(tab.getByRole('button', { name: '退出 browser_jwt_tabs', exact: true })).toBeVisible()
+    await expect(tab.getByRole('button', { name: '保存完整设置' })).toBeEnabled()
+  }
+  expect(failures).toEqual([])
+  await logout(other)
+  await expect(page).toHaveURL(/\/login/)
+})
+
+test('JWT · an expired access response refreshes once and retries the same write', async ({ page }) => {
+  await register(page, 'browser_jwt_expired')
+  await login(page, 'browser_jwt_expired')
+  const writes = []
+  let refreshes = 0
+  page.on('request', request => { if (request.url().endsWith('/api/auth/refresh')) refreshes++ })
+  await page.route('**/api/me/preferences', async route => {
+    if (route.request().method() !== 'PUT') return route.continue()
+    writes.push(route.request().postDataJSON())
+    if (writes.length === 1) return route.fulfill({ status: 401, contentType: 'application/json', body: JSON.stringify({ error: { code: 'ACCESS_TOKEN_EXPIRED', message: 'expired' } }) })
+    await route.continue()
+  })
+  await page.getByLabel('能量（千卡）').fill('2345')
+  await page.getByRole('button', { name: '保存完整设置' }).click()
+  await expect(page.getByRole('status')).toContainText('已保存')
+  expect(refreshes).toBe(1)
+  expect(writes).toHaveLength(2)
+  expect(writes[1]).toEqual(writes[0])
 })

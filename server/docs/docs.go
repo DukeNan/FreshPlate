@@ -17,6 +17,11 @@ const docTemplate = `{
     "paths": {
         "/admin/audit-logs": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "仅管理员可用。仅管理员。按 ID 降序，使用 offset 分页。action 示例：admin_init、admin_recover_password、password_reset、role_changed、status_changed、user_updated；未知 action 返回空列表。",
                 "produces": [
                     "application/json"
@@ -114,6 +119,11 @@ const docTemplate = `{
         },
         "/admin/users": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "仅管理员可用。仅管理员。按 ID 降序，使用 offset 分页；total 为筛选后的总数。",
                 "produces": [
                     "application/json"
@@ -222,6 +232,11 @@ const docTemplate = `{
         },
         "/admin/users/{id}": {
             "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "仅管理员可用。仅管理员。不能修改本人（SELF_ADMIN_CHANGE_FORBIDDEN），不能移除最后一位启用管理员（LAST_ADMIN_REQUIRED）。状态变化撤销目标全部会话；角色变化在后续请求生效。不变值成功返回且不写审计。",
                 "consumes": [
                     "application/json"
@@ -234,20 +249,6 @@ const docTemplate = `{
                 ],
                 "summary": "修改用户角色或状态",
                 "parameters": [
-                    {
-                        "type": "string",
-                        "description": "必须逐字匹配服务配置 Origin；浏览器自动设置，不允许跨站请求。",
-                        "name": "Origin",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "GET /auth/csrf 返回的 token；登录后改用登录响应中的 csrf_token，须与 CSRF Cookie 一致。",
-                        "name": "X-CSRF-Token",
-                        "in": "header",
-                        "required": true
-                    },
                     {
                         "type": "string",
                         "description": "表单加载时登录用户 ID 的十进制规范字符串（int64 范围），不是目标用户 ID；不作为认证凭据。身份不一致返回 409。",
@@ -346,6 +347,11 @@ const docTemplate = `{
         },
         "/admin/users/{id}/reset-password": {
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "仅管理员可用。仅管理员，不能重置本人。临时密码不能等于目标当前密码（400 INVALID_ARGUMENT）。撤销目标全部会话，要求下次登录改密；不启用禁用账号。目标并发变化返回 IDENTITY_CHANGED。临时密码由管理员自行通过独立渠道交付。",
                 "consumes": [
                     "application/json"
@@ -358,20 +364,6 @@ const docTemplate = `{
                 ],
                 "summary": "重置用户密码",
                 "parameters": [
-                    {
-                        "type": "string",
-                        "description": "必须逐字匹配服务配置 Origin；浏览器自动设置，不允许跨站请求。",
-                        "name": "Origin",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "GET /auth/csrf 返回的 token；登录后改用登录响应中的 csrf_token，须与 CSRF Cookie 一致。",
-                        "name": "X-CSRF-Token",
-                        "in": "header",
-                        "required": true
-                    },
                     {
                         "type": "string",
                         "description": "表单加载时登录用户 ID 的十进制规范字符串（int64 范围），不是目标用户 ID；不作为认证凭据。身份不一致返回 409。",
@@ -523,7 +515,7 @@ const docTemplate = `{
         },
         "/auth/login": {
             "post": {
-                "description": "设置固定有效期 7 天的会话 Cookie，并轮换 CSRF；后续写请求使用此处 csrf_token。每 IP 每 15 分钟 30 次，每规范化用户名每 15 分钟 10 次。must_change_password=true 时仅可访问 /me、/auth/csrf、/auth/logout、/me/password。",
+                "description": "返回有效 15 分钟的 access JWT，设置固定有效期 7 天的 refresh Cookie；登录、刷新与注销使用 csrf_token。每 IP 每 15 分钟 30 次，每规范化用户名每 15 分钟 10 次。must_change_password=true 时仅可访问 /me、/auth/csrf、/auth/logout、/me/password。",
                 "consumes": [
                     "application/json"
                 ],
@@ -686,6 +678,66 @@ const docTemplate = `{
                 }
             }
         },
+        "/auth/refresh": {
+            "post": {
+                "description": "refresh Cookie 固定有效 7 天；旧令牌重放会撤销整个会话。需要匹配 Origin 和 CSRF。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "认证"
+                ],
+                "summary": "轮换刷新令牌并取得 access JWT",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "精确匹配服务 Origin",
+                        "name": "Origin",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "当前 CSRF 令牌",
+                        "name": "X-CSRF-Token",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/api.response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/api.loginResult"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "AUTH_REQUIRED 或 REFRESH_TOKEN_REUSED",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "CSRF_INVALID",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/auth/register": {
             "post": {
                 "description": "始终创建 active 普通用户；注册不会自动登录。用户名重复返回 USERNAME_TAKEN。每 IP 每小时最多 10 次。",
@@ -700,20 +752,6 @@ const docTemplate = `{
                 ],
                 "summary": "注册普通用户",
                 "parameters": [
-                    {
-                        "type": "string",
-                        "description": "必须逐字匹配服务配置 Origin；浏览器自动设置，不允许跨站请求。",
-                        "name": "Origin",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "GET /auth/csrf 返回的 token；登录后改用登录响应中的 csrf_token，须与 CSRF Cookie 一致。",
-                        "name": "X-CSRF-Token",
-                        "in": "header",
-                        "required": true
-                    },
                     {
                         "description": "请求参数；拒绝未知字段，最多 64 KiB",
                         "name": "body",
@@ -796,6 +834,11 @@ const docTemplate = `{
         },
         "/foods": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "仅登录用户可用。仅返回 active 食材，按 ID 升序，无分页。仅基础名称，不提供营养或过敏原判定数据。",
                 "produces": [
                     "application/json"
@@ -861,6 +904,11 @@ const docTemplate = `{
         },
         "/me": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "仅登录用户可用。允许处于强制改密状态的用户访问。",
                 "produces": [
                     "application/json"
@@ -923,6 +971,11 @@ const docTemplate = `{
         },
         "/me/password": {
             "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "仅登录用户可用。新密码不能等于当前密码（400 INVALID_ARGUMENT）。允许强制改密用户访问。成功撤销本人全部会话并要求重新登录；再 GET /auth/csrf 获取匿名令牌。每用户每 15 分钟 5 次、每 IP 每 15 分钟 20 次。",
                 "consumes": [
                     "application/json"
@@ -935,20 +988,6 @@ const docTemplate = `{
                 ],
                 "summary": "修改本人密码",
                 "parameters": [
-                    {
-                        "type": "string",
-                        "description": "必须逐字匹配服务配置 Origin；浏览器自动设置，不允许跨站请求。",
-                        "name": "Origin",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "GET /auth/csrf 返回的 token；登录后改用登录响应中的 csrf_token，须与 CSRF Cookie 一致。",
-                        "name": "X-CSRF-Token",
-                        "in": "header",
-                        "required": true
-                    },
                     {
                         "type": "string",
                         "description": "表单加载时登录用户 ID 的十进制规范字符串（int64 范围），不是目标用户 ID；不作为认证凭据。身份不一致返回 409。",
@@ -1029,6 +1068,11 @@ const docTemplate = `{
         },
         "/me/preferences": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "仅登录用户可用。返回完整设置，包括仍被引用的停用忌口食材。",
                 "produces": [
                     "application/json"
@@ -1089,6 +1133,11 @@ const docTemplate = `{
                 }
             },
             "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "仅登录用户可用。必须提交全部七个输入字段；数组不可为 null，营养目标允许 null。不接受响应中的 excluded_foods、updated_at。",
                 "consumes": [
                     "application/json"
@@ -1101,20 +1150,6 @@ const docTemplate = `{
                 ],
                 "summary": "完整替换个人饮食设置",
                 "parameters": [
-                    {
-                        "type": "string",
-                        "description": "必须逐字匹配服务配置 Origin；浏览器自动设置，不允许跨站请求。",
-                        "name": "Origin",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "GET /auth/csrf 返回的 token；登录后改用登录响应中的 csrf_token，须与 CSRF Cookie 一致。",
-                        "name": "X-CSRF-Token",
-                        "in": "header",
-                        "required": true
-                    },
                     {
                         "type": "string",
                         "description": "表单加载时登录用户 ID 的十进制规范字符串（int64 范围），不是目标用户 ID；不作为认证凭据。身份不一致返回 409。",
@@ -1265,7 +1300,16 @@ const docTemplate = `{
         "api.loginResult": {
             "type": "object",
             "properties": {
+                "access_token": {
+                    "type": "string"
+                },
                 "csrf_token": {
+                    "type": "string"
+                },
+                "expires_in": {
+                    "type": "integer"
+                },
+                "token_type": {
                     "type": "string"
                 },
                 "user": {
@@ -1537,6 +1581,13 @@ const docTemplate = `{
                 }
             }
         }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        }
     }
 }`
 
@@ -1547,7 +1598,7 @@ var SwaggerInfo = &swag.Spec{
 	BasePath:         "/api",
 	Schemes:          []string{},
 	Title:            "FreshPlate 用户模块 API",
-	Description:      "使用 HttpOnly Cookie 会话，不使用 Bearer Token。会话固定有效期 7 天，CSRF 有效期 24 小时。写请求须有匹配的 Origin、CSRF Cookie 与 X-CSRF-Token；受保护写请求另需表单加载时的 X-Expected-User-ID。登录后改用响应中的 csrf_token。强制改密期间只允许 /me、/auth/csrf、/auth/logout、/me/password。成功返回 data（204 无响应体），失败返回 error.code/message。JSON 最多 64 KiB，拒绝未知字段。所有 API 响应 no-store。不启用 CORS。密码任务最多同时两个，超限 429。Swagger 2.0 不支持 cookie 类型的 security scheme，Cookie 由同源浏览器自动维护。",
+	Description:      "使用 Authorization: Bearer access JWT（15 分钟），每次查会话确保即时撤销。refresh HttpOnly Cookie 固定有效 7 天，轮换并检测重放。登录、刷新和注销要求精确 Origin 与 CSRF；其他写接口无需 CSRF，受保护写接口仍要求 X-Expected-User-ID。JWT 仅保存前端内存。强制改密期间允许 /me、/auth/csrf、/auth/refresh、/auth/logout、/me/password。成功返回 data，失败返回 error.code/message。所有 API no-store，不启用 CORS。",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

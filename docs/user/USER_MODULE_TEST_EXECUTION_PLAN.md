@@ -1,5 +1,7 @@
 # 用户模块测试实施方案
 
+> 认证已迁移到 JWT；本文保留早期设计和验证背景。当前认证契约、迁移与测试范围以 [JWT 认证说明](JWT_AUTHENTICATION.md) 和 [API 文档](API.md) 为准。
+
 编写时间：2026-10-19。架构已由用户明确确认；功能初版（数据库、logic、HTTP、CLI、Vue）已完成。此前各 Agent 的开发期检查用于定位错误，本方案规定整体验证与回归，执行结果及证据见 [本轮总结](USER_MODULE_IMPLEMENTATION_SUMMARY.md)。基础用例见 [测试用例](USER_MODULE_TEST_CASES.md)，浏览器具体步骤见 [浏览器实施方案](USER_MODULE_BROWSER_TEST_PLAN.md)。
 
 ## 1. 环境、数据与隔离

@@ -1,5 +1,7 @@
 # 用户模块待实现架构与实施边界
 
+> 认证已迁移到 JWT；本文保留早期设计和验证背景。当前认证契约、迁移与测试范围以 [JWT 认证说明](JWT_AUTHENTICATION.md) 和 [API 文档](API.md) 为准。
+
 日期：2026-10-19。架构已由用户确认；下文保留方案阶段基线与实施边界。后续实现及验证见 [本轮总结](USER_MODULE_IMPLEMENTATION_SUMMARY.md)。
 
 依据：[技术设计](USER_MODULE_TECHNICAL_DESIGN.md)、[总实施方案](../../IMPLEMENTATION_PLAN.md)、[第三轮评审](USER_MODULE_TECHNICAL_DESIGN_REVIEW_ROUND3.md)。

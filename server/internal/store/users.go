@@ -98,6 +98,10 @@ func (s *Store) IssueSession(ctx context.Context, expected User, hash []byte, no
 			return E(401, "INVALID_CREDENTIALS", "用户名或密码不正确")
 		}
 		_, e = c.ExecContext(ctx, "INSERT INTO sessions(token_hash,user_id,auth_version,created_at,expires_at) VALUES(?,?,?,?,?)", hash, u.ID, u.AuthVersion, now.Unix(), expires.Unix())
+		if e != nil {
+			return e
+		}
+		_, e = c.ExecContext(ctx, "INSERT INTO refresh_tokens(token_hash,session_hash) VALUES(?,?)", hash, hash)
 		return e
 	})
 	return

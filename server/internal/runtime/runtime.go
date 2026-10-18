@@ -15,9 +15,10 @@ import (
 )
 
 type Config struct {
-	Address, Database, Origin, KeyFile, WebDir string
-	Secure                                     bool
-	TrustedProxies                             []string
+	Address, Database, Origin, KeyFile, JWTKeyFile, WebDir string
+	JWTKey                                                 []byte
+	Secure                                                 bool
+	TrustedProxies                                         []string
 }
 
 func env(key, fallback string) string {
@@ -32,6 +33,7 @@ func Flags(fs *flag.FlagSet) *Config {
 	fs.StringVar(&c.Database, "db", env("FRESHPLATE_DB", "../data/freshplate.db"), "SQLite file")
 	fs.StringVar(&c.Origin, "origin", env("FRESHPLATE_ORIGIN", "http://127.0.0.1:8080"), "exact browser origin")
 	fs.StringVar(&c.KeyFile, "key", env("FRESHPLATE_KEY", "../data/csrf.key"), "CSRF key file")
+	fs.StringVar(&c.JWTKeyFile, "jwt-key", env("FRESHPLATE_JWT_KEY", "../data/jwt.key"), "JWT signing key file")
 	fs.StringVar(&c.WebDir, "web", env("FRESHPLATE_WEB", "../web/dist"), "built frontend directory")
 	fs.BoolVar(&c.Secure, "secure", env("FRESHPLATE_SECURE", "false") == "true", "HTTPS cookies")
 	fs.Func("trusted-proxies", "comma separated trusted proxy IPs/CIDRs", func(v string) error {
@@ -54,11 +56,20 @@ func (c Config) Validate() error {
 	if _, _, err = net.SplitHostPort(c.Address); err != nil {
 		return fmt.Errorf("invalid listen address: %w", err)
 	}
-	if c.Database == "" || c.KeyFile == "" {
-		return errors.New("database and key paths required")
-	}
-	if filepath.Clean(c.Database) == filepath.Clean(c.KeyFile) {
-		return errors.New("database and key must have different paths")
+	paths := []string{c.Database, c.KeyFile, c.JWTKeyFile}
+	for i, path := range paths {
+		if path == "" {
+			return errors.New("database, CSRF key and JWT key paths required")
+		}
+		for _, other := range paths[:i] {
+			same, err := samePath(path, other)
+			if err != nil {
+				return err
+			}
+			if same {
+				return errors.New("database, CSRF key and JWT key must have different paths")
+			}
+		}
 	}
 	for _, p := range c.TrustedProxies {
 		if net.ParseIP(p) == nil {
@@ -71,6 +82,43 @@ func (c Config) Validate() error {
 		return errors.New("FRESHPLATE_SECURE must be true or false")
 	}
 	return nil
+}
+
+// Resolve existing parents too, so aliases are rejected before key files exist.
+func canonicalPath(path string) (string, error) {
+	path, err := filepath.Abs(path)
+	if err != nil {
+		return "", err
+	}
+	resolved, err := filepath.EvalSymlinks(path)
+	if err == nil {
+		return resolved, nil
+	}
+	if !os.IsNotExist(err) || filepath.Dir(path) == path {
+		return "", err
+	}
+	parent, err := canonicalPath(filepath.Dir(path))
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(parent, filepath.Base(path)), nil
+}
+
+func samePath(a, b string) (bool, error) {
+	left, err := canonicalPath(a)
+	if err != nil {
+		return false, err
+	}
+	right, err := canonicalPath(b)
+	if err != nil {
+		return false, err
+	}
+	if left == right {
+		return true, nil
+	}
+	ai, aerr := os.Stat(a)
+	bi, berr := os.Stat(b)
+	return aerr == nil && berr == nil && os.SameFile(ai, bi), nil
 }
 
 // Lock uses the database path so service and maintenance commands exclude each other.
@@ -113,17 +161,25 @@ func Unlock(f *os.File) error {
 }
 
 func Key(database, path string) ([]byte, error) {
+	return secretKey(database, path, "CSRF")
+}
+
+func JWTKey(database, path string) ([]byte, error) {
+	return secretKey(database, path, "JWT")
+}
+
+func secretKey(database, path, name string) ([]byte, error) {
 	info, err := os.Lstat(path)
 	if err == nil {
 		if !info.Mode().IsRegular() || info.Mode().Perm() != 0600 {
-			return nil, errors.New("CSRF key must be a regular file with mode 0600")
+			return nil, fmt.Errorf("%s key must be a regular file with mode 0600", name)
 		}
 		key, e := os.ReadFile(path)
 		if e != nil {
 			return nil, e
 		}
 		if len(key) != 32 {
-			return nil, errors.New("invalid CSRF key length")
+			return nil, fmt.Errorf("invalid %s key length", name)
 		}
 		return key, nil
 	}
@@ -131,7 +187,7 @@ func Key(database, path string) ([]byte, error) {
 		return nil, err
 	}
 	if _, e := os.Stat(database); !os.IsNotExist(e) {
-		return nil, errors.New("CSRF key missing for existing database; restore the original key before starting")
+		return nil, fmt.Errorf("%s key missing for existing database; provision or restore the key before starting", name)
 	}
 	if err = os.MkdirAll(filepath.Dir(path), 0700); err != nil {
 		return nil, err

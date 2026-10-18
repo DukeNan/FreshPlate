@@ -1,70 +1,89 @@
-import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest'
-function response(status, data) { return new Response(status === 204 ? null : JSON.stringify(status >= 400 ? { error: data } : { data }), { status, headers: { 'Content-Type': 'application/json' } }) }
-let api, configureApi, setCsrf
+import { beforeEach, afterEach, expect, it, vi } from 'vitest'
+function response(status, data) { return new Response(status === 204 ? null : JSON.stringify(status >= 400 ? { error: data } : { data }), { status }) }
+let api, configureApi, setCsrf, setAccessToken
 beforeEach(async () => {
   vi.resetModules()
-  ;({ api, configureApi, setCsrf } = await import('./api.js'))
+  ;({ api, configureApi, setCsrf, setAccessToken } = await import('./api.js'))
   vi.stubGlobal('fetch', vi.fn())
 })
 afterEach(() => vi.unstubAllGlobals())
-describe('HTTP security contract', () => {
-  it('uses Cookie, JSON and the explicit form identity snapshot', async () => {
-    setCsrf('token')
-    fetch.mockResolvedValue(response(204))
-    await api('/me/password', { method: 'PUT', expectedUserId: 7, body: { current_password: 'old', new_password: 'new' } })
-    expect(fetch).toHaveBeenCalledWith('/api/me/password', expect.objectContaining({ credentials: 'same-origin', method: 'PUT', headers: expect.objectContaining({ 'X-CSRF-Token': 'token', 'X-Expected-User-ID': '7' }) }))
-  })
-  it('refuses a protected write without a form identity', async () => {
-    setCsrf('token')
-    await expect(api('/me/preferences', { method: 'PUT', body: {} })).rejects.toMatchObject({ code: 'MISSING_IDENTITY' })
-    expect(fetch).not.toHaveBeenCalled()
-  })
-  it('refreshes on CSRF rejection without replaying a destructive write', async () => {
-    setCsrf('old')
-    const recover = vi.fn().mockResolvedValue()
-    configureApi({ generation: () => 0, recover, unauthorized: vi.fn(), passwordRequired: vi.fn() })
-    fetch.mockResolvedValue(response(403, { code: 'CSRF_INVALID', message: 'expired' }))
-    await expect(api('/admin/users/3/reset-password', { method: 'POST', expectedUserId: 1, body: { temporary_password: 'secret' } })).rejects.toMatchObject({ code: 'CSRF_INVALID' })
-    expect(recover).toHaveBeenCalledOnce()
-    expect(fetch).toHaveBeenCalledOnce()
-  })
-  it('drops a late private response after an account switch', async () => {
-    let generation = 1, resolve
-    configureApi({ generation: () => generation })
-    fetch.mockReturnValue(new Promise(done => { resolve = done }))
-    const request = api('/me/preferences')
-    generation = 2
-    resolve(response(200, { allergens: ['milk'] }))
-    await expect(request).rejects.toMatchObject({ code: 'STALE_RESPONSE' })
-  })
-  it('clears identity on 401 and distinguishes forced password changes', async () => {
-    const unauthorized = vi.fn(), passwordRequired = vi.fn()
-    configureApi({ generation: () => 0, unauthorized, passwordRequired })
-    fetch.mockResolvedValueOnce(response(401, { code: 'AUTH_REQUIRED' })).mockResolvedValueOnce(response(403, { code: 'PASSWORD_CHANGE_REQUIRED' }))
-    await expect(api('/me/preferences')).rejects.toMatchObject({ status: 401 })
-    await expect(api('/admin/users')).rejects.toMatchObject({ code: 'PASSWORD_CHANGE_REQUIRED' })
-    expect(unauthorized).toHaveBeenCalledOnce()
-    expect(passwordRequired).toHaveBeenCalledOnce()
-  })
-  it('does not clear identity when login credentials are rejected', async () => {
-    const unauthorized = vi.fn()
-    setCsrf('token')
-    configureApi({ generation: () => 0, unauthorized })
-    fetch.mockResolvedValue(response(401, { code: 'INVALID_CREDENTIALS' }))
-    await expect(api('/auth/login', { method: 'POST', body: {} })).rejects.toMatchObject({ code: 'INVALID_CREDENTIALS' })
-    expect(unauthorized).not.toHaveBeenCalled()
-  })
+it('uses Bearer and form identity on protected writes without CSRF', async () => {
+  setCsrf('csrf'); setAccessToken('jwt')
+  fetch.mockResolvedValue(response(204))
+  await api('/me/password', { method: 'PUT', expectedUserId: 7, body: {} })
+  const request = fetch.mock.calls[0][1]
+  expect(request.headers).toMatchObject({ Authorization: 'Bearer jwt', 'X-Expected-User-ID': '7' })
+  expect(request.headers['X-CSRF-Token']).toBeUndefined()
 })
-it('a CSRF recovery really fetches /me and a fresh token, then waits for user resubmission', async () => {
-  const { acceptLogin, auth } = await import('./auth.js')
-  acceptLogin({ user: { id: 1, role: 'user', must_change_password: false }, csrf_token: 'old-token' })
-  fetch.mockResolvedValueOnce(response(403, { code: 'CSRF_INVALID' }))
-    .mockResolvedValueOnce(response(200, { id: 1, role: 'user', must_change_password: false }))
-    .mockResolvedValueOnce(response(200, { token: 'fresh-token' }))
-  await expect(api('/me/preferences', { method: 'PUT', expectedUserId: 1, body: {} })).rejects.toMatchObject({ code: 'CSRF_INVALID' })
-  expect(fetch.mock.calls.map(call => call[0])).toEqual(['/api/me/preferences', '/api/me', '/api/auth/csrf'])
-  expect(auth.user.id).toBe(1)
-  fetch.mockResolvedValueOnce(response(200, {}))
+it('refuses a protected write without a form identity', async () => {
+  await expect(api('/me/preferences', { method: 'PUT', body: {} })).rejects.toMatchObject({ code: 'MISSING_IDENTITY' })
+  expect(fetch).not.toHaveBeenCalled()
+})
+it('uses CSRF on Cookie endpoints and never includes the Bearer token', async () => {
+  setCsrf('csrf'); setAccessToken('jwt')
+  fetch.mockResolvedValue(response(204))
+  for (const path of ['/auth/login', '/auth/refresh', '/auth/logout']) await api(path, { method: 'POST' })
+  for (const [, request] of fetch.mock.calls) {
+    expect(request.headers['X-CSRF-Token']).toBe('csrf')
+    expect(request.headers.Authorization).toBeUndefined()
+  }
+})
+it('registers without CSRF', async () => {
+  fetch.mockResolvedValue(response(200, {}))
+  await api('/auth/register', { method: 'POST', body: {} })
+  expect(fetch).toHaveBeenCalledOnce()
+  expect(fetch.mock.calls[0][1].headers['X-CSRF-Token']).toBeUndefined()
+})
+it('refreshes an explicitly expired JWT and retries a write exactly once', async () => {
+  const refresh = vi.fn(async () => setAccessToken('new'))
+  configureApi({ generation: () => 0, refresh })
+  setAccessToken('old')
+  fetch.mockResolvedValueOnce(response(401, { code: 'ACCESS_TOKEN_EXPIRED' })).mockResolvedValueOnce(response(200, {}))
   await api('/me/preferences', { method: 'PUT', expectedUserId: 1, body: {} })
-  expect(fetch.mock.calls[3][1].headers['X-CSRF-Token']).toBe('fresh-token')
+  expect(refresh).toHaveBeenCalledOnce()
+  expect(fetch.mock.calls[1][1].headers.Authorization).toBe('Bearer new')
+})
+it('does not replay a write after an account changes during refresh', async () => {
+  let generation = 0
+  configureApi({ generation: () => generation, refresh: async () => { generation++ } })
+  fetch.mockResolvedValue(response(401, { code: 'ACCESS_TOKEN_EXPIRED' }))
+  await expect(api('/me/preferences', { method: 'PUT', expectedUserId: 1, body: {} })).rejects.toMatchObject({ code: 'STALE_RESPONSE' })
+  expect(fetch).toHaveBeenCalledOnce()
+})
+it('does not refresh twice when the retried access token expires', async () => {
+  const refresh = vi.fn(), unauthorized = vi.fn()
+  configureApi({ generation: () => 0, refresh, unauthorized })
+  fetch.mockImplementation(() => Promise.resolve(response(401, { code: 'ACCESS_TOKEN_EXPIRED' })))
+  await expect(api('/me')).rejects.toMatchObject({ code: 'ACCESS_TOKEN_EXPIRED' })
+  expect(refresh).toHaveBeenCalledOnce()
+  expect(fetch).toHaveBeenCalledTimes(2)
+  expect(unauthorized).toHaveBeenCalledOnce()
+})
+it('does not retry network failures, business failures or invalid authentication', async () => {
+  const refresh = vi.fn(), unauthorized = vi.fn()
+  configureApi({ generation: () => 0, refresh, unauthorized })
+  fetch.mockRejectedValueOnce(new Error('offline')).mockResolvedValueOnce(response(403, { code: 'FORBIDDEN' })).mockResolvedValueOnce(response(401, { code: 'AUTH_REQUIRED' }))
+  await expect(api('/me')).rejects.toMatchObject({ code: 'NETWORK_ERROR' })
+  await expect(api('/me')).rejects.toMatchObject({ code: 'FORBIDDEN' })
+  await expect(api('/me')).rejects.toMatchObject({ code: 'AUTH_REQUIRED' })
+  expect(refresh).not.toHaveBeenCalled()
+  expect(unauthorized).toHaveBeenCalledOnce()
+})
+it('drops a late private response after account switching', async () => {
+  let generation = 1, resolve
+  configureApi({ generation: () => generation })
+  fetch.mockReturnValue(new Promise(done => { resolve = done }))
+  const request = api('/me/preferences')
+  generation++
+  resolve(response(200, {}))
+  await expect(request).rejects.toMatchObject({ code: 'STALE_RESPONSE' })
+})
+it('rejects CSRF without recursively refreshing the Cookie endpoint', async () => {
+  const recover = vi.fn()
+  configureApi({ generation: () => 0, recover })
+  setCsrf('old')
+  fetch.mockResolvedValue(response(403, { code: 'CSRF_INVALID' }))
+  await expect(api('/auth/refresh', { method: 'POST' })).rejects.toMatchObject({ code: 'CSRF_INVALID' })
+  expect(recover).not.toHaveBeenCalled()
+  expect(fetch).toHaveBeenCalledOnce()
 })

@@ -40,7 +40,7 @@ func readPassword() (string, error) {
 }
 func run() error {
 	if len(os.Args) < 2 {
-		return errors.New("usage: admin init|recover-password --username NAME [--db PATH --key PATH]")
+		return errors.New("usage: admin init|recover-password --username NAME [--db PATH --key PATH --jwt-key PATH]")
 	}
 	command := os.Args[1]
 	if command != "init" && command != "recover-password" {
@@ -68,6 +68,9 @@ func run() error {
 	}
 	defer appRuntime.Unlock(lock)
 	if _, err = appRuntime.Key(cfg.Database, cfg.KeyFile); err != nil {
+		return err
+	}
+	if _, err = appRuntime.JWTKey(cfg.Database, cfg.JWTKeyFile); err != nil {
 		return err
 	}
 	st, err := store.Open(cfg.Database)

@@ -1,24 +1,59 @@
 import { beforeEach, afterEach, expect, it, vi } from 'vitest'
 const user = id => ({ id, username: `user_${id}`, role: 'user', status: 'active', must_change_password: false })
-const result = (status, data) => new Response(JSON.stringify(status === 200 ? { data } : { error: { code: 'AUTH_REQUIRED' } }), { status })
-let auth, checkIdentity, verifyForm, acceptLogin
+const session = id => ({ user: user(id), access_token: `jwt-${id}`, csrf_token: `csrf-${id}` })
+const result = (status, data) => new Response(JSON.stringify(status < 400 ? { data } : { error: { code: data || 'AUTH_REQUIRED' } }), { status })
+let auth, checkIdentity, verifyForm, acceptLogin, refreshSession, channel, lock, storage
 beforeEach(async () => {
   vi.resetModules()
   vi.stubGlobal('fetch', vi.fn())
-  ;({ auth, checkIdentity, verifyForm, acceptLogin } = await import('./auth.js'))
+  storage = new Map()
+  vi.stubGlobal('localStorage', { getItem: key => storage.get(key) || null, setItem: (key, value) => storage.set(key, value) })
+  let queue = Promise.resolve()
+  lock = vi.fn((name, action) => { const current = queue.then(action); queue = current.catch(() => {}); return current })
+  vi.stubGlobal('navigator', { locks: { request: lock } })
+  vi.stubGlobal('BroadcastChannel', class {
+    constructor() { channel = this }
+    postMessage = vi.fn()
+  })
+  ;({ auth, checkIdentity, verifyForm, acceptLogin, refreshSession } = await import('./auth.js'))
 })
 afterEach(() => vi.unstubAllGlobals())
-it('restores identity; refuses an old form after another account logs in', async () => {
-  fetch.mockResolvedValueOnce(result(200, user(1))).mockResolvedValueOnce(result(200, user(2)))
-  await checkIdentity()
-  const generation = auth.generation
+it('restores identity through refresh, keeping all tokens out of storage', async () => {
+  fetch.mockResolvedValueOnce(result(200, { token: 'anonymous' })).mockResolvedValueOnce(result(200, session(1)))
+  expect(await checkIdentity()).toBe(true)
+  expect(auth.user.id).toBe(1)
+  expect(fetch.mock.calls.map(call => call[0])).toEqual(['/api/auth/csrf', '/api/auth/refresh'])
+  expect([...storage.keys()]).toEqual(['freshplate-auth-revision'])
+  expect(JSON.stringify([...storage.values()])).not.toMatch(/jwt|csrf|user/)
+})
+it('merges simultaneous refreshes in one tab', async () => {
+  acceptLogin(session(1))
+  fetch.mockResolvedValueOnce(result(200, { token: 'csrf' })).mockResolvedValueOnce(result(200, session(1)))
+  await Promise.all([refreshSession(), refreshSession(), refreshSession()])
+  expect(lock).toHaveBeenCalledOnce()
+  expect(fetch.mock.calls.map(call => call[0])).toEqual(['/api/auth/csrf', '/api/auth/refresh'])
+})
+it('refuses an old form after another account logs in', async () => {
+  acceptLogin(session(1))
+  fetch.mockResolvedValue(result(200, user(2)))
   await expect(verifyForm(1)).rejects.toMatchObject({ code: 'IDENTITY_CHANGED' })
   expect(auth.user.id).toBe(2)
-  expect(auth.generation).toBeGreaterThan(generation)
 })
-it('uses the newest concurrent identity check and ignores an older answer', async () => {
+it('a check started before login cannot overwrite the login result', async () => {
+  acceptLogin(session(1))
+  let resolve
+  fetch.mockReturnValue(new Promise(done => { resolve = done }))
+  const old = checkIdentity()
+  acceptLogin(session(2))
+  resolve(result(401))
+  await old
+  expect(auth.user.id).toBe(2)
+  expect(auth.checkError).toBe('')
+})
+it('uses newest identity check and ignores an older answer', async () => {
+  acceptLogin(session(1))
   let resolveOld
-  fetch.mockReturnValueOnce(new Promise(resolve => { resolveOld = resolve })).mockResolvedValueOnce(result(200, user(2)))
+  fetch.mockReturnValueOnce(new Promise(done => { resolveOld = done })).mockResolvedValueOnce(result(200, user(2)))
   const old = checkIdentity()
   await checkIdentity()
   resolveOld(result(200, user(1)))
@@ -26,77 +61,126 @@ it('uses the newest concurrent identity check and ignores an older answer', asyn
   expect(auth.user.id).toBe(2)
   expect(auth.checking).toBe(false)
 })
-it('a check started before login cannot overwrite the login result', async () => {
-  let resolveOld
-  fetch.mockReturnValue(new Promise(resolve => { resolveOld = resolve }))
-  const old = checkIdentity()
-  acceptLogin({ user: user(2), csrf_token: 'new-token' })
-  resolveOld(result(401))
-  await old
-  expect(auth.user.id).toBe(2)
-  expect(auth.checkError).toBe('')
-})
-it('pauses submitting on network failure and permits a successful retry', async () => {
-  acceptLogin({ user: user(1), csrf_token: 'token' })
+it('pauses submitting on a network error and permits identity check retry', async () => {
+  acceptLogin(session(1))
   fetch.mockRejectedValueOnce(new TypeError('offline')).mockResolvedValueOnce(result(200, user(1)))
   await expect(verifyForm(1)).rejects.toMatchObject({ code: 'IDENTITY_UNVERIFIED' })
   expect(auth.user.id).toBe(1)
-  expect(auth.checkError).not.toBe('')
   await verifyForm(1)
   expect(auth.checkError).toBe('')
 })
-it('treats unauthenticated identity as a real transition and clears old forms', async () => {
-  acceptLogin({ user: user(1), csrf_token: 'token' })
-  const generation = auth.generation
+it('clears identity on revoked authentication', async () => {
+  acceptLogin(session(1))
   fetch.mockResolvedValue(result(401))
   await checkIdentity()
   expect(auth.user).toBeNull()
-  expect(auth.generation).toBeGreaterThan(generation)
 })
-it('broadcasts only an identity event, and rechecks on channel/focus/visibility events', async () => {
-  const postMessage = vi.fn(), windowListeners = {}, documentListeners = {}
-  let instance
-  vi.stubGlobal('BroadcastChannel', class {
-    constructor(name) { this.name = name; instance = this }
-    postMessage = postMessage
-  })
-  vi.stubGlobal('window', { addEventListener: (name, callback) => { windowListeners[name] = callback } })
-  vi.stubGlobal('document', { visibilityState: 'visible', addEventListener: (name, callback) => { documentListeners[name] = callback } })
-  const { startIdentityWatch } = await import('./auth.js')
-  startIdentityWatch()
-  acceptLogin({ user: user(1), csrf_token: 'never-broadcast-this' })
-  expect(postMessage).toHaveBeenCalledWith({ type: 'identity-may-have-changed' })
-  expect(JSON.stringify(postMessage.mock.calls)).not.toContain('never-broadcast-this')
-  fetch.mockResolvedValue(result(200, user(1)))
-  instance.onmessage({ data: { type: 'identity-may-have-changed' } })
-  expect(auth.checking).toBe(true)
-  await vi.waitFor(() => expect(auth.checking).toBe(false))
-  windowListeners.focus()
-  await vi.waitFor(() => expect(auth.checking).toBe(false))
-  documentListeners.visibilitychange()
-  await vi.waitFor(() => expect(auth.checking).toBe(false))
-  expect(fetch).toHaveBeenCalledTimes(3)
-})
-it('keeps focus/visibility fallback when BroadcastChannel is unavailable', async () => {
-  const callbacks = {}
-  vi.stubGlobal('BroadcastChannel', undefined)
-  vi.stubGlobal('window', { addEventListener: (name, fn) => { callbacks[name] = fn } })
-  vi.stubGlobal('document', { visibilityState: 'visible', addEventListener: (name, fn) => { callbacks[name] = fn } })
-  const { startIdentityWatch } = await import('./auth.js')
-  startIdentityWatch()
-  fetch.mockResolvedValue(result(200, user(1)))
-  callbacks.focus()
-  await vi.waitFor(() => expect(auth.checking).toBe(false))
-  callbacks.visibilitychange()
-  await vi.waitFor(() => expect(auth.checking).toBe(false))
+it('serializes login and refresh, and acquires fresh CSRF before Cookie writes', async () => {
+  const { login } = await import('./auth.js')
+  fetch.mockResolvedValueOnce(result(200, { token: 'csrf' })).mockResolvedValueOnce(result(200, session(1)))
+  await login({ username: 'user_1', password: 'secret' })
+  expect(lock).toHaveBeenCalledWith('freshplate-auth', expect.any(Function))
+  expect(fetch.mock.calls[1][1].headers['X-CSRF-Token']).toBe('csrf')
   expect(auth.user.id).toBe(1)
-  expect(fetch).toHaveBeenCalledTimes(2)
 })
-it('does not send logout when the required identity recheck fails', async () => {
-  acceptLogin({ user: user(1), csrf_token: 'token' })
-  fetch.mockRejectedValueOnce(new TypeError('offline'))
+it('does not retry refresh after an uncertain network result; permits explicit login', async () => {
+  acceptLogin(session(1))
+  fetch.mockResolvedValueOnce(result(200, { token: 'csrf' })).mockRejectedValueOnce(new Error('lost response'))
+  await expect(refreshSession()).rejects.toMatchObject({ code: 'NETWORK_ERROR' })
+  await expect(refreshSession()).rejects.toMatchObject({ code: 'REFRESH_UNCERTAIN' })
+  expect(fetch).toHaveBeenCalledTimes(2)
+  expect(auth.user).toBeNull()
+  expect(await checkIdentity()).toBe(true)
+  const { login } = await import('./auth.js')
+  fetch.mockResolvedValueOnce(result(200, { token: 'csrf' })).mockResolvedValueOnce(result(200, session(2)))
+  await login({})
+  expect(auth.user.id).toBe(2)
+})
+it('clears authentication on refresh replay detection', async () => {
+  acceptLogin(session(1))
+  fetch.mockResolvedValueOnce(result(200, { token: 'csrf' })).mockResolvedValueOnce(result(401, 'REFRESH_TOKEN_REUSED'))
+  await expect(refreshSession()).rejects.toMatchObject({ code: 'REFRESH_TOKEN_REUSED' })
+  expect(auth.user).toBeNull()
+})
+it('requires browser coordination support', async () => {
+  vi.stubGlobal('navigator', {})
+  expect(await checkIdentity()).toBe(false)
+  expect(auth.checkError).toContain('新版浏览器')
+  expect(fetch).not.toHaveBeenCalled()
+})
+it('fails closed if the revision marker cannot be read', async () => {
+  vi.stubGlobal('localStorage', { getItem() { throw new Error('blocked') } })
+  expect(await checkIdentity()).toBe(false)
+  expect(fetch).not.toHaveBeenCalled()
+})
+it('ignores reordered broadcasts, accepts the newest session, and never broadcasts refresh tokens', async () => {
+  fetch.mockResolvedValueOnce(result(200, { token: 'csrf' })).mockResolvedValueOnce(result(200, session(1)))
+  await refreshSession()
+  storage.set('freshplate-auth-revision', 'latest')
+  channel.onmessage({ data: { type: 'session', revision: 'latest', session: session(2) } })
+  channel.onmessage({ data: { type: 'session', revision: 'old', session: session(1) } })
+  expect(auth.user.id).toBe(2)
+  expect(JSON.stringify(channel.postMessage.mock.calls)).not.toContain('refresh_token')
+  channel.onmessage({ data: { type: 'session', revision: 'latest', session: null } })
+  expect(auth.user).toBeNull()
+})
+it('does not send logout if the required identity check fails', async () => {
+  acceptLogin(session(1))
+  fetch.mockRejectedValueOnce(new Error('offline'))
   const { logoutCurrentSession } = await import('./auth.js')
   await expect(logoutCurrentSession()).rejects.toMatchObject({ code: 'IDENTITY_UNVERIFIED' })
   expect(fetch.mock.calls.map(call => call[0])).toEqual(['/api/me'])
-  expect(auth.checkError).not.toBe('')
+})
+it('rejects queued logout when another tab changed the shared revision before its broadcast arrives', async () => {
+  acceptLogin(session(1))
+  const { logoutCurrentSession } = await import('./auth.js')
+  fetch.mockResolvedValueOnce(result(200, user(1)))
+  lock.mockImplementationOnce(async (name, action) => { storage.set('freshplate-auth-revision', 'new-login'); return action() })
+  await expect(logoutCurrentSession()).rejects.toMatchObject({ code: 'IDENTITY_CHANGED' })
+  expect(fetch.mock.calls.map(call => call[0])).toEqual(['/api/me'])
+})
+it('serializes password change and clearing the current session', async () => {
+  acceptLogin(session(1))
+  const { changePassword } = await import('./auth.js')
+  fetch.mockResolvedValueOnce(result(200, user(1))).mockResolvedValueOnce(new Response(null, { status: 204 }))
+  await changePassword(1, { current_password: 'old', new_password: 'new' })
+  expect(lock).toHaveBeenCalledOnce()
+  expect(fetch.mock.calls.map(call => call[0])).toEqual(['/api/me', '/api/me/password'])
+  expect(auth.user).toBeNull()
+})
+it('does not recursively acquire the auth lock if password access expires', async () => {
+  acceptLogin(session(1))
+  const { changePassword } = await import('./auth.js')
+  fetch.mockResolvedValueOnce(result(200, user(1))).mockResolvedValueOnce(result(401, 'ACCESS_TOKEN_EXPIRED'))
+  await expect(changePassword(1, {})).rejects.toMatchObject({ code: 'ACCESS_TOKEN_EXPIRED' })
+  expect(lock).toHaveBeenCalledOnce()
+  expect(auth.user.id).toBe(1)
+})
+it('shares one refresh across two tab instances using Web Locks and BroadcastChannel', async () => {
+  const channels = []
+  vi.stubGlobal('BroadcastChannel', class {
+    constructor() { channels.push(this) }
+    postMessage(data) { for (const peer of channels) if (peer !== this) peer.onmessage?.({ data }) }
+  })
+  vi.stubGlobal('window', { addEventListener() {} })
+  vi.stubGlobal('document', { addEventListener() {} })
+  const first = await import('./auth.js')
+  first.startIdentityWatch()
+  first.acceptLogin(session(1))
+  vi.resetModules()
+  const second = await import('./auth.js')
+  second.startIdentityWatch()
+  first.acceptLogin(session(1))
+  const rotated = { ...session(1), access_token: 'rotated-access' }
+  fetch.mockResolvedValueOnce(result(200, { token: 'csrf' })).mockResolvedValueOnce(result(200, rotated))
+  await Promise.all([first.refreshSession(), second.refreshSession()])
+  expect(fetch.mock.calls.map(call => call[0])).toEqual(['/api/auth/csrf', '/api/auth/refresh'])
+  expect(second.auth.user.id).toBe(1)
+})
+it('does not send Cookie mutations when the revision marker is read-only', async () => {
+  vi.stubGlobal('localStorage', { getItem: () => null, setItem() { throw new Error('quota') } })
+  const { login } = await import('./auth.js')
+  await expect(login({})).rejects.toMatchObject({ code: 'STORAGE_UNAVAILABLE' })
+  await expect(refreshSession()).rejects.toMatchObject({ code: 'STORAGE_UNAVAILABLE' })
+  expect(fetch).not.toHaveBeenCalled()
 })

@@ -9,4 +9,4 @@ sys.path.insert(0, str(ROOT / 'scripts'))
 from verify_cli import hidden_command
 
 fixture = json.loads((Path(__file__).parent / 'fixtures.json').read_text())['admin']
-hidden_command([sys.argv[1], 'init', '--username', fixture['username'], '--db', sys.argv[2], '--key', sys.argv[3]], fixture['password'], os.environ.copy())
+hidden_command([sys.argv[1], 'init', '--username', fixture['username'], '--db', sys.argv[2], '--key', sys.argv[3], '--jwt-key', sys.argv[4]], fixture['password'], os.environ.copy())

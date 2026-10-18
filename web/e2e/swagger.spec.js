@@ -8,7 +8,7 @@ test('Swagger UI loads all API operations and executes a same-origin request und
   expect(response.status()).toBe(200)
   expect(response.headers()['content-security-policy']).toContain("script-src 'self'")
   await expect(page.getByRole('heading', { name: 'FreshPlate 用户模块 API', exact: false })).toBeVisible()
-  await expect(page.locator('.opblock')).toHaveCount(13)
+  await expect(page.locator('.opblock')).toHaveCount(14)
   const csrf = page.locator('.opblock').filter({ hasText: '取得 CSRF 令牌' })
   await csrf.locator('.opblock-summary').click()
   await csrf.getByRole('button', { name: 'Try it out' }).click()

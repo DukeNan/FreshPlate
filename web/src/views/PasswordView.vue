@@ -1,8 +1,7 @@
 <script setup>
 import { ref } from 'vue'
-import { api } from '../api.js'
 import { passwordError } from '../validation.js'
-import { auth, verifyForm, endSession } from '../auth.js'
+import { auth, changePassword } from '../auth.js'
 import { router } from '../router.js'
 const expectedUserId = auth.user?.id
 const current = ref(''), next = ref(''), repeat = ref(''), busy = ref(false), error = ref('')
@@ -11,7 +10,7 @@ async function submit() {
   if (passwordError(next.value)) { error.value = passwordError(next.value); return }
   if (next.value !== repeat.value) { error.value = '两次输入的新密码不一致。'; return }
   busy.value = true
-  try { await verifyForm(expectedUserId); await api('/me/password', { method: 'PUT', expectedUserId, body: { current_password: current.value, new_password: next.value } }); current.value = ''; next.value = ''; repeat.value = ''; await endSession(); await router.replace({ path: '/login', query: { changed: '1' } }) }
+  try { await changePassword(expectedUserId, { current_password: current.value, new_password: next.value }); current.value = ''; next.value = ''; repeat.value = ''; await router.replace({ path: '/login', query: { changed: '1' } }) }
   catch (e) { error.value = e.message } finally { busy.value = false }
 }
 </script>

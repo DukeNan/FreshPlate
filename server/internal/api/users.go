@@ -54,6 +54,7 @@ func (a *API) page(c *gin.Context) (int, int, bool) {
 // @Failure 403 {object} errorResponse "CSRF_INVALID：Origin/CSRF 无效；FORBIDDEN：权限不足；PASSWORD_CHANGE_REQUIRED：必须先修改密码。"
 // @Failure 500 {object} errorResponse "INTERNAL_ERROR：服务内部错误。"
 // @Failure 503 {object} errorResponse "DATABASE_BUSY：数据库忙，本次写入未保存，请稍后手动重提。"
+// @Security BearerAuth
 // @Router /admin/users [get]
 func (a *API) users(c *gin.Context) {
 	page, size, ok := a.page(c)
@@ -84,8 +85,6 @@ func (a *API) users(c *gin.Context) {
 // @Tags 管理
 // @Produce json
 // @Accept json
-// @Param Origin header string true "必须逐字匹配服务配置 Origin；浏览器自动设置，不允许跨站请求。"
-// @Param X-CSRF-Token header string true "GET /auth/csrf 返回的 token；登录后改用登录响应中的 csrf_token，须与 CSRF Cookie 一致。"
 // @Param X-Expected-User-ID header string true "表单加载时登录用户 ID 的十进制规范字符串（int64 范围），不是目标用户 ID；不作为认证凭据。身份不一致返回 409。"
 // @Param id path int64 true "目标用户 ID。" minimum(1)
 // @Param body body userUpdate true "请求参数；拒绝未知字段，最多 64 KiB"
@@ -98,6 +97,7 @@ func (a *API) users(c *gin.Context) {
 // @Failure 415 {object} errorResponse "UNSUPPORTED_MEDIA_TYPE：请求体必须使用 application/json。"
 // @Failure 500 {object} errorResponse "INTERNAL_ERROR：服务内部错误。"
 // @Failure 503 {object} errorResponse "DATABASE_BUSY：数据库忙，本次写入未保存，请稍后手动重提。"
+// @Security BearerAuth
 // @Router /admin/users/{id} [patch]
 func (a *API) updateUser(c *gin.Context) {
 	id, ok := a.id(c)
@@ -126,8 +126,6 @@ func (a *API) updateUser(c *gin.Context) {
 // @Tags 管理
 // @Produce json
 // @Accept json
-// @Param Origin header string true "必须逐字匹配服务配置 Origin；浏览器自动设置，不允许跨站请求。"
-// @Param X-CSRF-Token header string true "GET /auth/csrf 返回的 token；登录后改用登录响应中的 csrf_token，须与 CSRF Cookie 一致。"
 // @Param X-Expected-User-ID header string true "表单加载时登录用户 ID 的十进制规范字符串（int64 范围），不是目标用户 ID；不作为认证凭据。身份不一致返回 409。"
 // @Param id path int64 true "目标用户 ID。" minimum(1)
 // @Param body body passwordReset true "请求参数；拒绝未知字段，最多 64 KiB"
@@ -142,6 +140,7 @@ func (a *API) updateUser(c *gin.Context) {
 // @Failure 500 {object} errorResponse "INTERNAL_ERROR：服务内部错误。"
 // @Failure 503 {object} errorResponse "DATABASE_BUSY：数据库忙，本次写入未保存，请稍后手动重提。"
 // @Header 429 {integer} Retry-After "建议等待的秒数"
+// @Security BearerAuth
 // @Router /admin/users/{id}/reset-password [post]
 func (a *API) resetPassword(c *gin.Context) {
 	id, ok := a.id(c)
@@ -174,6 +173,7 @@ func (a *API) resetPassword(c *gin.Context) {
 // @Failure 403 {object} errorResponse "CSRF_INVALID：Origin/CSRF 无效；FORBIDDEN：权限不足；PASSWORD_CHANGE_REQUIRED：必须先修改密码。"
 // @Failure 500 {object} errorResponse "INTERNAL_ERROR：服务内部错误。"
 // @Failure 503 {object} errorResponse "DATABASE_BUSY：数据库忙，本次写入未保存，请稍后手动重提。"
+// @Security BearerAuth
 // @Router /admin/audit-logs [get]
 func (a *API) audit(c *gin.Context) {
 	page, size, ok := a.page(c)

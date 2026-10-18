@@ -147,7 +147,7 @@ func (s *Store) migrate(ctx context.Context) error {
 			if err := c.QueryRowContext(ctx, "SELECT count(*),coalesce(max(version),0) FROM schema_migrations").Scan(&count, &version); err != nil {
 				return err
 			}
-			if count != 1 || version != 1 {
+			if count != version || version < 1 || version > 2 {
 				return fmt.Errorf("unsupported or incomplete migration history")
 			}
 			if err := c.QueryRowContext(ctx, "SELECT checksum FROM schema_migrations WHERE version=1").Scan(&actual); err != nil {
@@ -157,7 +157,33 @@ func (s *Store) migrate(ctx context.Context) error {
 				return fmt.Errorf("migration checksum mismatch")
 			}
 		}
-		for _, table := range []string{"users", "sessions", "user_preferences", "foods", "audit_logs"} {
+		next, err := migrations.Files.ReadFile("002_refresh_tokens.sql")
+		if err != nil {
+			return err
+		}
+		nextSum := sha256.Sum256(next)
+		nextChecksum := hex.EncodeToString(nextSum[:])
+		var applied int
+		if err := c.QueryRowContext(ctx, "SELECT count(*) FROM schema_migrations WHERE version=2").Scan(&applied); err != nil {
+			return err
+		}
+		if applied == 0 {
+			if _, err := c.ExecContext(ctx, string(next)); err != nil {
+				return err
+			}
+			if _, err := c.ExecContext(ctx, "INSERT INTO schema_migrations VALUES(2,?,?)", nextChecksum, time.Now().Unix()); err != nil {
+				return err
+			}
+		} else {
+			var actual string
+			if err := c.QueryRowContext(ctx, "SELECT checksum FROM schema_migrations WHERE version=2").Scan(&actual); err != nil {
+				return err
+			}
+			if actual != nextChecksum {
+				return fmt.Errorf("migration checksum mismatch")
+			}
+		}
+		for _, table := range []string{"users", "sessions", "refresh_tokens", "user_preferences", "foods", "audit_logs"} {
 			var n int
 			if err := c.QueryRowContext(ctx, "SELECT count(*) FROM sqlite_master WHERE type='table' AND name=?", table).Scan(&n); err != nil {
 				return err
@@ -169,6 +195,7 @@ func (s *Store) migrate(ctx context.Context) error {
 		for table, columns := range map[string]string{
 			"users":            userColumns,
 			"sessions":         "token_hash,user_id,auth_version,created_at,expires_at",
+			"refresh_tokens":   "token_hash,session_hash,consumed",
 			"user_preferences": "user_id,allergens_json,excluded_food_ids_json,dietary_preferences_json,daily_energy_kcal,daily_protein_g,daily_fat_g,daily_carbohydrate_g,updated_at",
 			"foods":            "id,name,status",
 			"audit_logs":       "id,actor_user_id,actor_source,action,target_user_id,details_json,created_at",
@@ -179,7 +206,7 @@ func (s *Store) migrate(ctx context.Context) error {
 			}
 			rows.Close()
 		}
-		for _, index := range []string{"sessions_user", "sessions_expiry", "audit_created", "audit_target"} {
+		for _, index := range []string{"sessions_user", "sessions_expiry", "refresh_session", "audit_created", "audit_target"} {
 			var n int
 			if err := c.QueryRowContext(ctx, "SELECT count(*) FROM sqlite_master WHERE type='index' AND name=?", index).Scan(&n); err != nil {
 				return err

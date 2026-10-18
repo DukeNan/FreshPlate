@@ -11,7 +11,7 @@ import (
 )
 
 func config() Config {
-	return Config{Address: "127.0.0.1:8080", Database: "db", KeyFile: "key", Origin: "http://127.0.0.1:8080"}
+	return Config{Address: "127.0.0.1:8080", Database: "db", KeyFile: "key", JWTKeyFile: "jwt.key", Origin: "http://127.0.0.1:8080"}
 }
 func TestDEP001Configuration(t *testing.T) {
 	c := config()
@@ -99,7 +99,7 @@ func TestDEP001ExclusiveLock(t *testing.T) {
 	defer Unlock(third)
 }
 func TestDEP001FlagDefaults(t *testing.T) {
-	for _, key := range []string{"FRESHPLATE_ADDR", "FRESHPLATE_DB", "FRESHPLATE_KEY", "FRESHPLATE_ORIGIN", "FRESHPLATE_SECURE", "FRESHPLATE_WEB"} {
+	for _, key := range []string{"FRESHPLATE_ADDR", "FRESHPLATE_DB", "FRESHPLATE_KEY", "FRESHPLATE_JWT_KEY", "FRESHPLATE_ORIGIN", "FRESHPLATE_SECURE", "FRESHPLATE_WEB"} {
 		t.Setenv(key, "")
 	}
 	fs := flag.NewFlagSet("test", flag.ContinueOnError)
@@ -110,7 +110,7 @@ func TestDEP001FlagDefaults(t *testing.T) {
 	if e := c.Validate(); e != nil {
 		t.Fatal(e)
 	}
-	if c.Address != "127.0.0.1:8080" || c.Secure || c.Origin != "http://127.0.0.1:8080" {
+	if c.Address != "127.0.0.1:8080" || c.Secure || c.Origin != "http://127.0.0.1:8080" || c.JWTKeyFile != "../data/jwt.key" {
 		t.Fatal("unsafe defaults")
 	}
 }
@@ -164,5 +164,101 @@ func TestDEP002FinalPageHeaders(t *testing.T) {
 	handler.ServeHTTP(r, httptest.NewRequest(http.MethodPost, "/", strings.NewReader("{}")))
 	if r.Code != 405 {
 		t.Fatal("write page accepted")
+	}
+}
+
+func TestJWTKeyLifecycle(t *testing.T) {
+	dir := t.TempDir()
+	db, path := filepath.Join(dir, "db"), filepath.Join(dir, "jwt.key")
+	key, err := JWTKey(db, path)
+	if err != nil || len(key) != 32 {
+		t.Fatalf("create JWT key: %v", err)
+	}
+	csrf, err := Key(db, filepath.Join(dir, "csrf.key"))
+	if err != nil || string(key) == string(csrf) {
+		t.Fatalf("keys must be independent: %v", err)
+	}
+	if err := os.WriteFile(db, nil, 0600); err != nil {
+		t.Fatal(err)
+	}
+	again, err := JWTKey(db, path)
+	if err != nil || string(again) != string(key) {
+		t.Fatalf("reuse JWT key: %v", err)
+	}
+	if _, err := JWTKey(db, filepath.Join(dir, "missing")); err == nil {
+		t.Fatal("generated JWT key for existing database")
+	}
+	if err := os.Chmod(path, 0644); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := JWTKey(db, path); err == nil {
+		t.Fatal("accepted public JWT key")
+	}
+	if err := os.Chmod(path, 0600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(path, []byte("short"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := JWTKey(db, path); err == nil {
+		t.Fatal("accepted short JWT key")
+	}
+	alias := filepath.Join(dir, "alias.key")
+	if err := os.Symlink(path, alias); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := JWTKey(db, alias); err == nil {
+		t.Fatal("accepted symbolic JWT key")
+	}
+}
+
+func TestJWTKeyConfiguration(t *testing.T) {
+	dir := t.TempDir()
+	c := config()
+	c.Database, c.KeyFile, c.JWTKeyFile = filepath.Join(dir, "db"), filepath.Join(dir, "csrf.key"), filepath.Join(dir, "jwt.key")
+	if err := c.Validate(); err != nil {
+		t.Fatal(err)
+	}
+	for _, path := range []string{"", c.Database, c.KeyFile} {
+		t.Run(path, func(t *testing.T) {
+			copy := c
+			copy.JWTKeyFile = path
+			if copy.Validate() == nil {
+				t.Fatal("accepted missing or shared JWT key path")
+			}
+		})
+	}
+	alias := filepath.Join(dir, "alias")
+	if err := os.Symlink(dir, alias); err != nil {
+		t.Fatal(err)
+	}
+	c.JWTKeyFile = filepath.Join(alias, "csrf.key")
+	if c.Validate() == nil {
+		t.Fatal("accepted key through aliased parent before key exists")
+	}
+	if err := os.WriteFile(c.KeyFile, make([]byte, 32), 0600); err != nil {
+		t.Fatal(err)
+	}
+	c.JWTKeyFile = filepath.Join(dir, "hard.key")
+	if err := os.Link(c.KeyFile, c.JWTKeyFile); err != nil {
+		t.Fatal(err)
+	}
+	if c.Validate() == nil {
+		t.Fatal("accepted hard linked keys")
+	}
+}
+
+func TestJWTKeyFlagAndEnvironment(t *testing.T) {
+	t.Setenv("FRESHPLATE_JWT_KEY", "environment.key")
+	fs := flag.NewFlagSet("test", flag.ContinueOnError)
+	c := Flags(fs)
+	if c.JWTKeyFile != "environment.key" {
+		t.Fatal("JWT key environment ignored")
+	}
+	if err := fs.Parse([]string{"--jwt-key", "flag.key"}); err != nil {
+		t.Fatal(err)
+	}
+	if c.JWTKeyFile != "flag.key" {
+		t.Fatal("JWT key flag ignored")
 	}
 }
