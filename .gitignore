@@ -7,4 +7,8 @@ web/dist/
 web/coverage/
 server/coverage.out
 .DS_Store
+.vscode/
 __pycache__/
+test-results/
+playwright-report/
+server/*.log

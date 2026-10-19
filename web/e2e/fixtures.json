@@ -1,5 +1,39 @@
 {
   "admin": { "username": "browser_admin", "password": "Admin-browser-fixture-2026" },
   "temporaryPassword": "Temporary-browser-fixture-2026",
-  "finalPassword": "Final-browser-fixture-2026"
+  "finalPassword": "Final-browser-fixture-2026",
+  "users": {
+    "A": { "username": "module_user_a", "password": "Module-user-a-2026" },
+    "B": { "username": "module_user_b", "password": "Module-user-b-2026" }
+  },
+  "foods": {
+    "annotated": {
+      "name": "E2E燕麦片", "status": "active",
+      "energy_kcal_100g": 121, "protein_g_100g": 12.5, "fat_g_100g": 3.3, "carbohydrate_g_100g": 68.6,
+      "nutrition_source": "E2E 营养数据集 v1", "nutrition_reference": "E2E-REF-0001",
+      "density_g_ml": 1.03, "piece_weight_g": null, "conversion_source": "E2E 换算依据",
+      "allergens": ["milk"], "allergen_complete": true, "allergen_source": "E2E 过敏原核对依据"
+    },
+    "plain": {
+      "name": "E2E神秘果", "status": "active",
+      "energy_kcal_100g": null, "protein_g_100g": null, "fat_g_100g": null, "carbohydrate_g_100g": null,
+      "nutrition_source": null, "nutrition_reference": null,
+      "density_g_ml": null, "piece_weight_g": null, "conversion_source": null,
+      "allergens": [], "allergen_complete": false, "allergen_source": null
+    },
+    "complete": {
+      "name": "E2E鸡胸肉", "status": "active",
+      "energy_kcal_100g": 118, "protein_g_100g": 22.4, "fat_g_100g": 5, "carbohydrate_g_100g": 1.2,
+      "nutrition_source": "E2E 营养数据集 v1", "nutrition_reference": "E2E-REF-0002",
+      "density_g_ml": 1.05, "piece_weight_g": null, "conversion_source": "E2E 换算依据",
+      "allergens": [], "allergen_complete": true, "allergen_source": "E2E 过敏原核对依据"
+    },
+    "disposable": {
+      "name": "E2E停用材", "status": "active",
+      "energy_kcal_100g": 45, "protein_g_100g": 1, "fat_g_100g": 0.2, "carbohydrate_g_100g": 9.9,
+      "nutrition_source": "E2E 营养数据集 v1", "nutrition_reference": "E2E-REF-0003",
+      "density_g_ml": null, "piece_weight_g": 150, "conversion_source": "E2E 换算依据",
+      "allergens": ["sesame"], "allergen_complete": true, "allergen_source": "E2E 过敏原核对依据"
+    }
+  }
 }

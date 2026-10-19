@@ -31,7 +31,8 @@ try {
   await promisify(execFile)(go, ['build', '-o', executable, './cmd/server'], { cwd: resolve('../server'), env, timeout: 180000 })
   const admin = join(directory, 'admin')
   await promisify(execFile)(go, ['build', '-o', admin, './cmd/admin'], { cwd: resolve('../server'), env, timeout: 180000 })
-  await promisify(execFile)('python3', [resolve('e2e/seed-admin.py'), admin, join(directory, 'test.db'), join(directory, 'csrf.key'), join(directory, 'jwt.key')], { env, timeout: 60000 })
+  // 种子现在还会经 go run 编译并写入普通用户，首次编译放宽到 120s。
+  await promisify(execFile)('python3', [resolve('e2e/seed-admin.py'), admin, join(directory, 'test.db'), join(directory, 'csrf.key'), join(directory, 'jwt.key')], { env, timeout: 120000 })
   child = spawn(executable, ['-addr', `${address}:${port}`, '-origin', `http://${address}:${port}`, '-db', join(directory, 'test.db'), '-key', join(directory, 'csrf.key'), '-jwt-key', join(directory, 'jwt.key'), '-web', resolve('dist')], { env, stdio: 'inherit' })
   const exitCode = await new Promise((resolveExit, reject) => { child.once('error', reject); child.once('exit', code => resolveExit(code)) })
   await stop()
