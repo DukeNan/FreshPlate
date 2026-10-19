@@ -1,6 +1,6 @@
 # FreshPlate 鲜食记
 
-FreshPlate（鲜食记）是饮食管理项目，当前已完成用户模块，可在 macOS/Linux 本地运行。库存、食谱推荐、记餐与营养业务尚未实现，后续规划见 [实现计划](IMPLEMENTATION_PLAN.md)。
+FreshPlate（鲜食记）是饮食管理项目，已完成用户、食材基础数据、食材库存与食谱管理四个模块，可在 macOS/Linux 本地运行。食谱推荐、记餐与营养业务尚未实现，后续规划见 [实现计划](IMPLEMENTATION_PLAN.md)，三模块实施结果见 [实施总结](docs/test/IMPLEMENTATION_SUMMARY.md)。
 
 ## 当前功能
 
@@ -156,7 +156,11 @@ python3 scripts/verify_cli.py --go go
 | 文档 | 内容 |
 | --- | --- |
 | [用户模块 API 使用说明](docs/user/API.md) | 认证、错误处理、接口索引与 curl 示例 |
-| [自动生成的 Swagger 规范](server/docs/swagger.yaml) | Gin handler 注释生成的 14 个接口，可导入 API 工具 |
+| [食材基础数据技术方案](docs/food/FOOD_MODULE_TECHNICAL_DESIGN.md) | 已实现：食材目录、营养来源、换算与过敏原标注 |
+| [食材库存技术方案](docs/inventory/INVENTORY_MODULE_TECHNICAL_DESIGN.md) | 已实现：个人批次库存与到期提醒 |
+| [食谱管理技术方案](docs/recipe/RECIPE_MODULE_TECHNICAL_DESIGN.md) | 已实现：私有食谱与公共食谱发布 |
+| [三模块测试用例与实施总结](docs/test/IMPLEMENTATION_SUMMARY.md) | 测试用例基线、用例→测试映射、实测结果与遗留事项 |
+| [自动生成的 Swagger 规范](server/docs/swagger.yaml) | Gin handler 注释生成的 33 个接口，可导入 API 工具 |
 | [用户模块技术设计](docs/user/USER_MODULE_TECHNICAL_DESIGN.md) | 需求、数据模型与接口契约 |
 | [用户模块架构](docs/user/USER_MODULE_ARCHITECTURE.md) | 已确认的架构图、职责与实现范围 |
 | [测试用例](docs/user/USER_MODULE_TEST_CASES.md) | 按需求组织的验证场景 |
