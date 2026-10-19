@@ -44,6 +44,353 @@ definitions:
       error:
         $ref: '#/definitions/api.errorDetail'
     type: object
+  api.foodInput:
+    properties:
+      allergen_complete:
+        description: true=已核对；必须提供过敏原标注依据。
+        type: boolean
+      allergen_source:
+        description: 键必填；值可为 null 表示未知。声称已核对时必填。
+        maxLength: 500
+        type: string
+        x-nullable: true
+      allergens:
+        description: 去重后至多 10 个；[] 表示无已知标注。
+        items:
+          enum:
+          - milk
+          - egg
+          - fish
+          - crustacean
+          - mollusc
+          - peanut
+          - soy
+          - wheat
+          - tree_nut
+          - sesame
+          type: string
+        type: array
+      carbohydrate_g_100g:
+        description: 键必填；值可为 null 表示未知。
+        maximum: 100
+        minimum: 0
+        type: number
+        x-nullable: true
+      conversion_source:
+        description: 键必填；值可为 null 表示未知。任一换算系数存在时必填。
+        maxLength: 500
+        type: string
+        x-nullable: true
+      density_g_ml:
+        description: 键必填；值可为 null 表示未知。>0，最多六位小数；存在时必须有换算依据。
+        maximum: 100
+        minimum: 0
+        type: number
+        x-nullable: true
+      energy_kcal_100g:
+        description: 键必填；值可为 null 表示未知。营养组六字段必须全空或全有。
+        maximum: 1000
+        minimum: 0
+        type: number
+        x-nullable: true
+      fat_g_100g:
+        description: 键必填；值可为 null 表示未知。
+        maximum: 100
+        minimum: 0
+        type: number
+        x-nullable: true
+      name:
+        description: 去除首尾空白后 1～100 码点，不含控制字符。
+        example: 燕麦片
+        type: string
+      nutrition_reference:
+        description: 键必填；值可为 null 表示未知。营养组存在时必填；仅空白视为缺失。
+        maxLength: 1000
+        type: string
+        x-nullable: true
+      nutrition_source:
+        description: 键必填；值可为 null 表示未知。营养组存在时必填；仅空白视为缺失。
+        maxLength: 500
+        type: string
+        x-nullable: true
+      piece_weight_g:
+        description: 键必填；值可为 null 表示未知。>0，最多六位小数；存在时必须有换算依据。
+        maximum: 1000000
+        minimum: 0
+        type: number
+        x-nullable: true
+      protein_g_100g:
+        description: 键必填；值可为 null 表示未知。
+        maximum: 100
+        minimum: 0
+        type: number
+        x-nullable: true
+      status:
+        enum:
+        - active
+        - disabled
+        type: string
+    required:
+    - allergen_complete
+    - allergen_source
+    - allergens
+    - carbohydrate_g_100g
+    - conversion_source
+    - density_g_ml
+    - energy_kcal_100g
+    - fat_g_100g
+    - name
+    - nutrition_reference
+    - nutrition_source
+    - piece_weight_g
+    - protein_g_100g
+    - status
+    type: object
+  api.foodPage:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/store.FoodSummary'
+        type: array
+      total:
+        type: integer
+    type: object
+  api.foodUpdateInput:
+    properties:
+      allergen_complete:
+        description: true=已核对；必须提供过敏原标注依据。
+        type: boolean
+      allergen_source:
+        description: 键必填；值可为 null 表示未知。声称已核对时必填。
+        maxLength: 500
+        type: string
+        x-nullable: true
+      allergens:
+        description: 去重后至多 10 个；[] 表示无已知标注。
+        items:
+          enum:
+          - milk
+          - egg
+          - fish
+          - crustacean
+          - mollusc
+          - peanut
+          - soy
+          - wheat
+          - tree_nut
+          - sesame
+          type: string
+        type: array
+      carbohydrate_g_100g:
+        description: 键必填；值可为 null 表示未知。
+        maximum: 100
+        minimum: 0
+        type: number
+        x-nullable: true
+      conversion_source:
+        description: 键必填；值可为 null 表示未知。任一换算系数存在时必填。
+        maxLength: 500
+        type: string
+        x-nullable: true
+      density_g_ml:
+        description: 键必填；值可为 null 表示未知。>0，最多六位小数；存在时必须有换算依据。
+        maximum: 100
+        minimum: 0
+        type: number
+        x-nullable: true
+      energy_kcal_100g:
+        description: 键必填；值可为 null 表示未知。营养组六字段必须全空或全有。
+        maximum: 1000
+        minimum: 0
+        type: number
+        x-nullable: true
+      fat_g_100g:
+        description: 键必填；值可为 null 表示未知。
+        maximum: 100
+        minimum: 0
+        type: number
+        x-nullable: true
+      name:
+        description: 去除首尾空白后 1～100 码点，不含控制字符。
+        example: 燕麦片
+        type: string
+      nutrition_reference:
+        description: 键必填；值可为 null 表示未知。营养组存在时必填；仅空白视为缺失。
+        maxLength: 1000
+        type: string
+        x-nullable: true
+      nutrition_source:
+        description: 键必填；值可为 null 表示未知。营养组存在时必填；仅空白视为缺失。
+        maxLength: 500
+        type: string
+        x-nullable: true
+      piece_weight_g:
+        description: 键必填；值可为 null 表示未知。>0，最多六位小数；存在时必须有换算依据。
+        maximum: 1000000
+        minimum: 0
+        type: number
+        x-nullable: true
+      protein_g_100g:
+        description: 键必填；值可为 null 表示未知。
+        maximum: 100
+        minimum: 0
+        type: number
+        x-nullable: true
+      status:
+        enum:
+        - active
+        - disabled
+        type: string
+      version:
+        description: 服务端按 id+version 条件更新，不一致返回 409。
+        minimum: 1
+        type: integer
+    required:
+    - allergen_complete
+    - allergen_source
+    - allergens
+    - carbohydrate_g_100g
+    - conversion_source
+    - density_g_ml
+    - energy_kcal_100g
+    - fat_g_100g
+    - name
+    - nutrition_reference
+    - nutrition_source
+    - piece_weight_g
+    - protein_g_100g
+    - status
+    - version
+    type: object
+  api.inventoryCreateInput:
+    properties:
+      expires_on:
+        description: 严格 YYYY-MM-DD；null/省略表示未知。
+        example: "2026-10-25"
+        type: string
+        x-nullable: true
+      food_id:
+        description: 引用的标准食材；创建后不可修改。
+        example: 1
+        minimum: 1
+        type: integer
+      note:
+        description: TrimSpace 后至多 500 码点。
+        example: 第一批
+        maxLength: 500
+        type: string
+      quantity:
+        description: ASCII 十进制字符串（0 或非零整数开头，可带 1~3 位小数），创建必须 >0；不接受数字类型。
+        example: "6"
+        type: string
+      unit:
+        description: 原始单位；创建后不可修改。
+        enum:
+        - g
+        - ml
+        - piece
+        type: string
+    required:
+    - food_id
+    - quantity
+    - unit
+    type: object
+  api.inventoryDeleteInput:
+    properties:
+      version:
+        example: 2
+        minimum: 1
+        type: integer
+    required:
+    - version
+    type: object
+  api.inventoryFoodOutput:
+    properties:
+      id:
+        type: integer
+      name:
+        example: 燕麦片
+        type: string
+      status:
+        enum:
+        - active
+        - disabled
+        type: string
+    type: object
+  api.inventoryItemOutput:
+    properties:
+      created_at:
+        type: string
+      expires_on:
+        description: null 表示未知到期日。
+        example: "2026-10-25"
+        type: string
+        x-nullable: true
+      expiry_state:
+        enum:
+        - fresh
+        - expiring
+        - expired
+        - unknown
+        - depleted
+        type: string
+      food:
+        $ref: '#/definitions/api.inventoryFoodOutput'
+      id:
+        type: integer
+      note:
+        example: 第一批
+        type: string
+      quantity:
+        example: "1.25"
+        type: string
+      unit:
+        enum:
+        - g
+        - ml
+        - piece
+        type: string
+      updated_at:
+        type: string
+      version:
+        type: integer
+    type: object
+  api.inventoryPage:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/api.inventoryItemOutput'
+        type: array
+      total:
+        type: integer
+    type: object
+  api.inventoryUpdateInput:
+    properties:
+      expires_on:
+        description: 必填；null 表示未知到期日。
+        example: "2026-10-25"
+        type: string
+        x-nullable: true
+      note:
+        description: 必填（全量替换）；空串合法。
+        example: 已用掉一部分
+        maxLength: 500
+        type: string
+      quantity:
+        description: ASCII 十进制字符串；允许 "0" 表示用完。
+        example: "4.5"
+        type: string
+      version:
+        description: 期望旧版本；不一致返回 409。
+        example: 1
+        minimum: 1
+        type: integer
+    required:
+    - expires_on
+    - note
+    - quantity
+    - version
+    type: object
   api.loginResult:
     properties:
       access_token:
@@ -145,6 +492,307 @@ definitions:
     - dietary_preferences
     - excluded_food_ids
     type: object
+  api.recipeFoodOutput:
+    properties:
+      id:
+        type: integer
+      name:
+        example: 番茄
+        type: string
+      status:
+        enum:
+        - active
+        - disabled
+        type: string
+    type: object
+  api.recipeIngredientInput:
+    properties:
+      food_id:
+        description: 引用的标准食材；同一食谱不可重复。
+        example: 11
+        minimum: 1
+        type: integer
+      quantity:
+        description: ASCII 十进制字符串（可带 1~3 位小数），必须 >0；不接受数字类型。
+        example: "250"
+        type: string
+      unit:
+        description: 原始单位。
+        enum:
+        - g
+        - ml
+        - piece
+        type: string
+    required:
+    - food_id
+    - quantity
+    - unit
+    type: object
+  api.recipeIngredientOutput:
+    properties:
+      food:
+        $ref: '#/definitions/api.recipeFoodOutput'
+      position:
+        type: integer
+      quantity:
+        example: "250"
+        type: string
+      unit:
+        enum:
+        - g
+        - ml
+        - piece
+        type: string
+    type: object
+  api.recipeInput:
+    properties:
+      additional_allergens:
+        description: 额外标注；去重后至多 10 个，[] 表示无。
+        items:
+          enum:
+          - milk
+          - egg
+          - fish
+          - crustacean
+          - mollusc
+          - peanut
+          - soy
+          - wheat
+          - tree_nut
+          - sesame
+          type: string
+        type: array
+      allergen_complete:
+        description: true=已核对食谱层面额外风险；必须提供核对依据。
+        type: boolean
+      allergen_source:
+        description: 核对依据；complete=true 时必填。
+        maxLength: 500
+        type: string
+        x-nullable: true
+      duration_minutes:
+        description: 预计总耗时（分钟）。
+        example: 15
+        maximum: 1440
+        minimum: 1
+        type: integer
+      ingredients:
+        description: 0～100 条；position 由数组顺序生成。
+        items:
+          $ref: '#/definitions/api.recipeIngredientInput'
+        type: array
+      name:
+        description: 去除首尾空白后 1～100 码点，不含控制字符。
+        example: 番茄炒蛋
+        type: string
+      servings:
+        description: 整份食谱对应的份数。
+        example: 2
+        maximum: 100
+        minimum: 1
+        type: integer
+      source:
+        description: 来源说明或 URL；键必须存在，空串表示未填写。
+        example: 个人记录
+        maxLength: 1000
+        type: string
+        x-nullable: true
+      steps:
+        description: 纯文本步骤数组；每步去除首尾空白后 1～1000 码点，允许换行。
+        items:
+          type: string
+        type: array
+    required:
+    - additional_allergens
+    - allergen_complete
+    - duration_minutes
+    - ingredients
+    - name
+    - servings
+    - steps
+    type: object
+  api.recipeOutput:
+    properties:
+      additional_allergens:
+        items:
+          type: string
+        type: array
+      allergen_complete:
+        type: boolean
+      allergen_source:
+        type: string
+      created_at:
+        type: string
+      duration_minutes:
+        type: integer
+      effective_allergens:
+        items:
+          type: string
+        type: array
+      has_disabled_foods:
+        type: boolean
+      id:
+        type: integer
+      ingredients:
+        items:
+          $ref: '#/definitions/api.recipeIngredientOutput'
+        type: array
+      name:
+        type: string
+      restriction_metadata_complete:
+        type: boolean
+      servings:
+        type: integer
+      source:
+        type: string
+      status:
+        enum:
+        - draft
+        - published
+        - archived
+        type: string
+      steps:
+        items:
+          type: string
+        type: array
+      updated_at:
+        type: string
+      version:
+        type: integer
+      visibility:
+        enum:
+        - private
+        - public
+        type: string
+    type: object
+  api.recipePage:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/api.recipeSummaryOutput'
+        type: array
+      total:
+        type: integer
+    type: object
+  api.recipeSummaryOutput:
+    properties:
+      duration_minutes:
+        type: integer
+      has_disabled_foods:
+        type: boolean
+      id:
+        type: integer
+      name:
+        type: string
+      restriction_metadata_complete:
+        type: boolean
+      servings:
+        type: integer
+      status:
+        enum:
+        - draft
+        - published
+        - archived
+        type: string
+      updated_at:
+        type: string
+      version:
+        type: integer
+      visibility:
+        enum:
+        - private
+        - public
+        type: string
+    type: object
+  api.recipeUpdateInput:
+    properties:
+      additional_allergens:
+        description: 额外标注；去重后至多 10 个，[] 表示无。
+        items:
+          enum:
+          - milk
+          - egg
+          - fish
+          - crustacean
+          - mollusc
+          - peanut
+          - soy
+          - wheat
+          - tree_nut
+          - sesame
+          type: string
+        type: array
+      allergen_complete:
+        description: true=已核对食谱层面额外风险；必须提供核对依据。
+        type: boolean
+      allergen_source:
+        description: 核对依据；complete=true 时必填。
+        maxLength: 500
+        type: string
+        x-nullable: true
+      duration_minutes:
+        description: 预计总耗时（分钟）。
+        example: 15
+        maximum: 1440
+        minimum: 1
+        type: integer
+      ingredients:
+        description: 0～100 条；position 由数组顺序生成。
+        items:
+          $ref: '#/definitions/api.recipeIngredientInput'
+        type: array
+      name:
+        description: 去除首尾空白后 1～100 码点，不含控制字符。
+        example: 番茄炒蛋
+        type: string
+      servings:
+        description: 整份食谱对应的份数。
+        example: 2
+        maximum: 100
+        minimum: 1
+        type: integer
+      source:
+        description: 来源说明或 URL；键必须存在，空串表示未填写。
+        example: 个人记录
+        maxLength: 1000
+        type: string
+        x-nullable: true
+      status:
+        description: 目标状态；非法转换返回 409。
+        enum:
+        - draft
+        - published
+        - archived
+        type: string
+      steps:
+        description: 纯文本步骤数组；每步去除首尾空白后 1～1000 码点，允许换行。
+        items:
+          type: string
+        type: array
+      version:
+        description: 服务端按 id+version 条件更新，不一致返回 409。
+        minimum: 1
+        type: integer
+    required:
+    - additional_allergens
+    - allergen_complete
+    - duration_minutes
+    - ingredients
+    - name
+    - servings
+    - status
+    - steps
+    - version
+    type: object
+  api.resourceAuditPage:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/store.ResourceAudit'
+        type: array
+      total:
+        type: integer
+    type: object
   api.response:
     properties:
       data: {}
@@ -199,6 +847,60 @@ definitions:
       status:
         type: string
     type: object
+  store.FoodDetail:
+    properties:
+      allergen_complete:
+        type: boolean
+      allergen_source:
+        type: string
+      allergens:
+        items:
+          type: string
+        type: array
+      carbohydrate_g_100g:
+        type: number
+      conversion_source:
+        type: string
+      created_at:
+        type: string
+      density_g_ml:
+        type: number
+      energy_kcal_100g:
+        type: number
+      fat_g_100g:
+        type: number
+      id:
+        type: integer
+      name:
+        type: string
+      nutrition_reference:
+        type: string
+      nutrition_source:
+        type: string
+      piece_weight_g:
+        type: number
+      protein_g_100g:
+        type: number
+      status:
+        type: string
+      updated_at:
+        type: string
+      version:
+        type: integer
+    type: object
+  store.FoodSummary:
+    properties:
+      allergen_complete:
+        type: boolean
+      id:
+        type: integer
+      name:
+        type: string
+      status:
+        type: string
+      version:
+        type: integer
+    type: object
   store.Preferences:
     properties:
       allergens:
@@ -228,6 +930,24 @@ definitions:
       updated_at:
         type: string
     type: object
+  store.ResourceAudit:
+    properties:
+      action:
+        type: string
+      actor_user_id:
+        type: integer
+      created_at:
+        type: string
+      details:
+        additionalProperties: {}
+        type: object
+      id:
+        type: integer
+      resource_id:
+        type: integer
+      resource_type:
+        type: string
+    type: object
   store.User:
     properties:
       created_at:
@@ -247,11 +967,12 @@ definitions:
     type: object
 info:
   contact: {}
-  description: '使用 Authorization: Bearer access JWT（15 分钟），每次查会话确保即时撤销。refresh HttpOnly
-    Cookie 固定有效 7 天，轮换并检测重放。登录、刷新和注销要求精确 Origin 与 CSRF；其他写接口无需 CSRF，受保护写接口仍要求 X-Expected-User-ID。JWT
+  description: 'FreshPlate 三模块 API：用户模块（注册登录、JWT 访问/刷新令牌、饮食偏好、管理员用户与审计）；食材与库存模块（公共食材目录、带营养数据的食材管理、个人库存出入与盘点）；食谱模块（私有与公共食谱的创建、编辑、详情与检索）。通用约定：使用
+    Authorization: Bearer access JWT（15 分钟），每次查会话确保即时撤销。refresh HttpOnly Cookie 固定有效
+    7 天，轮换并检测重放。登录、刷新和注销要求精确 Origin 与 CSRF；其他写接口无需 CSRF，受保护写接口仍要求 X-Expected-User-ID。JWT
     仅保存前端内存。强制改密期间允许 /me、/auth/csrf、/auth/refresh、/auth/logout、/me/password。成功返回 data，失败返回
     error.code/message。所有 API no-store，不启用 CORS。'
-  title: FreshPlate 用户模块 API
+  title: FreshPlate API
   version: 0.1.0
 paths:
   /admin/audit-logs:
@@ -319,6 +1040,525 @@ paths:
       security:
       - BearerAuth: []
       summary: 分页查询审计日志
+      tags:
+      - 管理
+  /admin/foods:
+    get:
+      description: 仅管理员可用。返回全部状态食材摘要，按 ID 倒序；status 省略或为空表示不过滤。
+      parameters:
+      - description: 名称字面子串；处理后至多 100 码点。
+        in: query
+        name: q
+        type: string
+      - description: 状态筛选；省略或空字符串表示全部。
+        enum:
+        - active
+        - disabled
+        in: query
+        name: status
+        type: string
+      - default: 1
+        description: 页码。
+        in: query
+        maximum: 1000000
+        minimum: 1
+        name: page
+        type: integer
+      - default: 20
+        description: 每页条数。
+        in: query
+        maximum: 100
+        minimum: 1
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/api.response'
+            - properties:
+                data:
+                  $ref: '#/definitions/api.foodPage'
+              type: object
+        "400":
+          description: INVALID_ARGUMENT：分页参数、q 超长或状态无效。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "401":
+          description: AUTH_REQUIRED：未登录或会话失效。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "403":
+          description: FORBIDDEN：需要管理员权限；PASSWORD_CHANGE_REQUIRED：必须先修改密码。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "500":
+          description: INTERNAL_ERROR：服务内部错误。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "503":
+          description: DATABASE_BUSY：数据库忙，请稍后重试。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: 分页查询全部食材（管理员）
+      tags:
+      - 管理
+    post:
+      consumes:
+      - application/json
+      description: 仅管理员可用。必须提交全部输入字段，未知信息显式传 null 或 false；id/version/created_at/updated_at
+        等服务端字段不允许出现。成功返回 201 与 version=1 详情，并写 food_created 审计；名称重复返回 409 FOOD_NAME_TAKEN。写事务内复核会话、账号状态与管理员角色。
+      parameters:
+      - description: 表单加载时登录用户 ID 的十进制规范字符串（int64 范围）；不一致返回 409。
+        in: header
+        name: X-Expected-User-ID
+        required: true
+        type: string
+      - description: 请求参数；拒绝未知字段，最多 64 KiB
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/api.foodInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/api.response'
+            - properties:
+                data:
+                  $ref: '#/definitions/store.FoodDetail'
+              type: object
+        "400":
+          description: INVALID_ARGUMENT：字段缺失、格式错误、请求体超限或 Content-Type 非 application/json。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "401":
+          description: AUTH_REQUIRED：未登录或会话失效。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "403":
+          description: FORBIDDEN：需要管理员权限；PASSWORD_CHANGE_REQUIRED：必须先修改密码。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "409":
+          description: FOOD_NAME_TAKEN：名称已存在；IDENTITY_CHANGED：页面身份不一致。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "500":
+          description: INTERNAL_ERROR：服务内部错误。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "503":
+          description: DATABASE_BUSY：数据库忙，本次写入未保存，请稍后手动重提。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: 创建食材（管理员）
+      tags:
+      - 管理
+  /admin/foods/{id}:
+    put:
+      consumes:
+      - application/json
+      description: 仅管理员可用。必须提交完整输入与当前 version；服务端按 id+version 条件更新，版本不一致返回 409 VERSION_CONFLICT。无变化时返回原详情，不升版本、不写审计；状态变化优先记
+        food_disabled/food_enabled，其余记 food_updated。同一 ID 必须始终指代同一种食材及加工形态，语义变更应创建新记录并停用旧记录。
+      parameters:
+      - description: 表单加载时登录用户 ID 的十进制规范字符串（int64 范围）；不一致返回 409。
+        in: header
+        name: X-Expected-User-ID
+        required: true
+        type: string
+      - description: 食材 ID。
+        format: int64
+        in: path
+        minimum: 1
+        name: id
+        required: true
+        type: integer
+      - description: 请求参数；拒绝未知字段，最多 64 KiB
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/api.foodUpdateInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/api.response'
+            - properties:
+                data:
+                  $ref: '#/definitions/store.FoodDetail'
+              type: object
+        "400":
+          description: INVALID_ARGUMENT：字段缺失、version 非法、请求体超限或 Content-Type 非 application/json。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "401":
+          description: AUTH_REQUIRED：未登录或会话失效。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "403":
+          description: FORBIDDEN：需要管理员权限；PASSWORD_CHANGE_REQUIRED：必须先修改密码。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "404":
+          description: NOT_FOUND：食材不存在。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "409":
+          description: FOOD_NAME_TAKEN：名称已存在；VERSION_CONFLICT：版本已被他人修改；IDENTITY_CHANGED：页面身份不一致。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "500":
+          description: INTERNAL_ERROR：服务内部错误。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "503":
+          description: DATABASE_BUSY：数据库忙，本次写入未保存，请稍后手动重提。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: 全量更新食材（管理员）
+      tags:
+      - 管理
+  /admin/recipes:
+    get:
+      description: 仅管理员可用。返回全部状态的公共食谱，不含任何用户的私有食谱；status 省略或为空表示不过滤。按 ID 倒序分页，items
+        携带派生警示字段。
+      parameters:
+      - description: 名称字面子串；处理后至多 100 码点。
+        in: query
+        name: q
+        type: string
+      - description: 状态筛选；省略或空字符串表示全部。
+        enum:
+        - draft
+        - published
+        - archived
+        in: query
+        name: status
+        type: string
+      - default: 1
+        description: 页码。
+        in: query
+        maximum: 1000000
+        minimum: 1
+        name: page
+        type: integer
+      - default: 20
+        description: 每页条数。
+        in: query
+        maximum: 100
+        minimum: 1
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/api.response'
+            - properties:
+                data:
+                  $ref: '#/definitions/api.recipePage'
+              type: object
+        "400":
+          description: INVALID_ARGUMENT：分页参数、q 超长或状态无效。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "401":
+          description: AUTH_REQUIRED：未登录或会话失效。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "403":
+          description: FORBIDDEN：需要管理员权限；PASSWORD_CHANGE_REQUIRED：必须先修改密码。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "500":
+          description: INTERNAL_ERROR：服务内部错误。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "503":
+          description: DATABASE_BUSY：数据库忙，请稍后重试。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: 管理员公共食谱列表
+      tags:
+      - 管理
+    post:
+      consumes:
+      - application/json
+      description: 仅管理员可用。始终创建 public/draft（version=1），公共食谱不属于管理员个人账号（owner 为空）；不接受
+        visibility/owner_user_id/status/version，出现即 400。请求体上限 256 KiB。创建写入 recipe_created
+        资源审计。
+      parameters:
+      - description: 表单加载时登录用户 ID 的十进制规范字符串（int64 范围）；不一致返回 409。
+        in: header
+        name: X-Expected-User-ID
+        required: true
+        type: string
+      - description: 请求参数；拒绝未知字段，最多 256 KiB
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/api.recipeInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/api.response'
+            - properties:
+                data:
+                  $ref: '#/definitions/api.recipeOutput'
+              type: object
+        "400":
+          description: INVALID_ARGUMENT：字段缺失、数量/单位/过敏原编码非法、请求体超限或 Content-Type 非 application/json；FOOD_UNAVAILABLE：引用的食材不存在或已停用。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "401":
+          description: AUTH_REQUIRED：未登录或会话失效。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "403":
+          description: FORBIDDEN：需要管理员权限；PASSWORD_CHANGE_REQUIRED：必须先修改密码。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "409":
+          description: IDENTITY_CHANGED：页面身份不一致。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "500":
+          description: INTERNAL_ERROR：服务内部错误。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "503":
+          description: DATABASE_BUSY：数据库忙，本次写入未保存，请稍后手动重提。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: 创建公共食谱（管理员）
+      tags:
+      - 管理
+  /admin/recipes/{id}:
+    get:
+      description: 仅管理员可用。返回任意状态公共食谱的完整详情；私有食谱一律 404，管理员权限不突破私有边界。
+      parameters:
+      - description: 食谱 ID。
+        format: int64
+        in: path
+        minimum: 1
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/api.response'
+            - properties:
+                data:
+                  $ref: '#/definitions/api.recipeOutput'
+              type: object
+        "400":
+          description: INVALID_ARGUMENT：食谱 ID 不是正整数。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "401":
+          description: AUTH_REQUIRED：未登录或会话失效。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "403":
+          description: FORBIDDEN：需要管理员权限；PASSWORD_CHANGE_REQUIRED：必须先修改密码。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "404":
+          description: NOT_FOUND：食谱不存在或为私有食谱。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "500":
+          description: INTERNAL_ERROR：服务内部错误。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "503":
+          description: DATABASE_BUSY：数据库忙，请稍后重试。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: 管理员读取公共食谱详情
+      tags:
+      - 管理
+    put:
+      consumes:
+      - application/json
+      description: 仅管理员可用。提交完整输入、目标 status 与当前 version；支持发布、撤回为草稿与归档，archived→published
+        必须先恢复草稿。发布或保持 published 的编辑要求全部食材 active 且过敏原完整、食谱自身核对完整且有依据，不满足返回 409 RECIPE_NOT_PUBLISHABLE
+        并附原因。无变化返回原详情，不升版本、不写审计；状态变化优先记录对应审计动作。校验不套用发布者个人忌口。
+      parameters:
+      - description: 表单加载时登录用户 ID 的十进制规范字符串（int64 范围）；不一致返回 409。
+        in: header
+        name: X-Expected-User-ID
+        required: true
+        type: string
+      - description: 食谱 ID。
+        format: int64
+        in: path
+        minimum: 1
+        name: id
+        required: true
+        type: integer
+      - description: 请求参数；拒绝未知字段，最多 256 KiB
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/api.recipeUpdateInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/api.response'
+            - properties:
+                data:
+                  $ref: '#/definitions/api.recipeOutput'
+              type: object
+        "400":
+          description: INVALID_ARGUMENT：字段缺失、version/status 非法、请求体超限或 Content-Type
+            非 application/json；FOOD_UNAVAILABLE：新增引用的食材不存在或已停用。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "401":
+          description: AUTH_REQUIRED：未登录或会话失效。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "403":
+          description: FORBIDDEN：需要管理员权限；PASSWORD_CHANGE_REQUIRED：必须先修改密码。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "404":
+          description: NOT_FOUND：食谱不存在或为私有食谱。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "409":
+          description: RECIPE_NOT_PUBLISHABLE：不满足发布条件；INVALID_RECIPE_TRANSITION：非法状态转换；VERSION_CONFLICT：版本已被他人修改；IDENTITY_CHANGED：页面身份不一致。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "500":
+          description: INTERNAL_ERROR：服务内部错误。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "503":
+          description: DATABASE_BUSY：数据库忙，本次写入未保存，请稍后手动重提。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: 管理员编辑公共食谱
+      tags:
+      - 管理
+  /admin/resource-audit-logs:
+    get:
+      description: 仅管理员可用。返回 food/recipe 公共资源的管理审计事件，按 ID 倒序；resource_type 仅接受 food/recipe，resource_id
+        为正整数，action 精确匹配（如 food_created/food_updated/food_disabled/food_enabled）。账号审计仍走
+        GET /admin/audit-logs，两者互不混用。
+      parameters:
+      - description: 资源类型筛选；省略或空字符串表示全部。
+        enum:
+        - food
+        - recipe
+        in: query
+        name: resource_type
+        type: string
+      - description: 按资源 ID 筛选；正整数。
+        format: int64
+        in: query
+        minimum: 1
+        name: resource_id
+        type: integer
+      - description: 精确匹配操作类型（实现限制为 64 字节）；省略或空字符串表示全部。
+        in: query
+        maxLength: 64
+        name: action
+        type: string
+      - default: 1
+        description: 页码。
+        in: query
+        maximum: 1000000
+        minimum: 1
+        name: page
+        type: integer
+      - default: 20
+        description: 每页条数。
+        in: query
+        maximum: 100
+        minimum: 1
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/api.response'
+            - properties:
+                data:
+                  $ref: '#/definitions/api.resourceAuditPage'
+              type: object
+        "400":
+          description: INVALID_ARGUMENT：分页参数或筛选条件无效。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "401":
+          description: AUTH_REQUIRED：未登录或会话失效。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "403":
+          description: FORBIDDEN：需要管理员权限；PASSWORD_CHANGE_REQUIRED：必须先修改密码。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "500":
+          description: INTERNAL_ERROR：服务内部错误。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "503":
+          description: DATABASE_BUSY：数据库忙，请稍后重试。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: 分页查询资源管理审计（管理员）
       tags:
       - 管理
   /admin/users:
@@ -787,6 +2027,66 @@ paths:
       summary: 注册普通用户
       tags:
       - 认证
+  /food-catalog:
+    get:
+      description: 仅登录用户可用。只返回 active 食材摘要，按 ID 倒序；摘要仅含 id/name/status/version/allergen_complete，不携带营养或来源详情。q
+        为去除首尾空白后的名称字面子串匹配，不解释 SQL 通配符。
+      parameters:
+      - description: 名称字面子串；处理后至多 100 码点。
+        in: query
+        name: q
+        type: string
+      - default: 1
+        description: 页码。
+        in: query
+        maximum: 1000000
+        minimum: 1
+        name: page
+        type: integer
+      - default: 20
+        description: 每页条数。
+        in: query
+        maximum: 100
+        minimum: 1
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/api.response'
+            - properties:
+                data:
+                  $ref: '#/definitions/api.foodPage'
+              type: object
+        "400":
+          description: INVALID_ARGUMENT：分页参数或 q 超长。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "401":
+          description: AUTH_REQUIRED：未登录或会话失效。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "403":
+          description: PASSWORD_CHANGE_REQUIRED：必须先修改密码。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "500":
+          description: INTERNAL_ERROR：服务内部错误。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "503":
+          description: DATABASE_BUSY：数据库忙，请稍后重试。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: 分页检索食材目录
+      tags:
+      - 食材
   /foods:
     get:
       description: 仅登录用户可用。仅返回 active 食材，按 ID 升序，无分页。仅基础名称，不提供营养或过敏原判定数据。
@@ -829,6 +2129,374 @@ paths:
       summary: 列出可选食材
       tags:
       - 个人账户
+  /foods/{id}:
+    get:
+      description: 仅登录用户可用。返回全部业务字段；停用食材同样可读，用于解释既有引用。未知信息以 null 表示，不补零。
+      parameters:
+      - description: 食材 ID。
+        format: int64
+        in: path
+        minimum: 1
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/api.response'
+            - properties:
+                data:
+                  $ref: '#/definitions/store.FoodDetail'
+              type: object
+        "400":
+          description: INVALID_ARGUMENT：食材 ID 不是正整数。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "401":
+          description: AUTH_REQUIRED：未登录或会话失效。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "403":
+          description: PASSWORD_CHANGE_REQUIRED：必须先修改密码。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "404":
+          description: NOT_FOUND：食材不存在。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "500":
+          description: INTERNAL_ERROR：服务内部错误。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "503":
+          description: DATABASE_BUSY：数据库忙，请稍后重试。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: 读取食材完整详情
+      tags:
+      - 食材
+  /inventory-items:
+    get:
+      description: 仅登录用户可用。返回本人全部未删除批次（含数量为零项），按 ID 倒序；items 与 total 基于同一服务端 today
+        取得，筛选与响应 expiry_state 规则一致（depleted/expired/expiring/fresh/unknown）。q 为食材名称字面子串；不提供总质量/总数量聚合。日期统一按
+        UTC 判断。
+      parameters:
+      - description: 食材名称字面子串；处理后至多 100 码点。
+        in: query
+        name: q
+        type: string
+      - description: 按食材 ID 筛选；正整数。
+        format: int64
+        in: query
+        minimum: 1
+        name: food_id
+        type: integer
+      - description: 到期状态筛选；省略或空字符串表示全部。
+        enum:
+        - depleted
+        - expired
+        - expiring
+        - fresh
+        - unknown
+        in: query
+        name: expiry_state
+        type: string
+      - default: 1
+        description: 页码。
+        in: query
+        maximum: 1000000
+        minimum: 1
+        name: page
+        type: integer
+      - default: 20
+        description: 每页条数。
+        in: query
+        maximum: 100
+        minimum: 1
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/api.response'
+            - properties:
+                data:
+                  $ref: '#/definitions/api.inventoryPage'
+              type: object
+        "400":
+          description: INVALID_ARGUMENT：分页、q、food_id 或 expiry_state 参数无效。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "401":
+          description: AUTH_REQUIRED：未登录或会话失效。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "403":
+          description: PASSWORD_CHANGE_REQUIRED：必须先修改密码。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "500":
+          description: INTERNAL_ERROR：服务内部错误。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "503":
+          description: DATABASE_BUSY：数据库忙，请稍后重试。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: 分页查询本人库存
+      tags:
+      - 库存
+    post:
+      consumes:
+      - application/json
+      description: 仅登录用户可用。数量必须为 >0 的 ASCII 十进制字符串（至多三位小数）；食材必须 active（否则 400 FOOD_UNAVAILABLE）；不因相同内容自动合并。user_id/version/deleted_at
+        等服务端字段不允许出现。成功返回 201 与 version=1 详情。
+      parameters:
+      - description: 表单加载时登录用户 ID 的十进制规范字符串（int64 范围）；不一致返回 409。
+        in: header
+        name: X-Expected-User-ID
+        required: true
+        type: string
+      - description: 请求参数；拒绝未知字段，最多 64 KiB
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/api.inventoryCreateInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/api.response'
+            - properties:
+                data:
+                  $ref: '#/definitions/api.inventoryItemOutput'
+              type: object
+        "400":
+          description: INVALID_ARGUMENT：字段缺失或格式错误、请求体超限或 Content-Type 非 application/json；FOOD_UNAVAILABLE：食材不存在或已停用。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "401":
+          description: AUTH_REQUIRED：未登录或会话失效。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "403":
+          description: PASSWORD_CHANGE_REQUIRED：必须先修改密码。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "409":
+          description: IDENTITY_CHANGED：页面身份不一致。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "500":
+          description: INTERNAL_ERROR：服务内部错误。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "503":
+          description: DATABASE_BUSY：数据库忙，本次写入未保存，请稍后手动重提。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: 新建库存批次
+      tags:
+      - 库存
+  /inventory-items/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: 仅登录用户可用。必须提交 JSON {"version":N}（必填正整数）：缺失、null 或非法值在查询资源存在性之前返回
+        400，代理丢弃请求体也只能导致拒绝，永不退化为无版本删除；不接受查询参数或 If-Match 替代通道。版本不一致返回 409；成功逻辑删除返回
+        204；已删除或他人批次一律 404。
+      parameters:
+      - description: 表单加载时登录用户 ID 的十进制规范字符串（int64 范围）；不一致返回 409。
+        in: header
+        name: X-Expected-User-ID
+        required: true
+        type: string
+      - description: 库存批次 ID。
+        format: int64
+        in: path
+        minimum: 1
+        name: id
+        required: true
+        type: integer
+      - description: 删除请求；必须包含当前 version。
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/api.inventoryDeleteInput'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: 成功，无响应体
+        "400":
+          description: INVALID_ARGUMENT：version 缺失/null/非法、请求体缺失或 Content-Type 非 application/json。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "401":
+          description: AUTH_REQUIRED：未登录或会话失效。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "403":
+          description: PASSWORD_CHANGE_REQUIRED：必须先修改密码。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "404":
+          description: NOT_FOUND：批次不存在、已删除或不属于本人。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "409":
+          description: VERSION_CONFLICT：版本已被他人修改；IDENTITY_CHANGED：页面身份不一致。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "500":
+          description: INTERNAL_ERROR：服务内部错误。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "503":
+          description: DATABASE_BUSY：数据库忙，本次写入未保存，请稍后手动重提。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: 删除库存批次
+      tags:
+      - 库存
+    get:
+      description: 仅登录用户可用。返回统一 DTO；停用食材的批次同样可读并保留名称与停用标记。不存在、已删除或他人批次一律 404，不可区分。
+      parameters:
+      - description: 库存批次 ID。
+        format: int64
+        in: path
+        minimum: 1
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/api.response'
+            - properties:
+                data:
+                  $ref: '#/definitions/api.inventoryItemOutput'
+              type: object
+        "401":
+          description: AUTH_REQUIRED：未登录或会话失效。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "403":
+          description: PASSWORD_CHANGE_REQUIRED：必须先修改密码。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "404":
+          description: NOT_FOUND：批次不存在、已删除或不属于本人。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "500":
+          description: INTERNAL_ERROR：服务内部错误。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "503":
+          description: DATABASE_BUSY：数据库忙，请稍后重试。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: 读取本人库存批次详情
+      tags:
+      - 库存
+    put:
+      consumes:
+      - application/json
+      description: 仅登录用户可用。必须提交 quantity/expires_on/note 与当前 version；不接受 food_id/unit（食材引用与原单位不可修改）。服务端按
+        id+user_id+version+未删除条件更新，版本不一致返回 409 VERSION_CONFLICT；关联食材停用时只允许减量、设零或改备注/到期日（增量返回
+        409 FOOD_DISABLED）；相同内容返回原详情不加版本。
+      parameters:
+      - description: 表单加载时登录用户 ID 的十进制规范字符串（int64 范围）；不一致返回 409。
+        in: header
+        name: X-Expected-User-ID
+        required: true
+        type: string
+      - description: 库存批次 ID。
+        format: int64
+        in: path
+        minimum: 1
+        name: id
+        required: true
+        type: integer
+      - description: 请求参数；拒绝未知字段，最多 64 KiB
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/api.inventoryUpdateInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/api.response'
+            - properties:
+                data:
+                  $ref: '#/definitions/api.inventoryItemOutput'
+              type: object
+        "400":
+          description: INVALID_ARGUMENT：可变字段缺失、数量/日期非法、请求体超限或 Content-Type 非 application/json。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "401":
+          description: AUTH_REQUIRED：未登录或会话失效。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "403":
+          description: PASSWORD_CHANGE_REQUIRED：必须先修改密码。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "404":
+          description: NOT_FOUND：批次不存在、已删除或不属于本人。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "409":
+          description: VERSION_CONFLICT：版本已被他人修改；FOOD_DISABLED：食材已停用只允许减量；IDENTITY_CHANGED：页面身份不一致。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "500":
+          description: INTERNAL_ERROR：服务内部错误。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "503":
+          description: DATABASE_BUSY：数据库忙，本次写入未保存，请稍后手动重提。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: 全量替换库存批次可变字段
+      tags:
+      - 库存
   /me:
     get:
       description: 仅登录用户可用。允许处于强制改密状态的用户访问。
@@ -1036,6 +2704,263 @@ paths:
       summary: 完整替换个人饮食设置
       tags:
       - 个人账户
+  /recipes:
+    get:
+      description: 仅登录用户可用。scope=public（默认）仅返回已发布公共食谱，不接受 status 筛选；scope=mine 返回本人私有食谱的全部状态，可按
+        status 筛选。q 为去除首尾空白后至多 100 码点的名称字面子串；按 ID 倒序分页。items 携带读取时派生的警示字段，不含步骤全量内容。
+      parameters:
+      - default: public
+        description: 列表范围。
+        enum:
+        - public
+        - mine
+        in: query
+        name: scope
+        type: string
+      - description: 名称字面子串；处理后至多 100 码点。
+        in: query
+        name: q
+        type: string
+      - description: 仅 scope=mine 可用；省略或空表示全部状态。
+        enum:
+        - draft
+        - published
+        - archived
+        in: query
+        name: status
+        type: string
+      - default: 1
+        description: 页码。
+        in: query
+        maximum: 1000000
+        minimum: 1
+        name: page
+        type: integer
+      - default: 20
+        description: 每页条数。
+        in: query
+        maximum: 100
+        minimum: 1
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/api.response'
+            - properties:
+                data:
+                  $ref: '#/definitions/api.recipePage'
+              type: object
+        "400":
+          description: INVALID_ARGUMENT：分页参数、q 超长、scope 或 status 无效。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "401":
+          description: AUTH_REQUIRED：未登录或会话失效。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "403":
+          description: PASSWORD_CHANGE_REQUIRED：必须先修改密码。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "500":
+          description: INTERNAL_ERROR：服务内部错误。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "503":
+          description: DATABASE_BUSY：数据库忙，请稍后重试。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: 食谱列表（公共/我的）
+      tags:
+      - 食谱
+    post:
+      consumes:
+      - application/json
+      description: 仅登录用户可用。始终创建本人 private/draft（version=1）；不接受 visibility/owner_user_id/status/version，出现即
+        400。请求全部输入字段必须显式提交（空步骤/空原料合法）；请求体上限 256 KiB。私有食谱不写管理审计。
+      parameters:
+      - description: 表单加载时登录用户 ID 的十进制规范字符串（int64 范围）；不一致返回 409。
+        in: header
+        name: X-Expected-User-ID
+        required: true
+        type: string
+      - description: 请求参数；拒绝未知字段，最多 256 KiB
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/api.recipeInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/api.response'
+            - properties:
+                data:
+                  $ref: '#/definitions/api.recipeOutput'
+              type: object
+        "400":
+          description: INVALID_ARGUMENT：字段缺失、数量/单位/过敏原编码非法、请求体超限或 Content-Type 非 application/json；FOOD_UNAVAILABLE：引用的食材不存在或已停用。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "401":
+          description: AUTH_REQUIRED：未登录或会话失效。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "403":
+          description: FORBIDDEN：权限不足；PASSWORD_CHANGE_REQUIRED：必须先修改密码。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "409":
+          description: IDENTITY_CHANGED：页面身份不一致。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "500":
+          description: INTERNAL_ERROR：服务内部错误。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "503":
+          description: DATABASE_BUSY：数据库忙，本次写入未保存，请稍后手动重提。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: 创建私有食谱
+      tags:
+      - 食谱
+  /recipes/{id}:
+    get:
+      description: 仅登录用户可用。返回已发布公共食谱或本人私有食谱的完整详情，含原料（position 与食物 id/name/status）、有效过敏原合并结果与派生警示；其余（未发布/已撤回公共、他人私有、不存在）一律
+        404，不区分原因。
+      parameters:
+      - description: 食谱 ID。
+        format: int64
+        in: path
+        minimum: 1
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/api.response'
+            - properties:
+                data:
+                  $ref: '#/definitions/api.recipeOutput'
+              type: object
+        "400":
+          description: INVALID_ARGUMENT：食谱 ID 不是正整数。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "401":
+          description: AUTH_REQUIRED：未登录或会话失效。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "403":
+          description: PASSWORD_CHANGE_REQUIRED：必须先修改密码。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "404":
+          description: NOT_FOUND：食谱不存在、未发布或不属于本人。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "500":
+          description: INTERNAL_ERROR：服务内部错误。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "503":
+          description: DATABASE_BUSY：数据库忙，请稍后重试。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: 读取食谱详情
+      tags:
+      - 食谱
+    put:
+      consumes:
+      - application/json
+      description: 仅登录用户可用。必须提交完整输入、目标 status 与当前 version；按 id+version 条件更新，版本不一致返回
+        409 VERSION_CONFLICT。仅能修改本人私有食谱：公共或他人食谱一律 404。归档也提交完整内容，不提供 DELETE。
+      parameters:
+      - description: 表单加载时登录用户 ID 的十进制规范字符串（int64 范围）；不一致返回 409。
+        in: header
+        name: X-Expected-User-ID
+        required: true
+        type: string
+      - description: 食谱 ID。
+        format: int64
+        in: path
+        minimum: 1
+        name: id
+        required: true
+        type: integer
+      - description: 请求参数；拒绝未知字段，最多 256 KiB
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/api.recipeUpdateInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/api.response'
+            - properties:
+                data:
+                  $ref: '#/definitions/api.recipeOutput'
+              type: object
+        "400":
+          description: INVALID_ARGUMENT：字段缺失、version/status 非法、请求体超限或 Content-Type
+            非 application/json；FOOD_UNAVAILABLE：新增引用的食材不存在或已停用。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "401":
+          description: AUTH_REQUIRED：未登录或会话失效。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "403":
+          description: FORBIDDEN：权限不足；PASSWORD_CHANGE_REQUIRED：必须先修改密码。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "404":
+          description: NOT_FOUND：食谱不存在或不属于本人。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "409":
+          description: RECIPE_NOT_PUBLISHABLE：不满足发布条件；INVALID_RECIPE_TRANSITION：非法状态转换；VERSION_CONFLICT：版本已被他人修改；IDENTITY_CHANGED：页面身份不一致。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "500":
+          description: INTERNAL_ERROR：服务内部错误。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "503":
+          description: DATABASE_BUSY：数据库忙，本次写入未保存，请稍后手动重提。
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: 更新本人私有食谱
+      tags:
+      - 食谱
 securityDefinitions:
   BearerAuth:
     in: header

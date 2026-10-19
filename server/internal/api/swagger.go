@@ -10,9 +10,9 @@ import (
 
 //go:generate go tool swag init -g swagger.go -d .,../store -o ../../docs
 
-// @title FreshPlate 用户模块 API
+// @title FreshPlate API
 // @version 0.1.0
-// @description 使用 Authorization: Bearer access JWT（15 分钟），每次查会话确保即时撤销。refresh HttpOnly Cookie 固定有效 7 天，轮换并检测重放。登录、刷新和注销要求精确 Origin 与 CSRF；其他写接口无需 CSRF，受保护写接口仍要求 X-Expected-User-ID。JWT 仅保存前端内存。强制改密期间允许 /me、/auth/csrf、/auth/refresh、/auth/logout、/me/password。成功返回 data，失败返回 error.code/message。所有 API no-store，不启用 CORS。
+// @description FreshPlate 三模块 API：用户模块（注册登录、JWT 访问/刷新令牌、饮食偏好、管理员用户与审计）；食材与库存模块（公共食材目录、带营养数据的食材管理、个人库存出入与盘点）；食谱模块（私有与公共食谱的创建、编辑、详情与检索）。通用约定：使用 Authorization: Bearer access JWT（15 分钟），每次查会话确保即时撤销。refresh HttpOnly Cookie 固定有效 7 天，轮换并检测重放。登录、刷新和注销要求精确 Origin 与 CSRF；其他写接口无需 CSRF，受保护写接口仍要求 X-Expected-User-ID。JWT 仅保存前端内存。强制改密期间允许 /me、/auth/csrf、/auth/refresh、/auth/logout、/me/password。成功返回 data，失败返回 error.code/message。所有 API no-store，不启用 CORS。
 // @BasePath /api
 // @securityDefinitions.apikey BearerAuth
 // @in header

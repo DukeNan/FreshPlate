@@ -83,11 +83,12 @@ func (a *API) issueCSRF(c *gin.Context) (string, error) {
 	return token, nil
 }
 func (a *API) context(c *gin.Context) {
-	if c.Request.ContentLength > 64<<10 {
-		a.fail(c, store.E(400, "INVALID_ARGUMENT", "请求体过大"))
+	limit := bodyLimit(c.FullPath(), c.Request.Method)
+	if c.Request.ContentLength > limit {
+		a.fail(c, store.E(400, "INVALID_ARGUMENT", "请求体过大或无法读取"))
 		return
 	}
-	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, 64<<10)
+	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, limit)
 	path := c.Request.URL.Path
 	cookieAuth := path == "/api/auth/csrf" || path == "/api/auth/login" || path == "/api/auth/refresh" || path == "/api/auth/logout"
 	if cookieAuth {

@@ -9,6 +9,7 @@ import (
 	"mime"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 	"unicode/utf8"
 
@@ -64,6 +65,9 @@ func New(s *logic.Service, cfg appRuntime.Config, key []byte) (*gin.Engine, erro
 	admin.PATCH("/users/:id", a.updateUser)
 	admin.POST("/users/:id/reset-password", a.resetPassword)
 	admin.GET("/audit-logs", a.audit)
+	a.registerFoodRoutes(me, admin)
+	a.registerInventoryRoutes(me)
+	a.registerRecipeRoutes(me, admin)
 	r.NoRoute(func(c *gin.Context) {
 		c.Header("Cache-Control", "no-store")
 		a.fail(c, store.E(404, "NOT_FOUND", "接口不存在"))
@@ -102,13 +106,48 @@ func (a *API) fail(c *gin.Context, err error) {
 	}
 	c.AbortWithStatusJSON(app.Status, errorResponse{Error: errorDetail{Code: app.Code, Message: app.Message}})
 }
+// bodyLimit 按已匹配路由（FullPath）与请求方法返回请求体上限（食材方案
+// §2、食谱方案 §4）：仅食谱创建/更新四条写路由放宽至 256 KiB，其余全部
+// 接口保持 64 KiB；不按 URL 前缀泛化（未注册的子路径不受放宽）。入参为
+// gin 路由模板（c.FullPath() 返回 ":id"）或等价的正整数 ID 实际路径。
+// 它是 Content-Length 预检、流式 MaxBytesReader 与 decode 的唯一限制
+// 来源，保证三种通道同一限制。
+func bodyLimit(fullPath, method string) int64 {
+	if method != "POST" && method != "PUT" {
+		return 64 << 10
+	}
+	switch fullPath {
+	case "/api/recipes", "/api/admin/recipes", "/api/recipes/:id", "/api/admin/recipes/:id":
+		return 256 << 10
+	}
+	for _, prefix := range []string{"/api/recipes/", "/api/admin/recipes/"} {
+		if rest, ok := strings.CutPrefix(fullPath, prefix); ok && isPositiveDigits(rest) {
+			return 256 << 10
+		}
+	}
+	return 64 << 10
+}
+
+// isPositiveDigits 判断是否为非空十进制数字串（:id 的等价实际形式）。
+func isPositiveDigits(s string) bool {
+	if s == "" {
+		return false
+	}
+	for i := 0; i < len(s); i++ {
+		if s[i] < '0' || s[i] > '9' {
+			return false
+		}
+	}
+	return true
+}
+
 func (a *API) decode(c *gin.Context, dst any) bool {
 	typ, _, err := mime.ParseMediaType(c.GetHeader("Content-Type"))
 	if err != nil || typ != "application/json" {
 		a.fail(c, store.E(415, "UNSUPPORTED_MEDIA_TYPE", "请求必须使用 application/json"))
 		return false
 	}
-	body, err := io.ReadAll(http.MaxBytesReader(c.Writer, c.Request.Body, 64<<10))
+	body, err := io.ReadAll(http.MaxBytesReader(c.Writer, c.Request.Body, bodyLimit(c.FullPath(), c.Request.Method)))
 	if err != nil {
 		a.fail(c, store.E(400, "INVALID_ARGUMENT", "请求体过大或无法读取"))
 		return false
