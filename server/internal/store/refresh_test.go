@@ -122,7 +122,7 @@ func TestUpgradeV1PreservesBusinessDataAndInvalidatesSessions(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer s.Close()
-	for query, want := range map[string]int{"SELECT count(*) FROM users": 1, "SELECT count(*) FROM user_preferences": 1, "SELECT count(*) FROM sessions": 0, "SELECT count(*) FROM refresh_tokens": 0, "SELECT count(*) FROM schema_migrations": 2} {
+	for query, want := range map[string]int{"SELECT count(*) FROM users": 1, "SELECT count(*) FROM user_preferences": 1, "SELECT count(*) FROM sessions": 0, "SELECT count(*) FROM refresh_tokens": 0, "SELECT count(*) FROM schema_migrations": len(migrationChain)} {
 		var got int
 		if err = s.DB.QueryRow(query).Scan(&got); err != nil || got != want {
 			t.Fatalf("%s: got %d want %d err %v", query, got, want, err)
