@@ -2,7 +2,7 @@
 
 ## Project Structure & Module Organization
 
-FreshPlate currently implements user accounts, dietary preferences, and administration; inventory and nutrition features remain planned.
+FreshPlate currently implements user accounts, dietary preferences, the shared food catalog, personal inventory, and recipe management (see `docs/test/IMPLEMENTATION_SUMMARY.md`); recommendation, meal logging, and nutrition features remain planned.
 
 - `server/cmd/server/` and `server/cmd/admin/`: HTTP service and maintenance CLI entry points.
 - `server/internal/`: `api` handles HTTP/security, `logic` owns business rules, `store` manages SQLite, and `runtime` handles configuration and process locks.
