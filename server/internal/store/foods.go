@@ -7,6 +7,8 @@ import (
 	"errors"
 	"slices"
 	"time"
+
+	"gorm.io/gorm"
 )
 
 // foodDetailColumns 与 db.go 启动校验使用的 foodColumns 保持同一列集合；
@@ -89,13 +91,27 @@ func scanFoodDetail(r scanner) (FoodDetail, error) {
 	return f, nil
 }
 
-// foodArgs 组装 INSERT/UPDATE 共用的可编辑列参数（不含 version 与时间戳）。
-func foodArgs(in FoodWrite) ([]any, error) {
+func foodRecord(in FoodWrite) (foodRow, error) {
 	allergens, err := json.Marshal(in.Allergens)
 	if err != nil {
-		return nil, err
+		return foodRow{}, err
 	}
-	return []any{in.Name, in.Status, in.EnergyKcal100g, in.ProteinG100g, in.FatG100g, in.CarbohydrateG100g, in.NutritionSource, in.NutritionReference, in.DensityGml, in.PieceWeightG, in.ConversionSource, string(allergens), boolInt(in.AllergenComplete), in.AllergenSource}, nil
+	return foodRow{
+		Name:               in.Name,
+		Status:             in.Status,
+		EnergyKcal100g:     in.EnergyKcal100g,
+		ProteinG100g:       in.ProteinG100g,
+		FatG100g:           in.FatG100g,
+		CarbohydrateG100g:  in.CarbohydrateG100g,
+		NutritionSource:    in.NutritionSource,
+		NutritionReference: in.NutritionReference,
+		DensityGml:         in.DensityGml,
+		PieceWeightG:       in.PieceWeightG,
+		ConversionSource:   in.ConversionSource,
+		AllergensJSON:      string(allergens),
+		AllergenComplete:   in.AllergenComplete,
+		AllergenSource:     in.AllergenSource,
+	}, nil
 }
 
 // foodPtrEqual 在 NULL 语义下比较可空标量：仅当两者同为 nil 或指向相同值时相等。
@@ -144,12 +160,13 @@ func (s *Store) FoodAdminList(ctx context.Context, q, status string, page, size 
 
 // listFoods 是两个列表的共用实现：按 ID 倒序、instr 字面子串匹配。
 func (s *Store) listFoods(ctx context.Context, q, status string, page, size int) (items []FoodSummary, total int, err error) {
-	tx, err := s.DB.BeginTx(ctx, &sql.TxOptions{ReadOnly: true})
+	tx := s.orm.WithContext(ctx).Begin(&sql.TxOptions{ReadOnly: true})
+	err = tx.Error
 	if err != nil {
 		return nil, 0, mapError(err)
 	}
 	defer tx.Rollback()
-	where := " WHERE 1=1"
+	where := "1=1"
 	args := []any{}
 	if status != "" {
 		where += " AND status=?"
@@ -159,12 +176,11 @@ func (s *Store) listFoods(ctx context.Context, q, status string, page, size int)
 		where += " AND instr(name,?)>0"
 		args = append(args, q)
 	}
-	if err = tx.QueryRowContext(ctx, "SELECT count(*) FROM foods"+where, args...).Scan(&total); err != nil {
+	if err = tx.WithContext(ctx).Table("foods").Select("count(*)").Where(where, args...).Row().Scan(&total); err != nil {
 		return nil, 0, mapError(err)
 	}
 	limit, offset := pageBounds(page, size)
-	args = append(args, limit, offset)
-	rows, err := tx.QueryContext(ctx, "SELECT id,name,status,version,allergen_complete FROM foods"+where+" ORDER BY id DESC LIMIT ? OFFSET ?", args...)
+	rows, err := tx.WithContext(ctx).Table("foods").Select("id,name,status,version,allergen_complete").Where(where, args...).Order("id DESC").Limit(limit).Offset(offset).Rows()
 	if err != nil {
 		return nil, 0, mapError(err)
 	}
@@ -182,13 +198,13 @@ func (s *Store) listFoods(ctx context.Context, q, status string, page, size int)
 	if err != nil {
 		return nil, 0, err
 	}
-	err = mapError(tx.Commit())
+	err = mapError(tx.Commit().Error)
 	return
 }
 
 // FoodByID 返回食材完整详情；停用食材同样可读，用于解释既有引用。
 func (s *Store) FoodByID(ctx context.Context, id int64) (FoodDetail, error) {
-	f, err := scanFoodDetail(s.DB.QueryRowContext(ctx, "SELECT "+foodDetailColumns+" FROM foods WHERE id=?", id))
+	f, err := scanFoodDetail(s.orm.WithContext(ctx).Table("foods").Select(foodDetailColumns).Where("id=?", id).Row())
 	if errors.Is(err, sql.ErrNoRows) {
 		return FoodDetail{}, E(404, "NOT_FOUND", "食材不存在")
 	}
@@ -198,28 +214,26 @@ func (s *Store) FoodByID(ctx context.Context, id int64) (FoodDetail, error) {
 // CreateFood 在写事务内复核管理员后创建食材（version=1）并写创建审计。
 // 名称唯一约束冲突由 mapError 映射为 409 FOOD_NAME_TAKEN。
 func (s *Store) CreateFood(ctx context.Context, actor Session, in FoodWrite, now time.Time) (out FoodDetail, err error) {
-	err = s.WithImmediate(ctx, func(c *sql.Conn) error {
+	err = s.WithImmediate(ctx, func(c *gorm.DB) error {
 		a, e := checkSession(ctx, c, actor, now, true)
 		if e != nil {
 			return e
 		}
-		args, e := foodArgs(in)
+		record, e := foodRecord(in)
 		if e != nil {
 			return e
 		}
-		r, e := c.ExecContext(ctx, "INSERT INTO foods(name,status,energy_kcal_100g,protein_g_100g,fat_g_100g,carbohydrate_g_100g,nutrition_source,nutrition_reference,density_g_ml,piece_weight_g,conversion_source,allergens_json,allergen_complete,allergen_source,version,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,1,?,?)", append(args, now.Unix(), now.Unix())...)
+		record.Version, record.CreatedAt, record.UpdatedAt = 1, now.Unix(), now.Unix()
+		e = c.WithContext(ctx).Table("foods").Create(&record).Error
 		if e != nil {
 			return e
 		}
-		id, e := r.LastInsertId()
-		if e != nil {
-			return e
-		}
+		id := record.ID
 		details := map[string]any{"fields": foodCreateFields, "status_before": nil, "status_after": in.Status, "version_before": nil, "version_after": int64(1)}
 		if e = insertResourceAudit(ctx, c, a.ID, "food", id, "food_created", details, now); e != nil {
 			return e
 		}
-		out, e = scanFoodDetail(c.QueryRowContext(ctx, "SELECT "+foodDetailColumns+" FROM foods WHERE id=?", id))
+		out, e = scanFoodDetail(c.WithContext(ctx).Table("foods").Select(foodDetailColumns).Where("id=?", id).Row())
 		return e
 	})
 	return
@@ -229,12 +243,12 @@ func (s *Store) CreateFood(ctx context.Context, actor Session, in FoodWrite, now
 // 不一致返回 409；无变化返回原详情，不升版本、不写审计；有变化时以
 // id+version 条件更新并要求影响行数恰为 1，随后写审计并回读。
 func (s *Store) UpdateFood(ctx context.Context, actor Session, id, version int64, in FoodWrite, now time.Time) (out FoodDetail, err error) {
-	err = s.WithImmediate(ctx, func(c *sql.Conn) error {
+	err = s.WithImmediate(ctx, func(c *gorm.DB) error {
 		a, e := checkSession(ctx, c, actor, now, true)
 		if e != nil {
 			return e
 		}
-		old, e := scanFoodDetail(c.QueryRowContext(ctx, "SELECT "+foodDetailColumns+" FROM foods WHERE id=?", id))
+		old, e := scanFoodDetail(c.WithContext(ctx).Table("foods").Select(foodDetailColumns).Where("id=?", id).Row())
 		if errors.Is(e, sql.ErrNoRows) {
 			return E(404, "NOT_FOUND", "食材不存在")
 		}
@@ -250,18 +264,19 @@ func (s *Store) UpdateFood(ctx context.Context, actor Session, id, version int64
 			return nil
 		}
 		newVersion := old.Version + 1
-		args, e := foodArgs(in)
+		record, e := foodRecord(in)
 		if e != nil {
 			return e
 		}
-		args = append(args, newVersion, now.Unix(), id, old.Version)
-		r, e := c.ExecContext(ctx, "UPDATE foods SET name=?,status=?,energy_kcal_100g=?,protein_g_100g=?,fat_g_100g=?,carbohydrate_g_100g=?,nutrition_source=?,nutrition_reference=?,density_g_ml=?,piece_weight_g=?,conversion_source=?,allergens_json=?,allergen_complete=?,allergen_source=?,version=?,updated_at=? WHERE id=? AND version=?", args...)
+		record.Version, record.UpdatedAt = newVersion, now.Unix()
+		// Select all fields so zero values and NULLs also replace the old values.
+		r := c.WithContext(ctx).Table("foods").Where("id=? AND version=?", id, old.Version).
+			Select("*").Omit("id", "created_at").Updates(&record)
+		e = r.Error
 		if e != nil {
 			return e
 		}
-		if n, e := r.RowsAffected(); e != nil {
-			return e
-		} else if n != 1 {
+		if n := r.RowsAffected; n != 1 {
 			return E(409, "VERSION_CONFLICT", "食材已被他人修改，请刷新后重试")
 		}
 		// 状态变化优先记 disabled/enabled，其余记 updated。
@@ -277,7 +292,7 @@ func (s *Store) UpdateFood(ctx context.Context, actor Session, id, version int64
 		if e = insertResourceAudit(ctx, c, a.ID, "food", id, action, details, now); e != nil {
 			return e
 		}
-		out, e = scanFoodDetail(c.QueryRowContext(ctx, "SELECT "+foodDetailColumns+" FROM foods WHERE id=?", id))
+		out, e = scanFoodDetail(c.WithContext(ctx).Table("foods").Select(foodDetailColumns).Where("id=?", id).Row())
 		return e
 	})
 	return

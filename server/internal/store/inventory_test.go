@@ -2,11 +2,12 @@ package store
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"fmt"
 	"testing"
 	"time"
+
+	"gorm.io/gorm"
 )
 
 // 库存模块存储层测试（INV-STORE-001～023）：默认值、不合并、CHECK、
@@ -271,7 +272,7 @@ func TestINVSTORE014_SessionRevokedMidTransaction(t *testing.T) {
 		t.Fatal(err)
 	}
 	result := make(chan error, 1)
-	err = s.WithImmediate(ctx, func(c *sql.Conn) error {
+	err = s.WithImmediate(ctx, func(c *gorm.DB) error {
 		previous := s.DB.Stats().WaitCount
 		go func() {
 			_, e := s.UpdateInventory(ctx, ss, out.ID, 1, 5000, nil, "撤销期间编辑", testNow)
@@ -281,7 +282,7 @@ func TestINVSTORE014_SessionRevokedMidTransaction(t *testing.T) {
 			return err
 		}
 		// 外层事务内撤销身份：auth_version+1 使会话失效。
-		_, e := c.ExecContext(ctx, "UPDATE users SET auth_version=auth_version+1 WHERE id=?", u.ID)
+		e := c.WithContext(ctx).Exec("UPDATE users SET auth_version=auth_version+1 WHERE id=?", u.ID).Error
 		return e
 	})
 	if err != nil {
@@ -432,7 +433,7 @@ func TestINVSTORE021_ConcurrentDisableBlocksCreate(t *testing.T) {
 	foodID := invFood(t, s, "鸡胸肉", "active")
 	// 场景一：外层事务先停用，随后执行的创建必须复核失败。
 	result := make(chan error, 1)
-	err := s.WithImmediate(ctx, func(c *sql.Conn) error {
+	err := s.WithImmediate(ctx, func(c *gorm.DB) error {
 		previous := s.DB.Stats().WaitCount
 		go func() {
 			_, e := s.CreateInventory(ctx, ss, foodID, 1000, "g", nil, "", testNow)
@@ -441,7 +442,7 @@ func TestINVSTORE021_ConcurrentDisableBlocksCreate(t *testing.T) {
 		if err := waitForStoreWaiter(ctx, s, previous); err != nil {
 			return err
 		}
-		_, e := c.ExecContext(ctx, "UPDATE foods SET status='disabled' WHERE id=?", foodID)
+		e := c.WithContext(ctx).Exec("UPDATE foods SET status='disabled' WHERE id=?", foodID).Error
 		return e
 	})
 	if err != nil {

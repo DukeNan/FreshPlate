@@ -5,6 +5,8 @@ import (
 	"database/sql"
 	"errors"
 	"time"
+
+	"gorm.io/gorm"
 )
 
 // 库存模块存储层（方案 §2/§3.3/§5）。所有查询与修改都强制限定
@@ -73,13 +75,13 @@ func (s *Store) ListInventory(ctx context.Context, userID int64, q string, foodI
 		return nil, 0, err
 	}
 	todayPlus3 := base.AddDate(0, 0, 3).Format(inventoryDateLayout)
-	tx, err := s.DB.BeginTx(ctx, &sql.TxOptions{ReadOnly: true})
+	tx := s.orm.WithContext(ctx).Begin(&sql.TxOptions{ReadOnly: true})
+	err = tx.Error
 	if err != nil {
 		return nil, 0, mapError(err)
 	}
 	defer tx.Rollback()
-	from := " FROM inventory_items i JOIN foods f ON f.id=i.food_id"
-	where := " WHERE i.user_id=? AND i.deleted_at IS NULL"
+	where := "i.user_id=? AND i.deleted_at IS NULL"
 	args := []any{userID}
 	if expiryState != "" {
 		switch expiryState {
@@ -108,12 +110,11 @@ func (s *Store) ListInventory(ctx context.Context, userID int64, q string, foodI
 		where += " AND i.food_id=?"
 		args = append(args, foodID)
 	}
-	if err = tx.QueryRowContext(ctx, "SELECT count(*)"+from+where, args...).Scan(&total); err != nil {
+	if err = tx.WithContext(ctx).Table("inventory_items i").Select("count(*)").Joins("JOIN foods f ON f.id=i.food_id").Where(where, args...).Row().Scan(&total); err != nil {
 		return nil, 0, mapError(err)
 	}
 	limit, offset := pageBounds(page, size)
-	args = append(args, limit, offset)
-	rows, err := tx.QueryContext(ctx, "SELECT "+inventoryDetailColumns+from+where+" ORDER BY i.id DESC LIMIT ? OFFSET ?", args...)
+	rows, err := tx.WithContext(ctx).Table("inventory_items i").Select(inventoryDetailColumns).Joins("JOIN foods f ON f.id=i.food_id").Where(where, args...).Order("i.id DESC").Limit(limit).Offset(offset).Rows()
 	if err != nil {
 		return nil, 0, mapError(err)
 	}
@@ -131,18 +132,18 @@ func (s *Store) ListInventory(ctx context.Context, userID int64, q string, foodI
 	if err != nil {
 		return nil, 0, err
 	}
-	err = mapError(tx.Commit())
+	err = mapError(tx.Commit().Error)
 	return
 }
 
 // InventoryByID 在写事务内复核会话后返回本人未删除批次详情；
 // 停用食材的批次同样可读（保留名称与停用标记）。
 func (s *Store) InventoryByID(ctx context.Context, actor Session, id int64, now time.Time) (out InventoryItem, err error) {
-	err = s.WithImmediate(ctx, func(c *sql.Conn) error {
+	err = s.WithImmediate(ctx, func(c *gorm.DB) error {
 		if _, e := checkSession(ctx, c, actor, now, false); e != nil {
 			return e
 		}
-		it, e := scanInventoryItem(c.QueryRowContext(ctx, "SELECT "+inventoryDetailColumns+" FROM inventory_items i JOIN foods f ON f.id=i.food_id WHERE i.id=? AND i.user_id=? AND i.deleted_at IS NULL", id, actor.User.ID))
+		it, e := scanInventoryItem(c.WithContext(ctx).Table("inventory_items i").Select(inventoryDetailColumns).Joins("JOIN foods f ON f.id=i.food_id").Where("i.id=? AND i.user_id=? AND i.deleted_at IS NULL", id, actor.User.ID).Row())
 		if errors.Is(e, sql.ErrNoRows) {
 			return inventoryNotFound
 		}
@@ -159,27 +160,25 @@ func (s *Store) InventoryByID(ctx context.Context, actor Session, id int64, now 
 // （version=1，note 默认空串）；不因相同内容合并，两批相同食材是真实
 // 库存。food 不存在或非 active 一律 FOOD_UNAVAILABLE。返回事务内最终记录。
 func (s *Store) CreateInventory(ctx context.Context, actor Session, foodID, quantityMilli int64, unit string, expiresOn *string, note string, now time.Time) (out InventoryItem, err error) {
-	err = s.WithImmediate(ctx, func(c *sql.Conn) error {
+	err = s.WithImmediate(ctx, func(c *gorm.DB) error {
 		if _, e := checkSession(ctx, c, actor, now, false); e != nil {
 			return e
 		}
 		var status string
-		e := c.QueryRowContext(ctx, "SELECT status FROM foods WHERE id=?", foodID).Scan(&status)
+		e := c.WithContext(ctx).Table("foods").Select("status").Where("id=?", foodID).Row().Scan(&status)
 		if errors.Is(e, sql.ErrNoRows) || (e == nil && status != "active") {
 			return E(400, "FOOD_UNAVAILABLE", "食材不存在或已停用")
 		}
 		if e != nil {
 			return e
 		}
-		r, e := c.ExecContext(ctx, "INSERT INTO inventory_items(user_id,food_id,quantity_milli,unit,expires_on,note,version,created_at,updated_at) VALUES(?,?,?,?,?,?,1,?,?)", actor.User.ID, foodID, quantityMilli, unit, expiresOn, note, now.Unix(), now.Unix())
+		row := inventoryRow{UserID: actor.User.ID, FoodID: foodID, QuantityMilli: quantityMilli, Unit: unit, ExpiresOn: expiresOn, Note: note, Version: 1, CreatedAt: now.Unix(), UpdatedAt: now.Unix()}
+		e = c.WithContext(ctx).Table("inventory_items").Create(&row).Error
 		if e != nil {
 			return e
 		}
-		id, e := r.LastInsertId()
-		if e != nil {
-			return e
-		}
-		out, e = scanInventoryItem(c.QueryRowContext(ctx, "SELECT "+inventoryDetailColumns+" FROM inventory_items i JOIN foods f ON f.id=i.food_id WHERE i.id=? AND i.user_id=?", id, actor.User.ID))
+		id := row.ID
+		out, e = scanInventoryItem(c.WithContext(ctx).Table("inventory_items i").Select(inventoryDetailColumns).Joins("JOIN foods f ON f.id=i.food_id").Where("i.id=? AND i.user_id=?", id, actor.User.ID).Row())
 		return e
 	})
 	return
@@ -190,11 +189,11 @@ func (s *Store) CreateInventory(ctx context.Context, actor Session, foodID, quan
 // 不加版本、不推进 updated_at；否则以 id+user_id+version+未删除条件更新，
 // 影响行数必须为 1，最后返回事务内最终记录。
 func (s *Store) UpdateInventory(ctx context.Context, actor Session, id, version, quantityMilli int64, expiresOn *string, note string, now time.Time) (out InventoryItem, err error) {
-	err = s.WithImmediate(ctx, func(c *sql.Conn) error {
+	err = s.WithImmediate(ctx, func(c *gorm.DB) error {
 		if _, e := checkSession(ctx, c, actor, now, false); e != nil {
 			return e
 		}
-		old, e := scanInventoryItem(c.QueryRowContext(ctx, "SELECT "+inventoryDetailColumns+" FROM inventory_items i JOIN foods f ON f.id=i.food_id WHERE i.id=? AND i.user_id=? AND i.deleted_at IS NULL", id, actor.User.ID))
+		old, e := scanInventoryItem(c.WithContext(ctx).Table("inventory_items i").Select(inventoryDetailColumns).Joins("JOIN foods f ON f.id=i.food_id").Where("i.id=? AND i.user_id=? AND i.deleted_at IS NULL", id, actor.User.ID).Row())
 		if errors.Is(e, sql.ErrNoRows) {
 			return inventoryNotFound
 		}
@@ -211,16 +210,21 @@ func (s *Store) UpdateInventory(ctx context.Context, actor Session, id, version,
 			out = old
 			return nil
 		}
-		r, e := c.ExecContext(ctx, "UPDATE inventory_items SET quantity_milli=?,expires_on=?,note=?,version=?,updated_at=? WHERE id=? AND user_id=? AND version=? AND deleted_at IS NULL", quantityMilli, expiresOn, note, old.Version+1, now.Unix(), id, actor.User.ID, old.Version)
+		r := c.WithContext(ctx).Table("inventory_items").Where("id=? AND user_id=? AND version=? AND deleted_at IS NULL", id, actor.User.ID, old.Version).Updates(map[string]any{
+			"quantity_milli": quantityMilli,
+			"expires_on":     expiresOn,
+			"note":           note,
+			"version":        old.Version + 1,
+			"updated_at":     now.Unix(),
+		})
+		e = r.Error
 		if e != nil {
 			return e
 		}
-		if n, e := r.RowsAffected(); e != nil {
-			return e
-		} else if n != 1 {
+		if n := r.RowsAffected; n != 1 {
 			return E(409, "VERSION_CONFLICT", "库存批次已被他人修改，请刷新后重试")
 		}
-		out, e = scanInventoryItem(c.QueryRowContext(ctx, "SELECT "+inventoryDetailColumns+" FROM inventory_items i JOIN foods f ON f.id=i.food_id WHERE i.id=? AND i.user_id=? AND i.deleted_at IS NULL", id, actor.User.ID))
+		out, e = scanInventoryItem(c.WithContext(ctx).Table("inventory_items i").Select(inventoryDetailColumns).Joins("JOIN foods f ON f.id=i.food_id").Where("i.id=? AND i.user_id=? AND i.deleted_at IS NULL", id, actor.User.ID).Row())
 		return e
 	})
 	return
@@ -229,12 +233,12 @@ func (s *Store) UpdateInventory(ctx context.Context, actor Session, id, version,
 // DeleteInventory 在写事务内复核会话、校验版本后逻辑删除：deleted_at
 // 置为当前时刻且 version+1；行保留批次 ID 供后续记餐关联。
 func (s *Store) DeleteInventory(ctx context.Context, actor Session, id, version int64, now time.Time) error {
-	return s.WithImmediate(ctx, func(c *sql.Conn) error {
+	return s.WithImmediate(ctx, func(c *gorm.DB) error {
 		if _, e := checkSession(ctx, c, actor, now, false); e != nil {
 			return e
 		}
 		var old int64
-		e := c.QueryRowContext(ctx, "SELECT version FROM inventory_items WHERE id=? AND user_id=? AND deleted_at IS NULL", id, actor.User.ID).Scan(&old)
+		e := c.WithContext(ctx).Table("inventory_items").Select("version").Where("id=? AND user_id=? AND deleted_at IS NULL", id, actor.User.ID).Row().Scan(&old)
 		if errors.Is(e, sql.ErrNoRows) {
 			return inventoryNotFound
 		}
@@ -244,13 +248,16 @@ func (s *Store) DeleteInventory(ctx context.Context, actor Session, id, version 
 		if old != version {
 			return E(409, "VERSION_CONFLICT", "库存批次已被他人修改，请刷新后重试")
 		}
-		r, e := c.ExecContext(ctx, "UPDATE inventory_items SET deleted_at=?,version=version+1,updated_at=? WHERE id=? AND user_id=? AND version=? AND deleted_at IS NULL", now.Unix(), now.Unix(), id, actor.User.ID, old)
+		r := c.WithContext(ctx).Table("inventory_items").Where("id=? AND user_id=? AND version=? AND deleted_at IS NULL", id, actor.User.ID, old).Updates(map[string]any{
+			"deleted_at": now.Unix(),
+			"version":    gorm.Expr("version+1"),
+			"updated_at": now.Unix(),
+		})
+		e = r.Error
 		if e != nil {
 			return e
 		}
-		if n, e := r.RowsAffected(); e != nil {
-			return e
-		} else if n != 1 {
+		if n := r.RowsAffected; n != 1 {
 			return E(409, "VERSION_CONFLICT", "库存批次已被他人修改，请刷新后重试")
 		}
 		return nil

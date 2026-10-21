@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"strings"
 	"time"
+
+	"gorm.io/gorm"
 )
 
 const userColumns = "id,username,password_hash,role,status,must_change_password,auth_version,created_at,updated_at"
@@ -22,43 +24,37 @@ func scanUser(r scanner, extra ...any) (User, error) {
 	return u, err
 }
 func (s *Store) UserByName(ctx context.Context, name string) (User, error) {
-	u, err := scanUser(s.DB.QueryRowContext(ctx, "SELECT "+userColumns+" FROM users WHERE username=?", name))
+	u, err := scanUser(s.orm.WithContext(ctx).Table("users").Select(userColumns).Where("username=?", name).Row())
 	return u, mapError(err)
 }
 func (s *Store) UserByID(ctx context.Context, id int64) (User, error) {
-	u, err := scanUser(s.DB.QueryRowContext(ctx, "SELECT "+userColumns+" FROM users WHERE id=?", id))
+	u, err := scanUser(s.orm.WithContext(ctx).Table("users").Select(userColumns).Where("id=?", id).Row())
 	return u, mapError(err)
 }
-func createUser(ctx context.Context, c *sql.Conn, name, hash, role string, now time.Time) (User, error) {
-	r, err := c.ExecContext(ctx, "INSERT INTO users(username,password_hash,role,created_at,updated_at) VALUES(?,?,?,?,?)", name, hash, role, now.Unix(), now.Unix())
+func createUser(ctx context.Context, c *gorm.DB, name, hash, role string, now time.Time) (User, error) {
+	row := userRow{Username: name, PasswordHash: hash, Role: role, CreatedAt: now.Unix(), UpdatedAt: now.Unix()}
+	err := c.WithContext(ctx).Table("users").Create(&row).Error
 	if err != nil {
 		return User{}, err
 	}
-	id, err := r.LastInsertId()
-	if err != nil {
+	id := row.ID
+	if err = c.WithContext(ctx).Table("user_preferences").Create(map[string]any{"user_id": id, "updated_at": now.Unix()}).Error; err != nil {
 		return User{}, err
 	}
-	if _, err = c.ExecContext(ctx, "INSERT INTO user_preferences(user_id,updated_at) VALUES(?,?)", id, now.Unix()); err != nil {
-		return User{}, err
-	}
-	return scanUser(c.QueryRowContext(ctx, "SELECT "+userColumns+" FROM users WHERE id=?", id))
+	return scanUser(c.WithContext(ctx).Table("users").Select(userColumns).Where("id=?", id).Row())
 }
 func (s *Store) CreateUser(ctx context.Context, name, hash, role string, now time.Time) (u User, err error) {
-	err = s.WithImmediate(ctx, func(c *sql.Conn) error { var e error; u, e = createUser(ctx, c, name, hash, role, now); return e })
+	err = s.WithImmediate(ctx, func(c *gorm.DB) error { var e error; u, e = createUser(ctx, c, name, hash, role, now); return e })
 	return
 }
 func (s *Store) ResolveSession(ctx context.Context, hash []byte, now time.Time) (*Session, error) {
-	return resolveSession(ctx, s.DB, hash, now)
+	return resolveSession(ctx, s.orm, hash, now)
 }
 
-type querier interface {
-	QueryRowContext(context.Context, string, ...any) *sql.Row
-}
-
-func resolveSession(ctx context.Context, q querier, hash []byte, now time.Time) (*Session, error) {
+func resolveSession(ctx context.Context, q *gorm.DB, hash []byte, now time.Time) (*Session, error) {
 	var expires int64
 	columns := "u." + strings.ReplaceAll(userColumns, ",", ",u.")
-	u, err := scanUser(q.QueryRowContext(ctx, "SELECT "+columns+",s.expires_at FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.token_hash=? AND s.expires_at>? AND u.status='active' AND s.auth_version=u.auth_version", hash, now.Unix()), &expires)
+	u, err := scanUser(q.WithContext(ctx).Table("sessions s").Select(columns+",s.expires_at").Joins("JOIN users u ON u.id=s.user_id").Where("s.token_hash=? AND s.expires_at>? AND u.status='active' AND s.auth_version=u.auth_version", hash, now.Unix()).Row(), &expires)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
@@ -67,7 +63,7 @@ func resolveSession(ctx context.Context, q querier, hash []byte, now time.Time) 
 	}
 	return &Session{User: u, TokenHash: hash, ExpiresAt: time.Unix(expires, 0).UTC()}, nil
 }
-func checkSession(ctx context.Context, c *sql.Conn, session Session, now time.Time, admin bool) (User, error) {
+func checkSession(ctx context.Context, c *gorm.DB, session Session, now time.Time, admin bool) (User, error) {
 	actual, err := resolveSession(ctx, c, session.TokenHash, now)
 	if err != nil {
 		return User{}, err
@@ -88,41 +84,41 @@ func sameCredential(a, b User) bool {
 	return a.ID == b.ID && a.Status == "active" && a.AuthVersion == b.AuthVersion && a.PasswordHash == b.PasswordHash
 }
 func (s *Store) IssueSession(ctx context.Context, expected User, hash []byte, now, expires time.Time) (u User, err error) {
-	err = s.WithImmediate(ctx, func(c *sql.Conn) error {
+	err = s.WithImmediate(ctx, func(c *gorm.DB) error {
 		var e error
-		u, e = scanUser(c.QueryRowContext(ctx, "SELECT "+userColumns+" FROM users WHERE id=?", expected.ID))
+		u, e = scanUser(c.WithContext(ctx).Table("users").Select(userColumns).Where("id=?", expected.ID).Row())
 		if e != nil {
 			return e
 		}
 		if !sameCredential(u, expected) {
 			return E(401, "INVALID_CREDENTIALS", "用户名或密码不正确")
 		}
-		_, e = c.ExecContext(ctx, "INSERT INTO sessions(token_hash,user_id,auth_version,created_at,expires_at) VALUES(?,?,?,?,?)", hash, u.ID, u.AuthVersion, now.Unix(), expires.Unix())
+		e = c.WithContext(ctx).Table("sessions").Create(map[string]any{"token_hash": hash, "user_id": u.ID, "auth_version": u.AuthVersion, "created_at": now.Unix(), "expires_at": expires.Unix()}).Error
 		if e != nil {
 			return e
 		}
-		_, e = c.ExecContext(ctx, "INSERT INTO refresh_tokens(token_hash,session_hash) VALUES(?,?)", hash, hash)
+		e = c.WithContext(ctx).Table("refresh_tokens").Create(map[string]any{"token_hash": hash, "session_hash": hash}).Error
 		return e
 	})
 	return
 }
 func (s *Store) DeleteSession(ctx context.Context, hash []byte) error {
-	_, err := s.DB.ExecContext(ctx, "DELETE FROM sessions WHERE token_hash=?", hash)
+	err := s.orm.WithContext(ctx).Table("sessions").Where("token_hash=?", hash).Delete(&struct{}{}).Error
 	return mapError(err)
 }
 func (s *Store) CleanupSessions(ctx context.Context, now time.Time) error {
-	_, err := s.DB.ExecContext(ctx, "DELETE FROM sessions WHERE expires_at<=?", now.Unix())
+	err := s.orm.WithContext(ctx).Table("sessions").Where("expires_at<=?", now.Unix()).Delete(&struct{}{}).Error
 	return mapError(err)
 }
-func updatePassword(ctx context.Context, c *sql.Conn, id int64, hash string, must bool, now time.Time) error {
-	if _, err := c.ExecContext(ctx, "UPDATE users SET password_hash=?,must_change_password=?,auth_version=auth_version+1,updated_at=? WHERE id=?", hash, must, now.Unix(), id); err != nil {
+func updatePassword(ctx context.Context, c *gorm.DB, id int64, hash string, must bool, now time.Time) error {
+	if err := c.WithContext(ctx).Table("users").Where("id=?", id).Updates(map[string]any{"password_hash": hash, "must_change_password": must, "auth_version": gorm.Expr("auth_version+1"), "updated_at": now.Unix()}).Error; err != nil {
 		return err
 	}
-	_, err := c.ExecContext(ctx, "DELETE FROM sessions WHERE user_id=?", id)
+	err := c.WithContext(ctx).Table("sessions").Where("user_id=?", id).Delete(&struct{}{}).Error
 	return err
 }
 func (s *Store) ChangePassword(ctx context.Context, session Session, expected User, hash string, now time.Time) error {
-	return s.WithImmediate(ctx, func(c *sql.Conn) error {
+	return s.WithImmediate(ctx, func(c *gorm.DB) error {
 		u, err := checkSession(ctx, c, session, now, false)
 		if err != nil {
 			return err
@@ -133,7 +129,7 @@ func (s *Store) ChangePassword(ctx context.Context, session Session, expected Us
 		return updatePassword(ctx, c, u.ID, hash, false, now)
 	})
 }
-func audit(ctx context.Context, c *sql.Conn, actor *int64, source, action string, target int64, details map[string]string, now time.Time) error {
+func audit(ctx context.Context, c *gorm.DB, actor *int64, source, action string, target int64, details map[string]string, now time.Time) error {
 	if details == nil {
 		details = map[string]string{}
 	}
@@ -141,13 +137,13 @@ func audit(ctx context.Context, c *sql.Conn, actor *int64, source, action string
 	if err != nil {
 		return err
 	}
-	_, err = c.ExecContext(ctx, "INSERT INTO audit_logs(actor_user_id,actor_source,action,target_user_id,details_json,created_at) VALUES(?,?,?,?,?,?)", actor, source, action, target, string(b), now.Unix())
+	err = c.WithContext(ctx).Table("audit_logs").Create(map[string]any{"actor_user_id": actor, "actor_source": source, "action": action, "target_user_id": target, "details_json": string(b), "created_at": now.Unix()}).Error
 	return err
 }
 func (s *Store) InitAdmin(ctx context.Context, name, hash string, now time.Time) (u User, err error) {
-	err = s.WithImmediate(ctx, func(c *sql.Conn) error {
+	err = s.WithImmediate(ctx, func(c *gorm.DB) error {
 		var count int
-		if err := c.QueryRowContext(ctx, "SELECT count(*) FROM users WHERE role='admin'").Scan(&count); err != nil {
+		if err := c.WithContext(ctx).Table("users").Select("count(*)").Where("role='admin'").Row().Scan(&count); err != nil {
 			return err
 		}
 		if count > 0 {
@@ -163,8 +159,8 @@ func (s *Store) InitAdmin(ctx context.Context, name, hash string, now time.Time)
 	return
 }
 func (s *Store) RecoverAdmin(ctx context.Context, expected User, hash string, now time.Time) error {
-	return s.WithImmediate(ctx, func(c *sql.Conn) error {
-		u, err := scanUser(c.QueryRowContext(ctx, "SELECT "+userColumns+" FROM users WHERE id=?", expected.ID))
+	return s.WithImmediate(ctx, func(c *gorm.DB) error {
+		u, err := scanUser(c.WithContext(ctx).Table("users").Select(userColumns).Where("id=?", expected.ID).Row())
 		if err != nil {
 			return err
 		}
@@ -178,7 +174,7 @@ func (s *Store) RecoverAdmin(ctx context.Context, expected User, hash string, no
 	})
 }
 func (s *Store) AdminReset(ctx context.Context, actor Session, expected User, hash string, now time.Time) error {
-	return s.WithImmediate(ctx, func(c *sql.Conn) error {
+	return s.WithImmediate(ctx, func(c *gorm.DB) error {
 		a, err := checkSession(ctx, c, actor, now, true)
 		if err != nil {
 			return err
@@ -186,7 +182,7 @@ func (s *Store) AdminReset(ctx context.Context, actor Session, expected User, ha
 		if a.ID == expected.ID {
 			return E(409, "SELF_ADMIN_CHANGE_FORBIDDEN", "请使用本人修改密码入口")
 		}
-		u, err := scanUser(c.QueryRowContext(ctx, "SELECT "+userColumns+" FROM users WHERE id=?", expected.ID))
+		u, err := scanUser(c.WithContext(ctx).Table("users").Select(userColumns).Where("id=?", expected.ID).Row())
 		if err == sql.ErrNoRows {
 			return E(404, "NOT_FOUND", "用户不存在")
 		}
@@ -203,7 +199,7 @@ func (s *Store) AdminReset(ctx context.Context, actor Session, expected User, ha
 	})
 }
 func (s *Store) AdminUpdate(ctx context.Context, actor Session, target int64, role, status *string, now time.Time) (u User, err error) {
-	err = s.WithImmediate(ctx, func(c *sql.Conn) error {
+	err = s.WithImmediate(ctx, func(c *gorm.DB) error {
 		a, e := checkSession(ctx, c, actor, now, true)
 		if e != nil {
 			return e
@@ -220,7 +216,7 @@ func (s *Store) AdminUpdate(ctx context.Context, actor Session, target int64, ro
 		if status != nil && *status != "active" && *status != "disabled" {
 			return E(400, "INVALID_ARGUMENT", "状态无效")
 		}
-		u, e = scanUser(c.QueryRowContext(ctx, "SELECT "+userColumns+" FROM users WHERE id=?", target))
+		u, e = scanUser(c.WithContext(ctx).Table("users").Select(userColumns).Where("id=?", target).Row())
 		if e == sql.ErrNoRows {
 			return E(404, "NOT_FOUND", "用户不存在")
 		}
@@ -239,18 +235,23 @@ func (s *Store) AdminUpdate(ctx context.Context, actor Session, target int64, ro
 		}
 		if old.Role == "admin" && old.Status == "active" && (u.Role != "admin" || u.Status != "active") {
 			var n int
-			if e = c.QueryRowContext(ctx, "SELECT count(*) FROM users WHERE role='admin' AND status='active'").Scan(&n); e != nil {
+			if e = c.WithContext(ctx).Table("users").Select("count(*)").Where("role='admin' AND status='active'").Row().Scan(&n); e != nil {
 				return e
 			}
 			if n <= 1 {
 				return E(409, "LAST_ADMIN_REQUIRED", "必须保留至少一位启用管理员")
 			}
 		}
-		if _, e = c.ExecContext(ctx, "UPDATE users SET role=?,status=?,auth_version=auth_version+?,updated_at=? WHERE id=?", u.Role, u.Status, boolInt(old.Status != u.Status), now.Unix(), target); e != nil {
+		if e = c.WithContext(ctx).Table("users").Where("id=?", target).Updates(map[string]any{
+			"role":         u.Role,
+			"status":       u.Status,
+			"auth_version": gorm.Expr("auth_version+?", boolInt(old.Status != u.Status)),
+			"updated_at":   now.Unix(),
+		}).Error; e != nil {
 			return e
 		}
 		if old.Status != u.Status {
-			if _, e = c.ExecContext(ctx, "DELETE FROM sessions WHERE user_id=?", target); e != nil {
+			if e = c.WithContext(ctx).Table("sessions").Where("user_id=?", target).Delete(&struct{}{}).Error; e != nil {
 				return e
 			}
 		}
@@ -267,7 +268,7 @@ func (s *Store) AdminUpdate(ctx context.Context, actor Session, target int64, ro
 				return e
 			}
 		}
-		u, e = scanUser(c.QueryRowContext(ctx, "SELECT "+userColumns+" FROM users WHERE id=?", target))
+		u, e = scanUser(c.WithContext(ctx).Table("users").Select(userColumns).Where("id=?", target).Row())
 		return e
 	})
 	return

@@ -24,7 +24,7 @@
 
 ## 2. 实现结果
 
-后端沿用 Gin API → logic → store → SQLite；管理员CLI直接复用logic/store。未增加ORM、JWT、Redis、权限引擎或状态管理库。
+后端沿用 Gin API → logic → store → SQLite；管理员CLI直接复用logic/store。后续 GORM 替换已将业务 CRUD 迁移至 ORM，保留原 SQL 迁移和立即写事务；详见 [验证记录](../test/GORM_MIGRATION_VERIFICATION.md)。
 
 - 注册与用户名规范化，注册原子创建普通账号和默认设置；Argon2id密码、等成本虚拟哈希、双槽有界密码计算、内存限流。
 - 固定七天服务端Session、摘要存储、重启持久化、改密/禁用/重置撤销全部会话；当前角色每次从数据库读取，强制改密白名单。

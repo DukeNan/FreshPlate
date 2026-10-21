@@ -6,17 +6,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"time"
+
+	"gorm.io/gorm"
 )
 
-type reader interface {
-	QueryContext(context.Context, string, ...any) (*sql.Rows, error)
-	QueryRowContext(context.Context, string, ...any) *sql.Row
-}
-
-func readPreferences(ctx context.Context, q reader, userID int64) (p Preferences, err error) {
+func readPreferences(ctx context.Context, q *gorm.DB, userID int64) (p Preferences, err error) {
 	var a, b, d string
 	var updated int64
-	err = q.QueryRowContext(ctx, "SELECT allergens_json,excluded_food_ids_json,dietary_preferences_json,daily_energy_kcal,daily_protein_g,daily_fat_g,daily_carbohydrate_g,updated_at FROM user_preferences WHERE user_id=?", userID).Scan(&a, &b, &d, &p.DailyEnergyKcal, &p.DailyProteinG, &p.DailyFatG, &p.DailyCarbohydrateG, &updated)
+	err = q.WithContext(ctx).Table("user_preferences").Select("allergens_json,excluded_food_ids_json,dietary_preferences_json,daily_energy_kcal,daily_protein_g,daily_fat_g,daily_carbohydrate_g,updated_at").Where("user_id=?", userID).Row().Scan(&a, &b, &d, &p.DailyEnergyKcal, &p.DailyProteinG, &p.DailyFatG, &p.DailyCarbohydrateG, &updated)
 	if err == sql.ErrNoRows {
 		return p, fmt.Errorf("missing user preferences")
 	}
@@ -39,7 +36,7 @@ func readPreferences(ctx context.Context, q reader, userID int64) (p Preferences
 	p.ExcludedFoods = []Food{}
 	for _, id := range p.ExcludedFoodIDs {
 		var f Food
-		err = q.QueryRowContext(ctx, "SELECT id,name,status FROM foods WHERE id=?", id).Scan(&f.ID, &f.Name, &f.Status)
+		err = q.WithContext(ctx).Table("foods").Select("id,name,status").Where("id=?", id).Row().Scan(&f.ID, &f.Name, &f.Status)
 		if err != nil {
 			return p, fmt.Errorf("invalid excluded food reference: %w", err)
 		}
@@ -48,7 +45,8 @@ func readPreferences(ctx context.Context, q reader, userID int64) (p Preferences
 	return p, nil
 }
 func (s *Store) Preferences(ctx context.Context, id int64) (Preferences, error) {
-	tx, err := s.DB.BeginTx(ctx, &sql.TxOptions{ReadOnly: true})
+	tx := s.orm.WithContext(ctx).Begin(&sql.TxOptions{ReadOnly: true})
+	err := tx.Error
 	if err != nil {
 		return Preferences{}, mapError(err)
 	}
@@ -57,10 +55,10 @@ func (s *Store) Preferences(ctx context.Context, id int64) (Preferences, error) 
 	if err != nil {
 		return p, mapError(err)
 	}
-	return p, mapError(tx.Commit())
+	return p, mapError(tx.Commit().Error)
 }
 func (s *Store) SavePreferences(ctx context.Context, session Session, p Preferences, now time.Time) (out Preferences, err error) {
-	err = s.WithImmediate(ctx, func(c *sql.Conn) error {
+	err = s.WithImmediate(ctx, func(c *gorm.DB) error {
 		u, e := checkSession(ctx, c, session, now, false)
 		if e != nil {
 			return e
@@ -78,7 +76,7 @@ func (s *Store) SavePreferences(ctx context.Context, session Session, p Preferen
 		}
 		for _, id := range p.ExcludedFoodIDs {
 			var status string
-			e = c.QueryRowContext(ctx, "SELECT status FROM foods WHERE id=?", id).Scan(&status)
+			e = c.WithContext(ctx).Table("foods").Select("status").Where("id=?", id).Row().Scan(&status)
 			if e == sql.ErrNoRows {
 				return E(400, "INVALID_ARGUMENT", "忌口食材不存在")
 			}
@@ -101,7 +99,16 @@ func (s *Store) SavePreferences(ctx context.Context, session Session, p Preferen
 		if e != nil {
 			return e
 		}
-		_, e = c.ExecContext(ctx, "UPDATE user_preferences SET allergens_json=?,excluded_food_ids_json=?,dietary_preferences_json=?,daily_energy_kcal=?,daily_protein_g=?,daily_fat_g=?,daily_carbohydrate_g=?,updated_at=? WHERE user_id=?", string(a), string(b), string(d), p.DailyEnergyKcal, p.DailyProteinG, p.DailyFatG, p.DailyCarbohydrateG, now.Unix(), u.ID)
+		e = c.WithContext(ctx).Table("user_preferences").Where("user_id=?", u.ID).Updates(map[string]any{
+			"allergens_json":           string(a),
+			"excluded_food_ids_json":   string(b),
+			"dietary_preferences_json": string(d),
+			"daily_energy_kcal":        p.DailyEnergyKcal,
+			"daily_protein_g":          p.DailyProteinG,
+			"daily_fat_g":              p.DailyFatG,
+			"daily_carbohydrate_g":     p.DailyCarbohydrateG,
+			"updated_at":               now.Unix(),
+		}).Error
 		if e != nil {
 			return e
 		}
@@ -111,7 +118,7 @@ func (s *Store) SavePreferences(ctx context.Context, session Session, p Preferen
 	return
 }
 func (s *Store) Foods(ctx context.Context) ([]Food, error) {
-	rows, err := s.DB.QueryContext(ctx, "SELECT id,name,status FROM foods WHERE status='active' ORDER BY id")
+	rows, err := s.orm.WithContext(ctx).Table("foods").Select("id,name,status").Where("status='active'").Order("id").Rows()
 	if err != nil {
 		return nil, mapError(err)
 	}

@@ -40,12 +40,12 @@ flowchart TD
 | HTTP | `server/internal/api/` | 注册、登录、退出、本人信息/改密/设置、管理员用户及审计接口；严格 JSON、大小限制、统一错误、响应安全头和 no-store |
 | 请求门禁 | `server/internal/api/middleware.go` | 有效 Session 上下文、Origin/CSRF、强制改密白名单、当前角色和旧表单身份断言；认证写接口的 CSRF 在业务变更前完成 |
 | 业务规则 | `server/internal/logic/` | Argon2id、用户名和密码校验、哈希并发保护、限流、账号管理不变量、设置校验及可供后续推荐使用的硬限制规则 |
-| 数据访问 | `server/internal/store/` | SQL、约束错误映射、会话与当前用户联合查询；专用连接立即写事务；事务内复核及审计；不在事务中向 DB 再取连接 |
+| 数据访问 | `server/internal/store/` | GORM CRUD、约束错误映射、会话与当前用户联合查询；专用连接立即写事务；事务内复核及审计；不在事务中向 DB 再取连接 |
 | 数据定义 | `server/migrations/` | 用户、Session、设置、审计、必要公共食材结构；迁移版本和校验值；空库创建最终结构，不自动删除字段降级 |
 | 前端 | `web/src/views/`、`api.js`、`auth.js`、`router.js` | 六类页面、身份恢复、请求错误处理、CSRF 更新、路由守卫；无额外状态管理库，不持久化密码或 Session |
 | 验证与运行资料 | 相邻 Go 测试、前端测试、配置示例、运行文档 | 测试用例追踪、真实临时 SQLite 测试、必要浏览器交互和最终响应头验收、管理员及备份恢复说明 |
 
-沿用 api → logic → store，不增加 ORM、通用 repository、权限引擎、Redis 或 JWT。身份门禁也通过 store 查询数据库；逻辑层不能自行拼 SQL，CLI 不调用 HTTP 或提供网络旁路。
+沿用 api → logic → store，store 内使用 GORM 处理业务 CRUD，保留 SQL 迁移与底层事务清理，不增加通用 repository、权限引擎、Redis 或 JWT。身份门禁也通过 store 查询数据库；逻辑层不能自行拼 SQL，CLI 不调用 HTTP 或提供网络旁路。
 
 ## 4. 关键流程与安全不变量
 

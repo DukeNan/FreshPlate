@@ -3,9 +3,14 @@ package store
 import (
 	"database/sql"
 	"time"
+
+	"gorm.io/gorm"
 )
 
-type Store struct{ DB *sql.DB }
+type Store struct {
+	DB  *sql.DB
+	orm *gorm.DB
+}
 type AppError struct {
 	Status        int
 	Code, Message string

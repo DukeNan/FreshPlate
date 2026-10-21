@@ -13,6 +13,8 @@
 
 架构遵循 API → logic → store 分层；写路径统一 `WithImmediate` + `checkSession` + 版本条件更新（影响行数=1）+ 审计同事务；越权统一 404、角色不足 403；`GET /api/foods` 原契约逐字节保留。
 
+2026-10-20 后续存储层调整：业务 CRUD 已迁移至 GORM，保留 modernc SQLite 连接、原 SQL 迁移与立即写事务；数据库版本仍为 v5，接口契约不变。单独验证结果见 [GORM 替换验证记录](GORM_MIGRATION_VERIFICATION.md)。
+
 ## 2. 测试用例与实施方案
 
 - 用例基线：`docs/test/FOOD_TEST_CASES.md`（89 条）、`INVENTORY_TEST_CASES.md`、`RECIPE_TEST_CASES.md`，共约 270 条，均经覆盖度审查与修补（对照方案验收表）。

@@ -22,7 +22,7 @@
 
 ### 1.2 运行方式
 
-继续使用 Go 1.26.4、Gin、`database/sql`、`modernc.org/sqlite`、Vue 3 和 Vite。角色和权限用代码中的固定规则表达，不增加权限框架、ORM、Redis 或 JWT。
+继续使用 Go 1.26.4、Gin、`modernc.org/sqlite`、Vue 3 和 Vite。业务 CRUD 使用 GORM，底层保留 `database/sql` 连接、SQL 迁移和 `BEGIN IMMEDIATE` 事务清理；不使用 `AutoMigrate`。角色和权限用代码中的固定规则表达，不增加权限框架、Redis 或 JWT。
 
 开发环境通过 Vite `/api` 代理访问后端；部署时前端与 API 使用同一站点，不启用 CORS。首版仍默认监听环回地址。完成认证、隔离和安全验收后，才可以通过 HTTPS 反向代理提供网络访问；具备多用户能力不等于自动开放公网。
 

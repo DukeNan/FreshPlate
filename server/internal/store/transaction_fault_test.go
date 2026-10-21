@@ -13,6 +13,7 @@ import (
 	"testing"
 	"time"
 
+	"gorm.io/gorm"
 	"modernc.org/sqlite"
 )
 
@@ -89,10 +90,12 @@ func TestDB004And005CommitFailureAndRollbackDiscard(t *testing.T) {
 			db.SetMaxOpenConns(1)
 			db.SetMaxIdleConns(1)
 			defer db.Close()
-			s = &Store{DB: db}
-			err = s.WithImmediate(context.Background(), func(c *sql.Conn) error {
-				_, e := c.ExecContext(context.Background(), "UPDATE users SET role='admin' WHERE id=?", u.ID)
-				return e
+			s, err = newStore(db)
+			if err != nil {
+				t.Fatal(err)
+			}
+			err = s.WithImmediate(context.Background(), func(c *gorm.DB) error {
+				return c.Table("users").Where("id=?", u.ID).Update("role", "admin").Error
 			})
 			if err == nil {
 				t.Fatal("commit failure swallowed")

@@ -51,6 +51,7 @@ test('INV-E2E-001 新增多批同食材：独立保存、字符串数量原样�
   await form.getByLabel('到期日（留空表示未知）').fill(today)
   await form.getByLabel('备注（至多 500 字）').fill('今日到期批次')
   await form.getByRole('button', { name: '创建批次' }).click()
+  await expect(form).toBeHidden()
   await expect(successMessage(page)).toContainText('已创建')
   // 数量以字符串原样进入 payload，未被浮点转换（INV-WEB-001）。
   expect(bodies).toHaveLength(1)
@@ -63,6 +64,7 @@ test('INV-E2E-001 新增多批同食材：独立保存、字符串数量原样�
   await form.getByLabel(/数量/).fill('0.1')
   await form.getByLabel('备注（至多 500 字）').fill('无日期批次')
   await form.getByRole('button', { name: '创建批次' }).click()
+  await expect(form).toBeHidden()
   await expect(successMessage(page)).toContainText('已创建')
   expect(bodies[1].quantity).toBe('0.1')
   // 第三批：+4 天（fresh）。
@@ -73,6 +75,7 @@ test('INV-E2E-001 新增多批同食材：独立保存、字符串数量原样�
   await form.getByLabel('到期日（留空表示未知）').fill(plusFour)
   await form.getByLabel('备注（至多 500 字）').fill('新鲜批次')
   await form.getByRole('button', { name: '创建批次' }).click()
+  await expect(form).toBeHidden()
   await expect(successMessage(page)).toContainText('已创建')
   // 列表出现三行独立批次（不合并），徽标为文字 + 颜色（INV-WEB-012）。
   const todayRow = page.getByRole('row').filter({ hasText: today })

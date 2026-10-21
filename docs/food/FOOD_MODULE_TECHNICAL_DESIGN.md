@@ -14,7 +14,7 @@
 
 ## 2. 共用技术与安全约定
 
-- 沿用 Go 1.26.4、Gin、SQLite、Vue 3；API → logic → store，不增加 ORM、状态管理库或外部服务。
+- 沿用 Go 1.26.4、Gin、SQLite、Vue 3；API → logic → store；业务 CRUD 使用 GORM，保留 SQL 迁移与立即写事务，不增加状态管理库或外部服务。
 - 认证以[当前 JWT 契约](../user/JWT_AUTHENTICATION.md)为准，不沿用旧设计中的 Session Cookie 认证。业务写操作提交 Bearer 和表单加载时的 `X-Expected-User-ID`；普通业务写接口不另加 CSRF，登录、刷新、注销规则保持现状。
 - 所有新增业务入口要求有效登录、active 账号和已完成强制改密。管理员权限由后端决定，写事务内重新检查会话、账号状态和角色。
 - 复用 `api.decode` 的 JSON、有效 UTF-8、拒绝未知字段及尾随 JSON 规则。请求体默认上限 64 KiB；仅食谱创建/更新的四类路由（`POST /api/recipes`、`PUT /api/recipes/:id` 及对应 `/api/admin/recipes` 路由）放宽至 256 KiB。按已匹配路由和方法确定限制，不按 URL 前缀泛化；`context` 中间件的 Content-Length 预检、流式 `MaxBytesReader` 及 `decode` 必须使用同一限制来源。不能仅放宽解码器，因为中间件已包裹请求体。超限统一返回 `400 INVALID_ARGUMENT`，无 Content-Length 的流式请求同样受限。ID 必须为正整数。时间存 UTC Unix 秒，输出 RFC 3339 UTC。

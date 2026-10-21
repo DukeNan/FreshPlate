@@ -8,6 +8,8 @@ import (
 	"slices"
 	"strings"
 	"time"
+
+	"gorm.io/gorm"
 )
 
 // 食谱模块存储层（方案 §3/§5/§6）。父表保存原始输入，原料与附加过敏原
@@ -97,29 +99,22 @@ type RecipeSummary struct {
 // 错误区分差异（方案 §5：一律 404 不泄露资源存在性）。
 var recipeNotFound = E(404, "NOT_FOUND", "食谱不存在")
 
-// recipeQuerier 抽象只读查询入口，使同一详情读取逻辑可运行在只读事务
-//（*sql.Tx）与写事务回读（*sql.Conn）之上。
-type recipeQuerier interface {
-	QueryRowContext(context.Context, string, ...any) *sql.Row
-	QueryContext(context.Context, string, ...any) (*sql.Rows, error)
-}
-
 // recipeRow 是 recipes 父行的原始扫描结果（含 owner_user_id 供所有权过滤）。
 type recipeRow struct {
-	ID              int64
-	Visibility      string
-	OwnerID         sql.NullInt64
-	Status          string
-	Name            string
-	Servings        int
-	DurationMinutes int
-	StepsJSON       string
-	Source          string
+	ID               int64
+	Visibility       string
+	OwnerID          sql.NullInt64 `gorm:"column:owner_user_id"`
+	Status           string
+	Name             string
+	Servings         int
+	DurationMinutes  int
+	StepsJSON        string
+	Source           string
 	AllergenComplete bool
-	AllergenSource  *string
-	Version         int64
-	CreatedAt       int64
-	UpdatedAt       int64
+	AllergenSource   *string
+	Version          int64
+	CreatedAt        int64 `gorm:"autoCreateTime:false"`
+	UpdatedAt        int64 `gorm:"autoUpdateTime:false"`
 }
 
 func scanRecipeRow(r scanner) (recipeRow, error) {
@@ -327,20 +322,20 @@ func recipeVisibilityFilter(public bool, viewerID int64) (string, []any) {
 
 // replaceRecipeChildren 删除旧子项并按请求重插；position 由数组顺序生成
 // 1..n。任一步失败由调用方整体回滚。
-func replaceRecipeChildren(ctx context.Context, c *sql.Conn, recipeID int64, in RecipeWrite) error {
-	if _, err := c.ExecContext(ctx, "DELETE FROM recipe_ingredients WHERE recipe_id=?", recipeID); err != nil {
+func replaceRecipeChildren(ctx context.Context, c *gorm.DB, recipeID int64, in RecipeWrite) error {
+	if err := c.WithContext(ctx).Table("recipe_ingredients").Where("recipe_id=?", recipeID).Delete(&struct{}{}).Error; err != nil {
 		return err
 	}
-	if _, err := c.ExecContext(ctx, "DELETE FROM recipe_allergens WHERE recipe_id=?", recipeID); err != nil {
+	if err := c.WithContext(ctx).Table("recipe_allergens").Where("recipe_id=?", recipeID).Delete(&struct{}{}).Error; err != nil {
 		return err
 	}
 	for i, item := range in.Ingredients {
-		if _, err := c.ExecContext(ctx, "INSERT INTO recipe_ingredients(recipe_id,position,food_id,quantity_milli,unit) VALUES(?,?,?,?,?)", recipeID, i+1, item.FoodID, item.QuantityMilli, item.Unit); err != nil {
+		if err := c.WithContext(ctx).Table("recipe_ingredients").Create(map[string]any{"recipe_id": recipeID, "position": i + 1, "food_id": item.FoodID, "quantity_milli": item.QuantityMilli, "unit": item.Unit}).Error; err != nil {
 			return err
 		}
 	}
 	for _, code := range in.AdditionalAllergens {
-		if _, err := c.ExecContext(ctx, "INSERT INTO recipe_allergens(recipe_id,allergen_code) VALUES(?,?)", recipeID, code); err != nil {
+		if err := c.WithContext(ctx).Table("recipe_allergens").Create(map[string]any{"recipe_id": recipeID, "allergen_code": code}).Error; err != nil {
 			return err
 		}
 	}
@@ -350,7 +345,7 @@ func replaceRecipeChildren(ctx context.Context, c *sql.Conn, recipeID int64, in 
 // recipeFoodMetas 在事务内批量读取给定 food_id 集合的状态与完整性；
 // 返回按输入顺序排列的元数据。任何 id 不存在都返回错误（调用方在读取
 // 前已确保 id 来自请求与既有引用，缺行按 FOOD_UNAVAILABLE 处理）。
-func recipeFoodMetas(ctx context.Context, c *sql.Conn, ids []int64) (map[int64]RecipeFoodMeta, error) {
+func recipeFoodMetas(ctx context.Context, c *gorm.DB, ids []int64) (map[int64]RecipeFoodMeta, error) {
 	metas := map[int64]RecipeFoodMeta{}
 	for i := 0; i < len(ids); i += 200 {
 		end := i + 200
@@ -358,12 +353,7 @@ func recipeFoodMetas(ctx context.Context, c *sql.Conn, ids []int64) (map[int64]R
 			end = len(ids)
 		}
 		batch := ids[i:end]
-		placeholders := strings.TrimSuffix(strings.Repeat("?,", len(batch)), ",")
-		args := make([]any, len(batch))
-		for j, id := range batch {
-			args[j] = id
-		}
-		rows, err := c.QueryContext(ctx, "SELECT id,status,allergen_complete FROM foods WHERE id IN ("+placeholders+")", args...)
+		rows, err := c.WithContext(ctx).Table("foods").Select("id,status,allergen_complete").Where("id IN ?", batch).Rows()
 		if err != nil {
 			return nil, mapError(err)
 		}
@@ -387,8 +377,8 @@ func recipeFoodMetas(ctx context.Context, c *sql.Conn, ids []int64) (map[int64]R
 
 // recipeExistingFoodIDs 读取食谱当前引用的 food_id 集合（保留停用引用
 // 例外的判定基准）。
-func recipeExistingFoodIDs(ctx context.Context, c *sql.Conn, recipeID int64) (map[int64]bool, error) {
-	rows, err := c.QueryContext(ctx, "SELECT food_id FROM recipe_ingredients WHERE recipe_id=?", recipeID)
+func recipeExistingFoodIDs(ctx context.Context, c *gorm.DB, recipeID int64) (map[int64]bool, error) {
+	rows, err := c.WithContext(ctx).Table("recipe_ingredients").Select("food_id").Where("recipe_id=?", recipeID).Rows()
 	if err != nil {
 		return nil, mapError(err)
 	}
@@ -424,7 +414,7 @@ func checkRecipeFoods(existing map[int64]bool, requested []int64, metas map[int6
 // recipeDetailFromTx 在给定查询入口上读取完整详情：父行、原料（JOIN foods
 // 取名称与状态）、附加过敏原、有效过敏原合并与派生警示；全部查询处于
 // 调用方既有的同一事务内，满足 REC-STORE-016 的一致性要求。
-func recipeDetailFromTx(ctx context.Context, q recipeQuerier, row recipeRow) (RecipeDetail, error) {
+func recipeDetailFromTx(ctx context.Context, q *gorm.DB, row recipeRow) (RecipeDetail, error) {
 	d := RecipeDetail{
 		ID: row.ID, Visibility: row.Visibility, Status: row.Status,
 		Name: row.Name, Servings: row.Servings, DurationMinutes: row.DurationMinutes,
@@ -439,7 +429,7 @@ func recipeDetailFromTx(ctx context.Context, q recipeQuerier, row recipeRow) (Re
 		d.Steps = []string{}
 	}
 	// 原料行：JOIN foods 保留名称与当前状态（含停用标记）。
-	rows, err := q.QueryContext(ctx, "SELECT ri.position,ri.food_id,f.name,f.status,ri.quantity_milli,ri.unit FROM recipe_ingredients ri JOIN foods f ON f.id=ri.food_id WHERE ri.recipe_id=? ORDER BY ri.position", row.ID)
+	rows, err := q.WithContext(ctx).Table("recipe_ingredients ri").Select("ri.position,ri.food_id,f.name,f.status,ri.quantity_milli,ri.unit").Joins("JOIN foods f ON f.id=ri.food_id").Where("ri.recipe_id=?", row.ID).Order("ri.position").Rows()
 	if err != nil {
 		return RecipeDetail{}, mapError(err)
 	}
@@ -458,7 +448,7 @@ func recipeDetailFromTx(ctx context.Context, q recipeQuerier, row recipeRow) (Re
 	}
 	rows.Close()
 	// 附加过敏原：固定按编码排序输出。
-	rows, err = q.QueryContext(ctx, "SELECT allergen_code FROM recipe_allergens WHERE recipe_id=? ORDER BY allergen_code", row.ID)
+	rows, err = q.WithContext(ctx).Table("recipe_allergens").Select("allergen_code").Where("recipe_id=?", row.ID).Order("allergen_code").Rows()
 	if err != nil {
 		return RecipeDetail{}, mapError(err)
 	}
@@ -478,13 +468,13 @@ func recipeDetailFromTx(ctx context.Context, q recipeQuerier, row recipeRow) (Re
 	rows.Close()
 	// 派生：单条 JOIN 聚合得出停用/完整性；无食材时 COALESCE 给出中性值。
 	var disabled, minComplete int
-	if err = q.QueryRowContext(ctx, "SELECT COALESCE(MAX(f.status<>'active'),0),COALESCE(MIN(f.allergen_complete),1) FROM recipe_ingredients ri JOIN foods f ON f.id=ri.food_id WHERE ri.recipe_id=?", row.ID).Scan(&disabled, &minComplete); err != nil {
+	if err = q.WithContext(ctx).Table("recipe_ingredients ri").Select("COALESCE(MAX(f.status<>'active'),0),COALESCE(MIN(f.allergen_complete),1)").Joins("JOIN foods f ON f.id=ri.food_id").Where("ri.recipe_id=?", row.ID).Row().Scan(&disabled, &minComplete); err != nil {
 		return RecipeDetail{}, mapError(err)
 	}
 	d.HasDisabledFoods = disabled == 1
 	d.RestrictionMetadataComplete = row.AllergenComplete && minComplete == 1
 	// 有效过敏原：food 当前标注 ∪ 附加标注，SQL 内去重排序（方案 §3.3）。
-	rows, err = q.QueryContext(ctx, "SELECT DISTINCT a FROM (SELECT je.value AS a FROM recipe_ingredients ri JOIN foods f ON f.id=ri.food_id, json_each(f.allergens_json) je WHERE ri.recipe_id=? UNION SELECT allergen_code FROM recipe_allergens WHERE recipe_id=?) ORDER BY a", row.ID, row.ID)
+	rows, err = q.WithContext(ctx).Raw("SELECT DISTINCT a FROM (SELECT je.value AS a FROM recipe_ingredients ri JOIN foods f ON f.id=ri.food_id, json_each(f.allergens_json) je WHERE ri.recipe_id=? UNION SELECT allergen_code FROM recipe_allergens WHERE recipe_id=?) ORDER BY a", row.ID, row.ID).Rows()
 	if err != nil {
 		return RecipeDetail{}, mapError(err)
 	}
@@ -506,10 +496,9 @@ func recipeDetailFromTx(ctx context.Context, q recipeQuerier, row recipeRow) (Re
 }
 
 // loadRecipeForWrite 在写事务内按可见性条件读取父行（REC-STORE 校验基准）。
-func loadRecipeForWrite(ctx context.Context, c *sql.Conn, id int64, public bool, viewerID int64) (recipeRow, error) {
+func loadRecipeForWrite(ctx context.Context, c *gorm.DB, id int64, public bool, viewerID int64) (recipeRow, error) {
 	vis, args := recipeVisibilityFilter(public, viewerID)
-	all := append([]any{id}, args...)
-	row, err := scanRecipeRow(c.QueryRowContext(ctx, "SELECT "+recipeColumns+" FROM recipes WHERE id=? AND "+vis, all...))
+	row, err := scanRecipeRow(c.WithContext(ctx).Table("recipes").Select(recipeColumns).Where("id=?", id).Where(vis, args...).Row())
 	if errors.Is(err, sql.ErrNoRows) {
 		return recipeRow{}, recipeNotFound
 	}
@@ -527,20 +516,19 @@ type RecipeDetailReadScope struct {
 // public 任意状态；普通用户 public+published 或 private+本人；其余（未发布
 // 公共、他人私有、不存在）一律 404。读取在单个只读事务内完成。
 func (s *Store) RecipeDetail(ctx context.Context, id int64, scope RecipeDetailReadScope) (out RecipeDetail, err error) {
-	tx, err := s.DB.BeginTx(ctx, &sql.TxOptions{ReadOnly: true})
+	tx := s.orm.WithContext(ctx).Begin(&sql.TxOptions{ReadOnly: true})
+	err = tx.Error
 	if err != nil {
 		return RecipeDetail{}, mapError(err)
 	}
 	defer tx.Rollback()
-	query := "SELECT " + recipeColumns + " FROM recipes WHERE id=?"
-	args := []any{id}
+	query := tx.WithContext(ctx).Table("recipes").Select(recipeColumns).Where("id=?", id)
 	if scope.Admin {
-		query += " AND visibility='public'"
+		query = query.Where("visibility='public'")
 	} else {
-		query += " AND ((visibility='public' AND status='published') OR (visibility='private' AND owner_user_id=?))"
-		args = append(args, scope.ViewerID)
+		query = query.Where("(visibility='public' AND status='published') OR (visibility='private' AND owner_user_id=?)", scope.ViewerID)
 	}
-	row, err := scanRecipeRow(tx.QueryRowContext(ctx, query, args...))
+	row, err := scanRecipeRow(query.Row())
 	if errors.Is(err, sql.ErrNoRows) {
 		return RecipeDetail{}, recipeNotFound
 	}
@@ -551,7 +539,7 @@ func (s *Store) RecipeDetail(ctx context.Context, id int64, scope RecipeDetailRe
 	if err != nil {
 		return RecipeDetail{}, err
 	}
-	return out, mapError(tx.Commit())
+	return out, mapError(tx.Commit().Error)
 }
 
 // RecipeListQuery 是列表查询条件；Visibility 恒为 public/private，OwnerID
@@ -567,14 +555,15 @@ type RecipeListQuery struct {
 
 // ListRecipes 返回食谱摘要分页（id DESC）；total 与当前页在同一只读事务
 // 内读取，派生警示字段对当页 recipe_id 集合做一条 JOIN 聚合批量完成
-//（REC-STORE-015：查询次数不随页内食谱数或原料数增长）。
+// （REC-STORE-015：查询次数不随页内食谱数或原料数增长）。
 func (s *Store) ListRecipes(ctx context.Context, q RecipeListQuery) (items []RecipeSummary, total int, err error) {
-	tx, err := s.DB.BeginTx(ctx, &sql.TxOptions{ReadOnly: true})
+	tx := s.orm.WithContext(ctx).Begin(&sql.TxOptions{ReadOnly: true})
+	err = tx.Error
 	if err != nil {
 		return nil, 0, mapError(err)
 	}
 	defer tx.Rollback()
-	where := " WHERE visibility=?"
+	where := "visibility=?"
 	args := []any{q.Visibility}
 	if q.Visibility == "private" {
 		where += " AND owner_user_id=?"
@@ -588,12 +577,11 @@ func (s *Store) ListRecipes(ctx context.Context, q RecipeListQuery) (items []Rec
 		where += " AND instr(name,?)>0"
 		args = append(args, q.Q)
 	}
-	if err = tx.QueryRowContext(ctx, "SELECT count(*) FROM recipes"+where, args...).Scan(&total); err != nil {
+	if err = tx.WithContext(ctx).Table("recipes").Select("count(*)").Where(where, args...).Row().Scan(&total); err != nil {
 		return nil, 0, mapError(err)
 	}
 	limit, offset := pageBounds(q.Page, q.Size)
-	args = append(args, limit, offset)
-	rows, err := tx.QueryContext(ctx, "SELECT id,visibility,status,name,servings,duration_minutes,allergen_complete,version,updated_at FROM recipes"+where+" ORDER BY id DESC LIMIT ? OFFSET ?", args...)
+	rows, err := tx.WithContext(ctx).Table("recipes").Select("id,visibility,status,name,servings,duration_minutes,allergen_complete,version,updated_at").Where(where, args...).Order("id DESC").Limit(limit).Offset(offset).Rows()
 	if err != nil {
 		return nil, 0, mapError(err)
 	}
@@ -621,12 +609,7 @@ func (s *Store) ListRecipes(ctx context.Context, q RecipeListQuery) (items []Rec
 	// 批量派生：当页全部 recipe_id 一条 JOIN 聚合（REC-STORE-015）；
 	// 无食材的食谱不在聚合结果中，默认 has_disabled=false、foods 完整。
 	if len(ids) > 0 {
-		placeholders := strings.TrimSuffix(strings.Repeat("?,", len(ids)), ",")
-		dargs := make([]any, len(ids))
-		for i, id := range ids {
-			dargs[i] = id
-		}
-		drows, e := tx.QueryContext(ctx, "SELECT ri.recipe_id,MAX(f.status<>'active'),MIN(f.allergen_complete) FROM recipe_ingredients ri JOIN foods f ON f.id=ri.food_id WHERE ri.recipe_id IN ("+placeholders+") GROUP BY ri.recipe_id", dargs...)
+		drows, e := tx.WithContext(ctx).Table("recipe_ingredients ri").Select("ri.recipe_id,MAX(f.status<>'active'),MIN(f.allergen_complete)").Joins("JOIN foods f ON f.id=ri.food_id").Where("ri.recipe_id IN ?", ids).Group("ri.recipe_id").Rows()
 		if e != nil {
 			return nil, 0, mapError(e)
 		}
@@ -653,14 +636,14 @@ func (s *Store) ListRecipes(ctx context.Context, q RecipeListQuery) (items []Rec
 			items[i].RestrictionMetadataComplete = complete
 		}
 	}
-	return items, total, mapError(tx.Commit())
+	return items, total, mapError(tx.Commit().Error)
 }
 
 // CreateRecipe 在写事务内复核会话后创建食谱：POST 恒为 draft，visibility
 // 由路径决定（public=true 管理员公共、false 本人私有）；创建时全部引用
 // 都是新增，必须 active。公共食谱写 recipe_created 审计，私有不写。
 func (s *Store) CreateRecipe(ctx context.Context, actor Session, public bool, in RecipeWrite, now time.Time) (out RecipeDetail, err error) {
-	err = s.WithImmediate(ctx, func(c *sql.Conn) error {
+	err = s.WithImmediate(ctx, func(c *gorm.DB) error {
 		a, e := checkSession(ctx, c, actor, now, public)
 		if e != nil {
 			return e
@@ -681,31 +664,49 @@ func (s *Store) CreateRecipe(ctx context.Context, actor Session, public bool, in
 		if e != nil {
 			return e
 		}
-		var owner any
+		var owner sql.NullInt64
 		visibility := "private"
 		if public {
 			visibility = "public"
 		} else {
-			owner = actor.User.ID
+			owner = sql.NullInt64{Int64: actor.User.ID, Valid: true}
 		}
-		r, e := c.ExecContext(ctx, "INSERT INTO recipes(visibility,owner_user_id,status,name,servings,duration_minutes,steps_json,source,allergen_complete,allergen_source,version,created_at,updated_at) VALUES(?,?,'draft',?,?,?,?,?,?,?,1,?,?)", visibility, owner, in.Name, in.Servings, in.DurationMinutes, steps, in.Source, boolInt(in.AllergenComplete), in.AllergenSource, now.Unix(), now.Unix())
+		record := recipeRow{
+			Visibility:       visibility,
+			OwnerID:          owner,
+			Status:           "draft",
+			Name:             in.Name,
+			Servings:         in.Servings,
+			DurationMinutes:  in.DurationMinutes,
+			StepsJSON:        steps,
+			Source:           in.Source,
+			AllergenComplete: in.AllergenComplete,
+			AllergenSource:   in.AllergenSource,
+			Version:          1,
+			CreatedAt:        now.Unix(),
+			UpdatedAt:        now.Unix(),
+		}
+		e = c.WithContext(ctx).Table("recipes").Create(&record).Error
 		if e != nil {
 			return e
 		}
-		id, e := r.LastInsertId()
-		if e != nil {
-			return e
-		}
+		id := record.ID
 		if e = replaceRecipeChildren(ctx, c, id, in); e != nil {
 			return e
 		}
 		if public {
-			details := map[string]any{"fields": append([]string{}, "name", "servings", "duration_minutes", "steps", "source", "allergen_complete", "allergen_source", "additional_allergens", "ingredients"), "status_before": nil, "status_after": "draft", "version_before": nil, "version_after": int64(1)}
+			details := map[string]any{
+				"fields":         append([]string{}, "name", "servings", "duration_minutes", "steps", "source", "allergen_complete", "allergen_source", "additional_allergens", "ingredients"),
+				"status_before":  nil,
+				"status_after":   "draft",
+				"version_before": nil,
+				"version_after":  int64(1),
+			}
 			if e = insertResourceAudit(ctx, c, a.ID, "recipe", id, "recipe_created", details, now); e != nil {
 				return e
 			}
 		}
-		row, e := scanRecipeRow(c.QueryRowContext(ctx, "SELECT "+recipeColumns+" FROM recipes WHERE id=?", id))
+		row, e := scanRecipeRow(c.WithContext(ctx).Table("recipes").Select(recipeColumns).Where("id=?", id).Row())
 		if e != nil {
 			return e
 		}
@@ -720,7 +721,7 @@ func (s *Store) CreateRecipe(ctx context.Context, actor Session, public bool, in
 // 保留 disabled 引用仅限既有 → 发布条件校验 → 无变化直接返回原详情 →
 // 条件更新父行 version+1 → 子项整体替换 → 公共写审计；任何失败整体回滚。
 func (s *Store) UpdateRecipe(ctx context.Context, actor Session, public bool, id, version int64, status string, in RecipeWrite, now time.Time) (out RecipeDetail, err error) {
-	err = s.WithImmediate(ctx, func(c *sql.Conn) error {
+	err = s.WithImmediate(ctx, func(c *gorm.DB) error {
 		a, e := checkSession(ctx, c, actor, now, public)
 		if e != nil {
 			return e
@@ -774,13 +775,23 @@ func (s *Store) UpdateRecipe(ctx context.Context, actor Session, public bool, id
 			return e
 		}
 		newVersion := row.Version + 1
-		r, e := c.ExecContext(ctx, "UPDATE recipes SET name=?,servings=?,duration_minutes=?,steps_json=?,source=?,allergen_complete=?,allergen_source=?,status=?,version=?,updated_at=? WHERE id=? AND version=?", in.Name, in.Servings, in.DurationMinutes, steps, in.Source, boolInt(in.AllergenComplete), in.AllergenSource, status, newVersion, now.Unix(), id, row.Version)
+		r := c.WithContext(ctx).Table("recipes").Where("id=? AND version=?", id, row.Version).Updates(map[string]any{
+			"name":              in.Name,
+			"servings":          in.Servings,
+			"duration_minutes":  in.DurationMinutes,
+			"steps_json":        steps,
+			"source":            in.Source,
+			"allergen_complete": boolInt(in.AllergenComplete),
+			"allergen_source":   in.AllergenSource,
+			"status":            status,
+			"version":           newVersion,
+			"updated_at":        now.Unix(),
+		})
+		e = r.Error
 		if e != nil {
 			return e
 		}
-		if n, e := r.RowsAffected(); e != nil {
-			return e
-		} else if n != 1 {
+		if n := r.RowsAffected; n != 1 {
 			return E(409, "VERSION_CONFLICT", "食谱已被他人修改，请刷新后重试")
 		}
 		if e = replaceRecipeChildren(ctx, c, id, in); e != nil {
@@ -794,7 +805,7 @@ func (s *Store) UpdateRecipe(ctx context.Context, actor Session, public bool, id
 		}
 		// 修复 Bug：旧 row 是更新前读出的数据，直接构造响应会返回旧值；
 		// 与 CreateRecipe 一致，UPDATE 与子项替换成功后在同一事务内重读父行。
-		fresh, e := scanRecipeRow(c.QueryRowContext(ctx, "SELECT "+recipeColumns+" FROM recipes WHERE id=?", id))
+		fresh, e := scanRecipeRow(c.WithContext(ctx).Table("recipes").Select(recipeColumns).Where("id=?", id).Row())
 		if e != nil {
 			return e
 		}

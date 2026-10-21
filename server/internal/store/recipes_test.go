@@ -17,7 +17,7 @@ import (
 // 食谱模块 store 层测试（REC-STORE-001~020）。
 
 // seedRecipeFoods 预置三类测试食材：active 完整、active 不完整、disabled
-//（绕过应用层直接插入，标注字段显式可控），返回对应 ID。
+// （绕过应用层直接插入，标注字段显式可控），返回对应 ID。
 func seedRecipeFoods(t *testing.T, s *Store) (complete, incomplete, disabled int64) {
 	t.Helper()
 	r, err := s.DB.Exec("INSERT INTO foods(name,status,allergens_json,allergen_complete,allergen_source,created_at,updated_at) VALUES('完整食材','active','[\"milk\"]',1,'包装标注',?,?)", testNow.Unix(), testNow.Unix())
@@ -283,7 +283,7 @@ func TestRecipeSTORE013_FoodConcurrentDisable(t *testing.T) {
 }
 
 // REC-STORE-014：无变化 PUT 不加版本不写审计。
-//（REC-REG-003 回归等价用例：steps 纳入 recipeWriteEqual 比较后，
+// （REC-REG-003 回归等价用例：steps 纳入 recipeWriteEqual 比较后，
 // 完全相同的 PUT 仍须走此无变化路径——本测试即为其回归保障，不另重复。）
 func TestRecipeSTORE014_NoChangePut(t *testing.T) {
 	s := testStore(t)
@@ -484,7 +484,10 @@ func openCountedStore(t *testing.T) *countedStore {
 	}
 	db.SetMaxOpenConns(1)
 	db.SetMaxIdleConns(1)
-	s := &Store{DB: db}
+	s, err := newStore(db)
+	if err != nil {
+		t.Fatal(err)
+	}
 	if err := db.QueryRow("PRAGMA journal_mode=WAL").Scan(new(string)); err != nil {
 		t.Fatal(err)
 	}

@@ -25,7 +25,7 @@ FreshPlate 根据冰箱现有食材推荐可做的菜，记录实际饮食，并
 | 项目 | 选择 |
 | --- | --- |
 | 后端 | Go 1.26.4，使用 Gin 框架实现 HTTP API |
-| 数据库 | SQLite，使用 `database/sql` 和纯 Go 驱动 `modernc.org/sqlite` |
+| 数据库 | SQLite，业务访问使用 GORM；底层复用 `database/sql` 和纯 Go 驱动 `modernc.org/sqlite` |
 | 前端 | Vue 3 + Vite，先做适配手机屏幕的网页 |
 | AI | 通过后端调用模型 API；提供方及费用额度在接入时确定 |
 | 部署 | 首版仅在本机运行，不对公网开放 |

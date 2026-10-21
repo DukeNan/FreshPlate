@@ -4,12 +4,14 @@ import (
 	"context"
 	"database/sql"
 	"time"
+
+	"gorm.io/gorm"
 )
 
 // ResolveRefresh includes consumed tokens so CSRF remains bound to the session during replay detection.
 func (s *Store) ResolveRefresh(ctx context.Context, hash []byte, now time.Time) (*Session, error) {
 	var sid []byte
-	err := s.DB.QueryRowContext(ctx, "SELECT session_hash FROM refresh_tokens WHERE token_hash=?", hash).Scan(&sid)
+	err := s.orm.WithContext(ctx).Table("refresh_tokens").Select("session_hash").Where("token_hash=?", hash).Row().Scan(&sid)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
@@ -20,10 +22,10 @@ func (s *Store) ResolveRefresh(ctx context.Context, hash []byte, now time.Time) 
 }
 func (s *Store) RotateRefresh(ctx context.Context, old, next []byte, now time.Time) (session *Session, err error) {
 	var rejected error
-	err = s.WithImmediate(ctx, func(c *sql.Conn) error {
+	err = s.WithImmediate(ctx, func(c *gorm.DB) error {
 		var sid []byte
 		var consumed bool
-		e := c.QueryRowContext(ctx, "SELECT session_hash,consumed FROM refresh_tokens WHERE token_hash=?", old).Scan(&sid, &consumed)
+		e := c.WithContext(ctx).Table("refresh_tokens").Select("session_hash,consumed").Where("token_hash=?", old).Row().Scan(&sid, &consumed)
 		if e == sql.ErrNoRows {
 			rejected = E(401, "AUTH_REQUIRED", "请重新登录")
 			return nil
@@ -40,16 +42,16 @@ func (s *Store) RotateRefresh(ctx context.Context, old, next []byte, now time.Ti
 			return nil
 		}
 		if consumed {
-			if _, e = c.ExecContext(ctx, "DELETE FROM sessions WHERE token_hash=?", sid); e != nil {
+			if e = c.WithContext(ctx).Table("sessions").Where("token_hash=?", sid).Delete(&struct{}{}).Error; e != nil {
 				return e
 			}
 			rejected = E(401, "REFRESH_TOKEN_REUSED", "刷新令牌已被使用，请重新登录")
 			return nil // Commit revocation before returning the rejection.
 		}
-		if _, e = c.ExecContext(ctx, "UPDATE refresh_tokens SET consumed=1 WHERE token_hash=?", old); e != nil {
+		if e = c.WithContext(ctx).Table("refresh_tokens").Where("token_hash=?", old).Updates(map[string]any{"consumed": 1}).Error; e != nil {
 			return e
 		}
-		_, e = c.ExecContext(ctx, "INSERT INTO refresh_tokens(token_hash,session_hash) VALUES(?,?)", next, sid)
+		e = c.WithContext(ctx).Table("refresh_tokens").Create(map[string]any{"token_hash": next, "session_hash": sid}).Error
 		return e
 	})
 	if err == nil {

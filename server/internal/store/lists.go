@@ -21,12 +21,13 @@ func pageBounds(page, size int) (int, int) {
 	return size, (page - 1) * size
 }
 func (s *Store) ListUsers(ctx context.Context, page, size int, username, role, status string) (items []User, total int, err error) {
-	tx, err := s.DB.BeginTx(ctx, &sql.TxOptions{ReadOnly: true})
+	tx := s.orm.WithContext(ctx).Begin(&sql.TxOptions{ReadOnly: true})
+	err = tx.Error
 	if err != nil {
 		return nil, 0, mapError(err)
 	}
 	defer tx.Rollback()
-	where := " WHERE 1=1"
+	where := "1=1"
 	args := []any{}
 	if username != "" {
 		where += " AND instr(username,?)>0"
@@ -40,12 +41,11 @@ func (s *Store) ListUsers(ctx context.Context, page, size int, username, role, s
 		where += " AND status=?"
 		args = append(args, status)
 	}
-	if err = tx.QueryRowContext(ctx, "SELECT count(*) FROM users"+where, args...).Scan(&total); err != nil {
+	if err = tx.WithContext(ctx).Table("users").Select("count(*)").Where(where, args...).Row().Scan(&total); err != nil {
 		return nil, 0, mapError(err)
 	}
 	limit, offset := pageBounds(page, size)
-	args = append(args, limit, offset)
-	rows, err := tx.QueryContext(ctx, "SELECT "+userColumns+" FROM users"+where+" ORDER BY id DESC LIMIT ? OFFSET ?", args...)
+	rows, err := tx.WithContext(ctx).Table("users").Select(userColumns).Where(where, args...).Order("id DESC").Limit(limit).Offset(offset).Rows()
 	if err != nil {
 		return nil, 0, mapError(err)
 	}
@@ -63,16 +63,17 @@ func (s *Store) ListUsers(ctx context.Context, page, size int, username, role, s
 	if err != nil {
 		return nil, 0, err
 	}
-	err = mapError(tx.Commit())
+	err = mapError(tx.Commit().Error)
 	return
 }
 func (s *Store) ListAudit(ctx context.Context, page, size int, target int64, action string) (items []Audit, total int, err error) {
-	tx, err := s.DB.BeginTx(ctx, &sql.TxOptions{ReadOnly: true})
+	tx := s.orm.WithContext(ctx).Begin(&sql.TxOptions{ReadOnly: true})
+	err = tx.Error
 	if err != nil {
 		return nil, 0, mapError(err)
 	}
 	defer tx.Rollback()
-	where := " WHERE 1=1"
+	where := "1=1"
 	args := []any{}
 	if target > 0 {
 		where += " AND target_user_id=?"
@@ -82,12 +83,11 @@ func (s *Store) ListAudit(ctx context.Context, page, size int, target int64, act
 		where += " AND action=?"
 		args = append(args, action)
 	}
-	if err = tx.QueryRowContext(ctx, "SELECT count(*) FROM audit_logs"+where, args...).Scan(&total); err != nil {
+	if err = tx.WithContext(ctx).Table("audit_logs").Select("count(*)").Where(where, args...).Row().Scan(&total); err != nil {
 		return nil, 0, mapError(err)
 	}
 	limit, offset := pageBounds(page, size)
-	args = append(args, limit, offset)
-	rows, err := tx.QueryContext(ctx, "SELECT id,actor_user_id,actor_source,action,target_user_id,details_json,created_at FROM audit_logs"+where+" ORDER BY id DESC LIMIT ? OFFSET ?", args...)
+	rows, err := tx.WithContext(ctx).Table("audit_logs").Select("id,actor_user_id,actor_source,action,target_user_id,details_json,created_at").Where(where, args...).Order("id DESC").Limit(limit).Offset(offset).Rows()
 	if err != nil {
 		return nil, 0, mapError(err)
 	}
@@ -112,6 +112,6 @@ func (s *Store) ListAudit(ctx context.Context, page, size int, target int64, act
 	if err != nil {
 		return nil, 0, err
 	}
-	err = mapError(tx.Commit())
+	err = mapError(tx.Commit().Error)
 	return
 }

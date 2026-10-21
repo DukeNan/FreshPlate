@@ -15,6 +15,7 @@ import (
 	"time"
 
 	migfs "freshplate/server/migrations"
+	"gorm.io/gorm"
 	"modernc.org/sqlite"
 )
 
@@ -51,7 +52,11 @@ func Open(path string) (*Store, error) {
 	}
 	db.SetMaxOpenConns(1)
 	db.SetMaxIdleConns(1)
-	s := &Store{DB: db}
+	s, err := newStore(db)
+	if err != nil {
+		db.Close()
+		return nil, err
+	}
 	var mode string
 	if err = db.QueryRow("PRAGMA journal_mode=WAL").Scan(&mode); err != nil {
 		db.Close()
@@ -69,6 +74,9 @@ func Open(path string) (*Store, error) {
 }
 func (s *Store) Close() error { return s.DB.Close() }
 func mapError(err error) error {
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return sql.ErrNoRows
+	}
 	var se *sqlite.Error
 	if errors.As(err, &se) {
 		switch se.Code() & 255 {
@@ -85,7 +93,7 @@ func mapError(err error) error {
 	}
 	return err
 }
-func (s *Store) WithImmediate(ctx context.Context, fn func(*sql.Conn) error) (err error) {
+func (s *Store) withImmediateSQL(ctx context.Context, fn func(*sql.Conn) error) (err error) {
 	c, err := s.DB.Conn(ctx)
 	if err != nil {
 		return mapError(err)
@@ -151,7 +159,7 @@ func (s *Store) migrate(ctx context.Context) error {
 		sum := sha256.Sum256(script)
 		chain = append(chain, step{m.version, string(script), hex.EncodeToString(sum[:])})
 	}
-	return s.WithImmediate(ctx, func(c *sql.Conn) error {
+	return s.withImmediateSQL(ctx, func(c *sql.Conn) error {
 		var exists int
 		if err := c.QueryRowContext(ctx, "SELECT count(*) FROM sqlite_master WHERE type='table' AND name='schema_migrations'").Scan(&exists); err != nil {
 			return err

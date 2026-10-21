@@ -14,6 +14,8 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	"gorm.io/gorm"
 )
 
 var testNow = time.Date(2026, 10, 19, 0, 0, 0, 0, time.UTC)
@@ -382,8 +384,8 @@ func TestDB002And004RollbackCancelAndPanic(t *testing.T) {
 						t.Errorf("panic not rethrown: %v", r)
 					}
 				}()
-				err = s.WithImmediate(req, func(c *sql.Conn) error {
-					if _, e := c.ExecContext(req, "UPDATE users SET role='admin' WHERE id=?", u.ID); e != nil {
+				err = s.WithImmediate(req, func(c *gorm.DB) error {
+					if e := c.WithContext(req).Exec("UPDATE users SET role='admin' WHERE id=?", u.ID).Error; e != nil {
 						return e
 					}
 					switch mode {
@@ -474,9 +476,9 @@ func TestPREF004FoodDisableAndSaveSerialize(t *testing.T) {
 	}
 	p.ExcludedFoodIDs = []int64{1}
 	result := make(chan error, 1)
-	err = s.WithImmediate(ctx, func(c *sql.Conn) error {
+	err = s.WithImmediate(ctx, func(c *gorm.DB) error {
 		var status string
-		if err := c.QueryRowContext(ctx, "SELECT status FROM foods WHERE id=1").Scan(&status); err != nil {
+		if err := c.WithContext(ctx).Raw("SELECT status FROM foods WHERE id=1").Row().Scan(&status); err != nil {
 			return err
 		}
 		if status != "active" {
@@ -487,7 +489,7 @@ func TestPREF004FoodDisableAndSaveSerialize(t *testing.T) {
 		if err := waitForStoreWaiter(ctx, s, previous); err != nil {
 			return err
 		}
-		_, err := c.ExecContext(ctx, "UPDATE foods SET status='disabled' WHERE id=1")
+		err := c.WithContext(ctx).Exec("UPDATE foods SET status='disabled' WHERE id=1").Error
 		return err
 	})
 	if err != nil {
@@ -504,8 +506,8 @@ func TestPREF004FoodDisableAndSaveSerialize(t *testing.T) {
 	if _, err = s.SavePreferences(ctx, ss, p, testNow); err != nil {
 		t.Fatal(err)
 	}
-	if err = s.WithImmediate(ctx, func(c *sql.Conn) error {
-		_, e := c.ExecContext(ctx, "UPDATE foods SET status='disabled' WHERE id=1")
+	if err = s.WithImmediate(ctx, func(c *gorm.DB) error {
+		e := c.WithContext(ctx).Exec("UPDATE foods SET status='disabled' WHERE id=1").Error
 		return e
 	}); err != nil {
 		t.Fatal(err)
@@ -554,7 +556,7 @@ func TestPREF005OrderedCompleteReplacements(t *testing.T) {
 			secondResult <- ctx.Err()
 		}
 	}()
-	err = s.WithImmediate(ctx, func(c *sql.Conn) error {
+	err = s.WithImmediate(ctx, func(c *gorm.DB) error {
 		previous := s.DB.Stats().WaitCount
 		go func() { _, e := s.SavePreferences(ctx, ss, first, testNow); firstResult <- e; close(firstDone) }()
 		return waitForStoreWaiter(ctx, s, previous)

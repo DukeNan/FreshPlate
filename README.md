@@ -12,7 +12,7 @@ FreshPlate（鲜食记）是饮食管理项目，已完成用户、食材基础�
 
 ## 技术架构与目录
 
-前端使用 Vue 3、Vue Router 和 Vite，后端使用 Go、Gin 和 SQLite。浏览器通过 `/api` 访问接口，API 层负责请求与安全校验，logic 层处理业务规则，store 层负责数据库读写。本地管理员 CLI 复用业务与存储层。完整架构图与说明见 [用户模块架构](docs/user/USER_MODULE_ARCHITECTURE.md)。
+前端使用 Vue 3、Vue Router 和 Vite，后端使用 Go、Gin、GORM 和 SQLite。浏览器通过 `/api` 访问接口，API 层负责请求与安全校验，logic 层处理业务规则，store 层负责数据库读写。本地管理员 CLI 复用业务与存储层。业务 CRUD 通过 GORM 执行，复用 `modernc.org/sqlite` 的纯 Go 连接；保留原 SQL 迁移及 `BEGIN IMMEDIATE` 事务清理，不使用 `AutoMigrate`，已有 v5 数据库无需转换。迁移验证见 [GORM 替换验证记录](docs/test/GORM_MIGRATION_VERIFICATION.md)。完整架构图与说明见 [用户模块架构](docs/user/USER_MODULE_ARCHITECTURE.md)。
 
 ```text
 FreshPlate/
