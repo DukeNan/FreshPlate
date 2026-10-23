@@ -14,6 +14,8 @@ FreshPlate 根据冰箱现有食材推荐可做的菜，记录实际饮食，并
 2. [食材库存](docs/inventory/INVENTORY_MODULE_TECHNICAL_DESIGN.md)：个人批次库存、数量校验和临期提醒。
 3. [食谱管理](docs/recipe/RECIPE_MODULE_TECHNICAL_DESIGN.md)：私有食谱、公共食谱发布和权限隔离。
 
+下一模块见 [推荐模块技术方案](docs/recommendation/RECOMMENDATION_MODULE_TECHNICAL_DESIGN.md) 与 [最终评审](docs/recommendation/RECOMMENDATION_MODULE_FINAL_REVIEW.md)：目前为待实现设计，先交付确定性推荐，AI 接入独立后续验收。
+
 上述方案以当前 JWT 认证为基础；本文中的早期 Session/Cookie 描述以 [JWT 认证说明](docs/user/JWT_AUTHENTICATION.md)为准。方案文档不表示功能已经实现。
 
 首版采用公开注册，能够访问站点的人可创建普通账号；公共食谱由管理员独立维护，不提供用户投稿或私有食谱转公共流程。

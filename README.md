@@ -159,6 +159,8 @@ python3 scripts/verify_cli.py --go go
 | [食材基础数据技术方案](docs/food/FOOD_MODULE_TECHNICAL_DESIGN.md) | 已实现：食材目录、营养来源、换算与过敏原标注 |
 | [食材库存技术方案](docs/inventory/INVENTORY_MODULE_TECHNICAL_DESIGN.md) | 已实现：个人批次库存与到期提醒 |
 | [食谱管理技术方案](docs/recipe/RECIPE_MODULE_TECHNICAL_DESIGN.md) | 已实现：私有食谱与公共食谱发布 |
+| [推荐模块技术方案](docs/recommendation/RECOMMENDATION_MODULE_TECHNICAL_DESIGN.md) | 待实现：安全过滤、库存匹配、排序与缺料说明 |
+| [推荐模块最终评审](docs/recommendation/RECOMMENDATION_MODULE_FINAL_REVIEW.md) | Codex 与 Claude 互评共识及修订核对 |
 | [三模块测试用例与实施总结](docs/test/IMPLEMENTATION_SUMMARY.md) | 测试用例基线、用例→测试映射、实测结果与遗留事项 |
 | [自动生成的 Swagger 规范](server/docs/swagger.yaml) | Gin handler 注释生成的 33 个接口，可导入 API 工具 |
 | [用户模块技术设计](docs/user/USER_MODULE_TECHNICAL_DESIGN.md) | 需求、数据模型与接口契约 |
