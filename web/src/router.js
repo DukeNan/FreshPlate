@@ -10,6 +10,7 @@ import InventoryView from './views/InventoryView.vue'
 import FoodsView from './views/FoodsView.vue'
 import ResourceAuditView from './views/ResourceAuditView.vue'
 import RecipesView from './views/RecipesView.vue'
+import RecommendationsView from './views/RecommendationsView.vue'
 import RecipeDetailView from './views/RecipeDetailView.vue'
 import RecipeEditView from './views/RecipeEditView.vue'
 export const router = createRouter({ history: createWebHistory(), routes: [
@@ -20,6 +21,7 @@ export const router = createRouter({ history: createWebHistory(), routes: [
   { path: '/password', component: PasswordView },
   { path: '/foods', component: FoodCatalogView },
   { path: '/inventory', component: InventoryView },
+  { path: '/recommendations', component: RecommendationsView },
   // 食谱模块（方案 §7）：普通私有链路与管理员公共链路复用同一组视图，
   // 由路由 props 区分模式；visibility/owner 由模式决定，不由表单提交。
   { path: '/recipes', component: RecipesView, props: { admin: false } },

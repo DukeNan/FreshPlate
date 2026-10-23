@@ -60,6 +60,7 @@ func New(s *logic.Service, cfg appRuntime.Config, key []byte) (*gin.Engine, erro
 	me.GET("/me/preferences", a.getPreferences)
 	me.PUT("/me/preferences", a.putPreferences)
 	me.GET("/foods", a.foods)
+	me.GET("/recommendations", a.recommendations)
 	admin := api.Group("/admin", a.protected(true))
 	admin.GET("/users", a.users)
 	admin.PATCH("/users/:id", a.updateUser)

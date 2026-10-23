@@ -1,0 +1,11 @@
+$ cd server && go test -race -timeout 20m ./...
+记录范围：本次工具会话返回的完整 stdout/stderr；列间空白归一化，不含工具包装元数据。
+?   freshplate/server/cmd/admin [no test files]
+?   freshplate/server/cmd/server [no test files]
+?   freshplate/server/docs [no test files]
+ok  freshplate/server/internal/api 665.856s
+ok  freshplate/server/internal/logic 5.787s
+ok  freshplate/server/internal/runtime 2.544s
+ok  freshplate/server/internal/store 16.618s
+?   freshplate/server/migrations [no test files]
+exit_code=0

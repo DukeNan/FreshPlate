@@ -1,0 +1,19 @@
+[WebServer] (node:85401) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] 2026/10/23 17:02:46 FreshPlate listening on 127.0.0.1:18080
+
+Running 6 tests using 1 worker
+
+(node:85572) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[seed] login #1 browser_admin @2026-10-23T09:02:47.387Z
+[seed] login #2 module_user_a @2026-10-23T09:02:47.736Z
+[seed] login #3 module_user_b @2026-10-23T09:02:47.787Z
+  ✓  1 e2e/recommendation-module.spec.js:73:1 › RECO-E2E-001 无库存仍展示缺料；录入临期库存后按可做、临期排序，偏好立即过滤 (422ms)
+  ✓  2 e2e/recommendation-module.spec.js:104:1 › RECO-E2E-002 q 与仅可立即做组合空态保持完整归因，筛选 total 不产生空页 (229ms)
+  ✓  3 e2e/recommendation-module.spec.js:128:1 › RECO-E2E-003 详情版本变化完全丢弃推荐匹配，刷新详情无内存快照 (348ms)
+  ✓  4 e2e/recommendation-module.spec.js:150:1 › RECO-E2E-004 唯一库存食材停用后无可用库存，安全幸存列表全 missing (197ms)
+  ✓  5 e2e/recommendation-module.spec.js:166:1 › RECO-E2E-005 搜索按码点校验，超长搜索不请求，100个补充平面字符可提交 (214ms)
+  ✓  6 e2e/swagger.spec.js:3:1 › RECO-COMPAT-001 Swagger UI loads all API operations and executes a same-origin request under the service CSP (633ms)
+
+  6 passed (11.4s)

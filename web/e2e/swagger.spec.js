@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test'
 
-test('Swagger UI loads all API operations and executes a same-origin request under the service CSP', async ({ page }) => {
+test('RECO-COMPAT-001 Swagger UI loads all API operations and executes a same-origin request under the service CSP', async ({ page }) => {
   const errors = []
   page.on('pageerror', error => errors.push(error.message))
   page.on('console', message => { if (message.type() === 'error') errors.push(message.text()) })
@@ -8,7 +8,8 @@ test('Swagger UI loads all API operations and executes a same-origin request und
   expect(response.status()).toBe(200)
   expect(response.headers()['content-security-policy']).toContain("script-src 'self'")
   await expect(page.getByRole('heading', { name: 'FreshPlate API', exact: false })).toBeVisible()
-  await expect(page.locator('.opblock')).toHaveCount(33)
+  await expect(page.locator('.opblock')).toHaveCount(34)
+  await expect(page.locator('.opblock-summary-path').filter({ hasText: '/recommendations' })).toHaveCount(1)
   const csrf = page.locator('.opblock').filter({ hasText: '取得 CSRF 令牌' })
   await csrf.locator('.opblock-summary').click()
   await csrf.getByRole('button', { name: 'Try it out' }).click()

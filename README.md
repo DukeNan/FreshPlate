@@ -1,11 +1,13 @@
 # FreshPlate 鲜食记
 
-FreshPlate（鲜食记）是饮食管理项目，已完成用户、食材基础数据、食材库存与食谱管理四个模块，可在 macOS/Linux 本地运行。食谱推荐、记餐与营养业务尚未实现，后续规划见 [实现计划](IMPLEMENTATION_PLAN.md)，三模块实施结果见 [实施总结](docs/test/IMPLEMENTATION_SUMMARY.md)。
+FreshPlate（鲜食记）是饮食管理项目，已实现用户、食材基础数据、食材库存、食谱管理与确定性推荐，可在 macOS/Linux 本地运行。AI 步骤生成、记餐与营养业务尚未实现，后续规划见 [实现计划](IMPLEMENTATION_PLAN.md)，三模块实施结果见 [实施总结](docs/test/IMPLEMENTATION_SUMMARY.md)。
 
 ## 当前功能
 
 - 注册、登录、退出；access JWT 有效期 15 分钟，HttpOnly refresh Cookie 固定有效期 7 天，支持轮换、重放检测及即时撤销。密码使用 Argon2id 哈希。
 - 个人饮食设置及忌口食材选择，内置 12 种基础食材名称。
+- 食谱推荐：按本人有效库存匹配公共及本人已完成食谱，强制过滤过敏原、忌口及不完整数据，按缺料数、临期食材和耗时排序，展示缺料与单位换算未知提示。推荐与详情的匹配提示为加载时快照，库存或偏好变化后须刷新。
+- 推荐模块不新增数据库表或迁移，schema 仍为 v5；设计与验证见 [推荐方案](docs/recommendation/RECOMMENDATION_MODULE_TECHNICAL_DESIGN.md) 和 [验收记录](docs/recommendation/tasks/validation.md)。
 - 普通用户与管理员权限；管理员可查询用户、调整角色和状态、重置密码及查询审计日志。
 - 本地管理员初始化和密码恢复；重置或恢复密码后要求用户修改密码。
 - Origin/CSRF 校验、写入时身份核对、请求限流与安全响应头。

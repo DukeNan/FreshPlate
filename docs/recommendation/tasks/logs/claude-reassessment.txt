@@ -1,0 +1,131 @@
+
+ ▐▛███▛█   Claude Code v2.1.286
+▝▜██████▀  glm-5.3-flash[1M] with high effort · API Usage Billing
+ ▝▝   ▝▝   ~/Desktop/Programming/CodeRepository/FreshPlate
+
+
+❯ /clear
+
+❯ /code-review 评审一下代码仓库 未提交的代码
+  ⎿  Running in the background as @code-review
+
+⏺ Agent "/code-review 评审一下代码仓库 未提交的代码" finished · 21m 35s
+
+  Thought for 1m 0s
+
+⏺ Code review(review · 5 findings)
+  ⎿  web/src/views/RecommendationsView.vue
+       ●  40 [correctness]    搜索输入框 maxlength=200 与后端 q 上限 100 码点不一致，放行了必然被 400 拒绝的输入
+     server/internal/api/recommendations_test.go
+       ●  10 [convention]     新增的 Go/Vitest 测试函数全部未携带用例 ID，违反 CLAUDE.md 强制的测试可追溯约定
+     server/internal/store/recommendations.go
+       ●  44 [reuse]          RecommendationSnapshot 逐行重写了同包 readPreferences 的读取逻辑，属于重复实现
+     web/src/views/RecipeDetailView.vue
+       ●  93 [simplification] 同一文件内并存两份单位→中文标签映射：旧的内联三元表达式与新引入的 unitLabel helper
+     server/internal/logic/recommendations.go
+       ● 162 [efficiency]     每个候选食谱都经 EnforceRestrictions 重复执行一次 ValidatePreferences，整次请求做 N 次冗余偏好校验
+
+  Thought for 4s
+
+⏺ 评审已完成，5 条发现已通过结构化结果上报（按严重度排序，可在界面上查看）。
+
+  补充结论：本次未提交变更的主体是「确定性推荐模块」，评审过程中实际执行了后端 go build / go vet / go test -run Recommendation 与前端
+  Vitest，全部通过。未发现高危正确性缺陷——写路径不变量不涉及（纯只读模块），兼容红线（GET /api/foods 响应形状、种子食材 ID、迁移链 001–005）均未触碰，换算逻辑（128
+  位中间精度、饱和、六方向换算）经对照设计文档与 oracle 测试逐条核对无误。
+
+  如需我直接修复这些发现，可以运行 /code-review --fix。
+
+✻ Baked for 1m 23s · done 15:40
+
+※ recap: 代码评审已完成：未提交的推荐模块变更共发现 5 个问题（已上报），无高危缺陷，前后端测试均通过。下一步：如需修复，可运行 /code-review --fix。
+
+❯ 请复审你上次推荐模块代码Review中的第3项（重复读取偏好）与第5项（重复ValidatePreferences）。这是用户明确要求你独立复审驳回理由，仅评审，不修改业务或测试代码。我们的判断：3)
+  readPreferences在store/preferences.go:37起逐excluded_food_ids查foods名称，直接复用会把固定五次查询变成5+N，违反推荐设计§5常数批量查询；重复基础解析确实存在，但抽基础helper属于可
+  选整理，本次不作为必修。5) BuildRecommendations请求级ValidatePreferences保证无候选时非法偏好仍返回错误，设计§2又明确逐候选调用EnforceRestrictions并保留签名；后者自带ValidatePrefe
+  rences属于共享安全边界。重复校验开销事实成立，但当前数十到数百候选规模无性能证据，不作为缺陷/阻塞项，不删除任一安全校验。请对照设计与源码独立判断每项接受/部分接受/坚持原发现，解
+  释证据、严重程度与最小建议，避免仅因我们声称符合设计就同意。另1/2/4项我正在修复（Unicode码点前置校验、测试ID映射、单位标签复用），你无需修改。请在当前对话直接返回完整结论。
+
+  Thought for 21s
+
+⏺ 我来独立复审这两项。先取证：源码（readPreferences、RecommendationSnapshot、BuildRecommendations、EnforceRestrictions/ValidatePreferences）与设计文档 §2/§5 原文都要对照。
+
+  Thought for 6s, read 1 file, called codegraph
+
+⏺ CodeGraph 未索引本项目，改用直接读源码取证：
+
+  Thought for 1m 59s, read 4 files
+
+⏺ 两项的源码事实已核对完毕。还差最后一块证据：store 测试是否显式断言了查询次数常数（这决定"直接复用 readPreferences"是否不止违反设计、还会打破既有测试契约）：
+
+  Thought for 1m 19s, searched for 1 pattern, read 1 file
+
+⏺ 最后顺手核一下第 2 项的涉及范围（我在 store/recommendations_test.go:12 看到了 // RECO-STORE-001，与我原先"6 个测试文件全部无 ID"的说法可能不符，需要一个准确修正）：
+
+  Thought for 36s, searched for 1 pattern
+
+⏺ 复审结论
+
+  我重新读取了 store/preferences.go、store/recommendations.go、logic/preferences.go、logic/recommendations.go 全文、设计文档 §2/§3.3/§5/§8 及 store
+  测试。结论：两项均接受你们的驳回，且第 3 项的修复建议（“直接复用”）是我的错误，予以撤回。依据如下——同意是建立在源码证据上，不是基于对你们陈述的采信。
+
+  ---
+
+  第 3 项：重复读取偏好 → 接受驳回（原发现降级为可选整理）
+
+  决定性证据（我原先遗漏的部分）：
+
+  - store/preferences.go:37-44：readPreferences 确实对每个 excluded_food_id 单独执行 SELECT id,name,status FROM foods WHERE id=?。你们的 N+1 描述完全属实。我原发现说“两处仅差
+    updated_at 列”——这个表述是错的，它遗漏了这个决定性差异。
+  - store/recommendations.go:44/59/77/96/120：RecommendationSnapshot 恰好 5 次查询，与第 33 行注释 "five batch queries regardless of candidate/ingredient counts" 一致。
+  - store/recommendations_test.go:34：counted.count() != 5 显式断言恰好 5 次查询（RECO-STORE-001）。带忌口的用户走 readPreferences 会变成 5+N（N ≤ 500，见 logic/preferences.go:39
+    上限），直接打破该测试。
+  - 设计 §5：“查询次数为常数”；§8 store 行：“查询次数为常数（防 N+1）”；§3.3：“一次请求为常数次批量查询”。直接复用违反成文契约与既有测试。
+
+  补充独立观察： 两处并非“重复实现同一逻辑”，而是有意分化——readPreferences 额外解析 ExcludedFoods（名称/状态，供偏好 API 响应用，preferences.go:36-44）并读
+  updated_at；推荐路径两者都不用（EnforceRestrictions 只消费 ExcludedFoodIDs）。连错误路径也有分化（ErrNoRows 包装方式不同）。真正同构的只有“三段 JSON 反序列化 + nil 数组校验”约 8
+  行。
+
+  严重程度： 原 find级（reuse 类、非阻塞）降为“注释级整理”，无风险。
+
+  最小建议（若日后做）： 只抽真正同构的反序列化+判空段；或最低成本——两处互加注释说明分化是有意的（列集差异 + ExcludedFoods 逐 ID
+  解析差异），防止未来有人按“重复应统一”的直觉照我原建议改错。同意本次不动。
+
+  ---
+
+  第 5 项：重复 ValidatePreferences → 接受驳回（撤销缺陷定性）
+
+  证据核实：
+
+  - logic/recommendations.go:130：入口 ValidatePreferences 在候选循环外无条件执行——你们说的“零候选时非法偏好仍报错”属实。且我额外确认了它返回规范化后的 p（去重后的
+    ExcludedFoodIDs），内部再校验结果恒同，纯冗余、无行为差异。
+  - 设计 §2 表格第 2 行明文：“元数据完整时调用 EnforceRestrictions 失败……复用 logic/preferences.go，保留函数签名”。逐候选调用是设计要求，非实现自由发挥。
+  - logic/preferences.go:72-75：EnforceRestrictions 文档注释声明供推荐/AI 替代/首次记餐共享；设计 §5 AI 约束 2（“AI 输出……必须重新经 EnforceRestrictions
+    与数据校验”）依赖其自洽校验——AI 路径的偏好来源不保证先经入口校验。删除内部校验会削弱共享安全边界。
+
+  一个支持你们观点的量化观察： ValidatePreferences 上界 O(32+32+500) 次操作；而 EnforceRestrictions 本身每候选就要重建 excluded(≤500)/blocked(≤10) 两个
+  map——同一数量级。即使删掉内部校验，逐候选 set
+  重建依然存在，且那正是设计明文要求的调用形态所固有的。可消除的部分不足冗余总量一半，在首版规模（§3.3：数十到数百候选）下总开销毫秒级以下，无正确性影响。
+
+  严重程度： 撤销。事实（重复校验存在）成立，但定性（efficiency 缺陷、应消除）不成立。
+
+  最小建议： 不改代码。若未来有性能证据，可行路径是同包加跳过重校验的 unexported 变体（不动导出签名、保留 EnforceRestrictions 自洽），但当前引入双路径维护成本不值得。
+
+  ---
+
+  ⚠️ 附带更正：第 2 项的事实基础有误（影响你们正在进行的修复）
+
+  刚才核实证据时发现：推荐模块全部 7 个测试文件都已带 RECO- 用例 ID——RECO-LOGIC-001~008、RECO-API-001~003、RECO-STORE-001~003、RECO-WEB-001~012，Go 侧为函数级注释、Vitest 侧在 it()
+  描述里。我原第 2 项声称“没有任何 RCM- ID 注释”是误报——评审 agent 用了错误的前缀 RCM- 去 grep，而实际代码用的是
+  RECO-。该发现唯一残留的有效部分是原报告末句：docs/test/RECOMMENDATION_TEST_CASES.md 的 ID→测试函数映射是否达到其他模块的粒度（可用 grep ID 定位函数）。你们修复“测试 ID
+  映射”时无需给测试函数补 ID，只需核对文档映射即可，请勿做重复劳动。
+
+✻ Cooked for 5m 2s · done 17:04
+
+─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+❯
+─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  [glm-5.3-flash[1m]] │ FreshPlate git:(main*) │ ⏱️  2h 21m
+  Context █░░░░░░░░░ 7%
+  2 CLAUDE.md | 1 MCPs | 1 hooks
+  ⏵⏵ bypass permissions on (shift+tab to cycle) · ← for agents
+

@@ -7,15 +7,18 @@
 import { ref, computed, onMounted } from 'vue'
 import { api } from '../api.js'
 import { auth } from '../auth.js'
+import { ingredientStatus, matchingRecommendation, missingSummary, takeRecommendation, unitLabel } from '../recommendations.js'
 
 const props = defineProps({ id: { type: String, required: true } })
 const generation = auth.generation
 const recipeId = Number(props.id)
+const recommendationSnapshot = takeRecommendation(recipeId)
 const detail = ref(null), error = ref(''), notFound = ref(false), loading = ref(false)
 const allergens = { milk: '乳', egg: '蛋', fish: '鱼', crustacean: '甲壳类', mollusc: '软体动物', peanut: '花生', soy: '大豆', wheat: '小麦', tree_nut: '树坚果', sesame: '芝麻' }
 let sequence = 0
 const invalid = computed(() => !Number.isSafeInteger(recipeId) || recipeId < 1)
 // 仅私有食谱可编辑：普通详情只返回已发布公共与本人私有，private 即本人所有。
+const recommendation = computed(() => detail.value && matchingRecommendation(recommendationSnapshot, detail.value.version))
 const editable = computed(() => !!detail.value && detail.value.visibility === 'private')
 function statusText(d) {
   if (d.status === 'published') return d.visibility === 'private' ? '已完成' : '已发布'
@@ -62,6 +65,14 @@ onMounted(load)
 
       <div class="actions"><RouterLink v-if="editable" class="linklike" :to="`/recipes/${detail.id}/edit`">编辑</RouterLink><RouterLink class="linklike" to="/recipes">返回列表</RouterLink></div>
 
+      <p v-if="recommendationSnapshot && !recommendation" class="notice" role="status">该食谱在推荐加载后已被修改，请返回并刷新推荐。<RouterLink to="/recommendations">返回推荐</RouterLink></p>
+      <section v-if="recommendation" class="card" aria-label="推荐匹配快照">
+        <h2>推荐加载时的匹配快照</h2>
+        <p class="muted">以下信息基于上次推荐加载时的库存与饮食设置，可能已变化。<RouterLink to="/recommendations">返回并刷新推荐</RouterLink></p>
+        <p :class="recommendation.can_cook ? 'success' : 'notice'">{{ recommendation.can_cook ? '可立即做' : `缺 ${recommendation.missing_count} 样` }}<span v-if="recommendation.uses_expiring"> · 可用临期食材</span></p>
+        <p v-if="!recommendation.can_cook">{{ missingSummary(recommendation.ingredients) }}</p>
+        <div class="table-wrap"><table><caption>推荐食材匹配明细</caption><thead><tr><th scope="col">食材</th><th scope="col">需要</th><th scope="col">库存匹配</th></tr></thead><tbody><tr v-for="item in recommendation.ingredients" :key="item.food.id"><td>{{ item.food.name }}</td><td>{{ item.need }} {{ unitLabel(item.unit) }}</td><td>{{ ingredientStatus(item) }}</td></tr></tbody></table></div>
+      </section>
       <div class="card">
         <h2>基本信息</h2>
         <table><caption class="sr-only">食谱基本信息</caption><tbody>
@@ -79,7 +90,7 @@ onMounted(load)
             <tr v-for="item in detail.ingredients" :key="item.position">
               <td>{{ item.position }}</td>
               <td>{{ item.food.name }}<small>#{{ item.food.id }}{{ item.food.status === 'disabled' ? ' · 已停用' : '' }}</small></td>
-              <td>{{ item.quantity }} {{ item.unit === 'g' ? '克' : item.unit === 'ml' ? '毫升' : item.unit === 'piece' ? '个' : item.unit }}</td>
+              <td>{{ item.quantity }} {{ unitLabel(item.unit) }}</td>
             </tr>
             <tr v-if="!detail.ingredients.length"><td colspan="3">未记录原料。</td></tr>
           </tbody>

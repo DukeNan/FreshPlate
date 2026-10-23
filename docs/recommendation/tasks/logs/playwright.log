@@ -1,0 +1,66 @@
+记录范围：已返回工具会话的构建/测试结果行；省略seed登录诊断时间、Node颜色环境警告、空白行。完整37个用例结果均保留，测试命令和耗时准确。
+$ npm run test:e2e --prefix web
+> freshplate-web@0.1.0 test:e2e
+> npm run build && playwright test
+> freshplate-web@0.1.0 build
+> vite build
+vite v6.4.4 building for production...
+transforming...
+✓ 50 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                   0.41 kB │ gzip:  0.31 kB
+dist/assets/index-DPNeqwy2.css    6.75 kB │ gzip:  2.00 kB
+dist/assets/index-DvJXMmaP.js   204.00 kB │ gzip: 68.85 kB
+✓ built in 702ms
+2026/10/23 14:40:13 FreshPlate listening on 127.0.0.1:18080
+Running 37 tests using 1 worker
+✓ 1 e2e/food-module.spec.js:22:1 › FOOD-E2E-001 主链路：管理员新增→普通用户检索→停用→旧忌口保留 (1.2s)
+✓ 2 e2e/food-module.spec.js:86:1 › FOOD-E2E-002 未知信息明确显示：不把未知当 0，也不默认 1ml=1g (173ms)
+✓ 3 e2e/food-module.spec.js:108:1 › FOOD-E2E-003 并发修改提示重新加载，后保存方不静默覆盖 (721ms)
+✓ 4 e2e/food-module.spec.js:143:1 › FOOD-E2E-004 编辑与启停确认可键盘操作 (343ms)
+✓ 5 e2e/food-module.spec.js:178:1 › FOOD-E2E-005 资源审计页面联动：创建/停用/启用事件与筛选 (593ms)
+✓ 6 e2e/food-module.spec.js:219:1 › FOOD-E2E-006 移动端视口可用：普通目录与管理列表无横向滚动 (212ms)
+✓ 7 e2e/food-module.spec.js:239:1 › FOOD-E2E-007 编辑对象切换的失败态与保存目标固定 (326ms)
+✓ 8 e2e/inventory-module.spec.js:34:1 › INV-E2E-001 新增多批同食材：独立保存、字符串数量原样提交、状态徽标 (605ms)
+✓ 9 e2e/inventory-module.spec.js:92:1 › INV-E2E-002 状态筛选临期：仅显示 expiring 批次 (182ms)
+✓ 10 e2e/inventory-module.spec.js:107:1 › INV-E2E-003 编辑批次：数量/备注/到期日更新，食材与单位锁定 (168ms)
+✓ 11 e2e/inventory-module.spec.js:127:1 › INV-E2E-004 设 0 表示用完：批次保留且标记 depleted (140ms)
+✓ 12 e2e/inventory-module.spec.js:145:1 › INV-E2E-005 删除批次：确认框显示食材与剩余数量，删除后消失 (117ms)
+✓ 13 e2e/inventory-module.spec.js:158:1 › INV-E2E-006 用户 B 看不到用户 A 的任何批次 (73ms)
+✓ 14 e2e/inventory-module.spec.js:167:1 › INV-E2E-007 管理员停用食材后：减量成功、增量被 409 拒绝且草稿保留 (530ms)
+✓ 15 e2e/inventory-module.spec.js:196:1 › INV-E2E-008 两标签页编辑同一批次：旧版本保存收到 409 并可重载 (485ms)
+✓ 16 e2e/inventory-module.spec.js:229:1 › INV-E2E-009 移动端视口可用：列表/新建/编辑无横向溢出且可键盘提交 (255ms)
+✓ 17 e2e/inventory-module.spec.js:255:1 › INV-E2E-010 删除版本冲突：列表刷新后保留失败提示 (127ms)
+✓ 18 e2e/recipe-module.spec.js:28:1 › REC-E2E-001 公共食谱发布可见性闭环：草稿不可见→发布可见→撤回不可见 (1.1s)
+✓ 19 e2e/recipe-module.spec.js:89:1 › REC-E2E-002 双用户私有食谱隔离：B 详情 404、列表为空，A 可见可编辑 (576ms)
+✓ 20 e2e/recipe-module.spec.js:121:1 › REC-E2E-003 私有食谱全生命周期：草稿→完成→归档→恢复→再完成（含纯文本脚本不执行） (754ms)
+✓ 21 e2e/recipe-module.spec.js:177:1 › REC-E2E-004 版本冲突：草稿保留、提示对比重载、重载后可重新提交 (637ms)
+✓ 22 e2e/recipe-module.spec.js:210:1 › REC-E2E-005 列表检索/分页、读取时派生警示徽标与移动端可用性 (467ms)
+✓ 23 e2e/recipe-module.spec.js:240:1 › REC-E2E-006 步骤编辑持久化与删除按钮：改步骤可保存可回读，删除步骤/原料行可用 (308ms)
+✓ 24 e2e/recommendation-module.spec.js:73:1 › RECO-E2E-001 无库存仍展示缺料；录入临期库存后按可做、临期排序，偏好立即过滤 (252ms)
+✓ 25 e2e/recommendation-module.spec.js:102:1 › RECO-E2E-002 q 与仅可立即做组合空态保持完整归因，筛选 total 不产生空页 (182ms)
+✓ 26 e2e/recommendation-module.spec.js:123:1 › RECO-E2E-003 详情版本变化完全丢弃推荐匹配，刷新详情无内存快照 (220ms)
+✓ 27 e2e/recommendation-module.spec.js:140:1 › RECO-E2E-004 唯一库存食材停用后无可用库存，安全幸存列表全 missing (215ms)
+✓ 28 e2e/swagger.spec.js:3:1 › Swagger UI loads all API operations and executes a same-origin request under the service CSP (700ms)
+✓ 29 e2e/user-module.spec.js:26:1 › REG-001 SES-001/004/005 FE-001/002 · real registration, settings, reload, password and logout (2.5s)
+✓ 30 e2e/user-module.spec.js:60:1 › FE-003/004 ID-001 · another tab switching accounts clears the old unsaved form (1.7s)
+✓ 31 e2e/user-module.spec.js:77:1 › FE-002 · mobile keyboard login and settings remain usable (805ms)
+✓ 32 e2e/user-module.spec.js:92:1 › SEC-004 FE-005 · final HTML headers, CSP, no inline code and private API no-store (878ms)
+✓ 33 e2e/user-module.spec.js:127:1 › FE-003 · failed identity recheck pauses all submissions including logout, then retries (883ms)
+✓ 34 e2e/user-module.spec.js:145:1 › ADM-001/002/004 FE-005 · real admin UI controls, audit and mandatory password change (3.6s)
+✓ 35 e2e/user-module.spec.js:225:1 › JWT · bearer-only writes, refresh rotation, replay revocation and cookie boundaries (629ms)
+✓ 36 e2e/user-module.spec.js:265:1 › JWT · concurrent tab reloads serialize refresh without revoking the shared session (860ms)
+✓ 37 e2e/user-module.spec.js:285:1 › JWT · an expired access response refreshes once and retries the same write (879ms)
+37 passed (38.0s)
+exit_code=0
+
+$ npm run test:e2e --prefix web -- recommendation-module.spec.js
+最终增强后专项重跑；构建输出同上（本次701ms），以下为完整测试结果行。
+Running 4 tests using 1 worker
+✓ 1 e2e/recommendation-module.spec.js:73:1 › RECO-E2E-001 无库存仍展示缺料；录入临期库存后按可做、临期排序，偏好立即过滤 (390ms)
+✓ 2 e2e/recommendation-module.spec.js:104:1 › RECO-E2E-002 q 与仅可立即做组合空态保持完整归因，筛选 total 不产生空页 (292ms)
+✓ 3 e2e/recommendation-module.spec.js:128:1 › RECO-E2E-003 详情版本变化完全丢弃推荐匹配，刷新详情无内存快照 (390ms)
+✓ 4 e2e/recommendation-module.spec.js:150:1 › RECO-E2E-004 唯一库存食材停用后无可用库存，安全幸存列表全 missing (224ms)
+4 passed (11.7s)
+exit_code=0

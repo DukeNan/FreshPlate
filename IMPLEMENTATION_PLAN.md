@@ -14,7 +14,7 @@ FreshPlate 根据冰箱现有食材推荐可做的菜，记录实际饮食，并
 2. [食材库存](docs/inventory/INVENTORY_MODULE_TECHNICAL_DESIGN.md)：个人批次库存、数量校验和临期提醒。
 3. [食谱管理](docs/recipe/RECIPE_MODULE_TECHNICAL_DESIGN.md)：私有食谱、公共食谱发布和权限隔离。
 
-下一模块见 [推荐模块技术方案](docs/recommendation/RECOMMENDATION_MODULE_TECHNICAL_DESIGN.md) 与 [最终评审](docs/recommendation/RECOMMENDATION_MODULE_FINAL_REVIEW.md)：目前为待实现设计，先交付确定性推荐，AI 接入独立后续验收。
+确定性推荐见 [推荐模块技术方案](docs/recommendation/RECOMMENDATION_MODULE_TECHNICAL_DESIGN.md) 与 [最终评审](docs/recommendation/RECOMMENDATION_MODULE_FINAL_REVIEW.md)：已实现确定性推荐，实施与验收记录见 [任务索引](docs/recommendation/tasks/README.md) 和 [测试计划](docs/test/RECOMMENDATION_TEST_CASES.md)。本模块不新增迁移或 schema_migrations 记录，数据库保持 v5；AI 接入独立后续验收。
 
 上述方案以当前 JWT 认证为基础；本文中的早期 Session/Cookie 描述以 [JWT 认证说明](docs/user/JWT_AUTHENTICATION.md)为准。方案文档不表示功能已经实现。
 
@@ -117,7 +117,7 @@ AI 不负责过敏原判定、库存扣减或最终营养数值。模型 API 不
 | 1. 项目与数据库基础 | Go 项目、SQLite 连接入口、建表迁移、数据访问测试 | 事务提交和回滚、外键约束、数据库文件配置、连接关闭 |
 | 2. 用户与权限 | 注册登录、Session、CSRF、个人设置、用户管理和审计 | 会话撤销、强制改密、角色权限、最后管理员保护 |
 | 3. 库存与偏好 | 按用户隔离的库存接口与页面、个人饮食限制 | 数量校验、临期显示、过敏原保存、双用户越权检查 |
-| 4. 食谱推荐 | 公共及私有食谱、筛选排序、AI 步骤生成 | 禁忌食材不会进入结果；私有食谱隔离；缺料说明准确 |
+| 4. 食谱推荐 | 公共及私有食谱、确定性安全过滤/库存匹配/排序已实现（[验收](docs/recommendation/tasks/validation.md)）；AI 步骤生成后续接入 | 禁忌食材不会进入结果；私有食谱隔离；缺料说明准确；快照与配方版本一致 |
 | 5. 饮食与营养 | 烹饪确认、库存扣减、饮食记录、趋势页 | 按用户隔离；同一餐只扣减一次；营养按实际份量计算 |
 | 6. 试用与修正 | 本地运行说明、账号恢复和迁移说明、端到端检查 | 注册到周趋势的完整流程、双用户隔离、管理员重置流程 |
 

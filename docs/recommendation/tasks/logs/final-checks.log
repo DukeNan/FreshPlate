@@ -1,0 +1,66 @@
+记录范围：从本次工具会话已返回的实际 stdout/stderr 整理；不是 shell 原始录屏。仅下列命令输出，未保存工具包装元数据及已覆盖的中间浏览器 JSON 报告。没有为补日志重复测试。
+
+$ cd server && go test ./...
+?   freshplate/server/cmd/admin [no test files]
+?   freshplate/server/cmd/server [no test files]
+?   freshplate/server/docs [no test files]
+ok  freshplate/server/internal/api 68.493s
+ok  freshplate/server/internal/logic 1.008s
+ok  freshplate/server/internal/runtime (cached)
+ok  freshplate/server/internal/store 6.042s
+?   freshplate/server/migrations [no test files]
+exit_code=0
+
+$ cd server && go vet ./...
+(no output)
+exit_code=0
+
+$ cd server && go build ./cmd/...
+(no output)
+exit_code=0
+
+$ cd server && go test ./internal/store
+ok  freshplate/server/internal/store 6.866s
+exit_code=0
+
+$ cd server && go test ./internal/api -run TestValidationRecommendation -v
+=== RUN   TestValidationRecommendationPasswordGate
+--- PASS: TestValidationRecommendationPasswordGate (1.18s)
+=== RUN   TestValidationRecommendationBusyReadAndRecovery
+--- PASS: TestValidationRecommendationBusyReadAndRecovery (0.73s)
+PASS
+ok  freshplate/server/internal/api 2.292s
+exit_code=0
+
+$ cd server && go test ./internal/store -run TestValidationRecommendation -v
+=== RUN   TestValidationRecommendationEmptyAndInactiveInventory
+--- PASS: TestValidationRecommendationEmptyAndInactiveInventory (0.01s)
+PASS
+ok  freshplate/server/internal/store 0.337s
+exit_code=0
+
+$ cd server && go test -race ./internal/api ./internal/logic ./internal/store -run Recommendation -count=1
+ok  freshplate/server/internal/api 28.601s
+ok  freshplate/server/internal/logic 1.356s
+ok  freshplate/server/internal/store 2.833s
+exit_code=0
+
+$ npm test --prefix web
+> freshplate-web@0.1.0 test
+> vitest run
+ RUN  v4.1.12 /Users/shaun/Desktop/Programming/CodeRepository/FreshPlate/web
+ Test Files  5 passed (5)
+      Tests  76 passed (76)
+   Start at  14:41:14
+   Duration  345ms (transform 142ms, setup 0ms, import 294ms, tests 231ms, environment 3ms)
+exit_code=0
+
+$ python3 scripts/verify_cli.py --go go
+CLI-001: hidden input, normalization, atomic defaults/audit and repeated initialization passed
+DEP-001/SEC-004: real server/CLI lock exclusion, DB/key/WAL/SHM permissions passed
+SES-002: valid browser session survived a real service restart
+CLI-002/ADM-002/SES-005: recovery revoked sessions, forced change and new login passed
+JWT-KEY: missing existing-deployment JWT key rejected without regeneration
+SEC-004: missing existing-deployment key rejected without regeneration
+PASS: disposable CLI/process verification complete; no credentials or tokens retained
+exit_code=0

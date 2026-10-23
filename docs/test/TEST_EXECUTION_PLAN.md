@@ -1,5 +1,7 @@
 # 三模块测试实施方案
 
+推荐模块用例与执行计划单独维护于 [RECOMMENDATION_TEST_CASES.md](RECOMMENDATION_TEST_CASES.md)，实际验证结果见 [独立验证记录](../recommendation/tasks/validation.md)。
+
 本文档是「步骤 4」交付物：把 `FOOD_TEST_CASES.md`、`INVENTORY_TEST_CASES.md`、`RECIPE_TEST_CASES.md` 三份用例文档中的用例 ID 映射到**已实际落盘**的测试代码与运行方式。映射关系以 grep 实际测试文件（文件头注释、函数名与函数内注释中的用例 ID）为准，不照抄用例文档中的「建议落点」；无测试对应的区段在第五节如实列为缺口。
 
 约定：Go 命令一律用 `env -u GOROOT /Users/dukenan/.goenv/versions/1.26.4/bin/go`（shell 的 GOROOT 指向旧版本，直接 `go` 会编译失败），且在 `server/` 目录下执行；npm 命令在 `web/` 目录下（或仓库根用 `--prefix web`）。
@@ -199,3 +201,16 @@ Go 测试失败信息本身带 `=== RUN TestXxx` 与文件行号，直接回溯�
 10. **FOOD-MIG-011 / INV-MIG-006 / REC-MIG-004（CLI 类）**：无 Go 测试，仅由 scripts/verify_cli.py 承载；该脚本是黑盒验证，失败时不给出用例 ID 级定位。
 
 除上述各项外，其余区段（FOOD-LOGIC/STORE/API/SEC 的 Go 部分、INV-LOGIC 全部、INV-STORE 全部、INV-API-001~037、INV-SEC-001~008/010~014、REC-LOGIC 全部、REC-STORE-001~018/020、REC-API 其余、REC-SEC-001~006/008/012/014/016）均有 ID 可检索的实际测试函数对应。
+
+## 推荐模块用例追溯
+
+逐项 ID → 测试函数映射见 [推荐用例编号表](RECOMMENDATION_TEST_CASES.md#可追溯用例编号)。
+
+| 用例 ID | 实际测试文件 | 命令（仓库根目录） |
+| --- | --- | --- |
+| RECO-LOGIC-001–008 | `server/internal/logic/recommendations{,_validation}_test.go` | `(cd server && go test ./internal/logic -run Recommendation)` |
+| RECO-STORE-001–003 | `server/internal/store/recommendations{,_validation}_test.go` | `(cd server && go test ./internal/store -run Recommendation)` |
+| RECO-API-001–003 | `server/internal/api/recommendations{,_validation}_test.go` | `(cd server && go test ./internal/api -run Recommendation)` |
+| RECO-WEB-001–013 | `web/src/recommendations.test.js` | `npm test --prefix web` |
+| RECO-E2E-001–006 | `web/e2e/recommendation-module.spec.js` | `(cd web && npx playwright test recommendation-module.spec.js)`（先构建前端） |
+| RECO-COMPAT-001 | `web/e2e/swagger.spec.js` | `(cd web && npx playwright test swagger.spec.js)`（先构建前端） |

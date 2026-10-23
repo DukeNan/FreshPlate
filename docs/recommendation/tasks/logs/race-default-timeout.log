@@ -1,0 +1,102 @@
+$ cd server && go test -race ./...
+记录范围：工具会话返回的完整测试输出（空白和列间tab归一化）；不包含工具包装元数据。
+?   freshplate/server/cmd/admin [no test files]
+?   freshplate/server/cmd/server [no test files]
+?   freshplate/server/docs [no test files]
+2026/10/23 14:41:30 request failed (*errors.errorString)
+panic: test timed out after 10m0s
+ running tests:
+  TestRecipeAPI021_024_MiscContracts (6s)
+
+goroutine 4960 [running]:
+testing.(*M).startAlarm.func1()
+ /Users/shaun/.goenv/versions/1.26.4/src/testing/testing.go:2802 +0x498
+created by time.goFunc
+ /Users/shaun/.goenv/versions/1.26.4/src/time/sleep.go:215 +0x44
+
+goroutine 1 [chan receive]:
+testing.(*T).Run(0xc000186b48, {0x1062eff8f, 0x22}, 0x107181778)
+ /Users/shaun/.goenv/versions/1.26.4/src/testing/testing.go:2109 +0x7dc
+testing.runTests.func1(0xc000186b48)
+ /Users/shaun/.goenv/versions/1.26.4/src/testing/testing.go:2585 +0x78
+testing.tRunner(0xc000186b48, 0xc000051ab8)
+ /Users/shaun/.goenv/versions/1.26.4/src/testing/testing.go:2036 +0x168
+testing.runTests({0x1062d9f81, 0x11}, {0x1062ea39d, 0x1e}, 0xc000012ba0, {0x107ab6940, 0x53, 0x53}, {0xc0002a1040?, 0xc00047ea00?, ...})
+ /Users/shaun/.goenv/versions/1.26.4/src/testing/testing.go:2583 +0x7a4
+testing.(*M).Run(0xc000200c80)
+ /Users/shaun/.goenv/versions/1.26.4/src/testing/testing.go:2443 +0xb3c
+main.main()
+ _testmain.go:210 +0x104
+
+goroutine 5000 [sync.WaitGroup.Wait]:
+sync.runtime_SemacquireWaitGroup(0xc000ec0a28?, 0x48?)
+ /Users/shaun/.goenv/versions/1.26.4/src/runtime/sema.go:114 +0x38
+sync.(*WaitGroup).Wait(0xc0004f5610)
+ /Users/shaun/.goenv/versions/1.26.4/src/sync/waitgroup.go:206 +0xb8
+golang.org/x/crypto/argon2.processBlocks({0xc004e4a000, 0x10000, 0x10000}, 0x3, 0x10000, 0x1, 0x2)
+ /Users/shaun/.goenv/shared/go-mod/golang.org/x/crypto@v0.43.0/argon2/argon2.go:234 +0x160
+golang.org/x/crypto/argon2.deriveKey(0x2, {0xc000e8c200, 0x1a, 0x1a}, {0xc000ec0cdc, 0x10, 0x10}, {0x0, 0x0, 0x0}, ...)
+ /Users/shaun/.goenv/shared/go-mod/golang.org/x/crypto@v0.43.0/argon2/argon2.go:114 +0x154
+golang.org/x/crypto/argon2.IDKey(...)
+ /Users/shaun/.goenv/shared/go-mod/golang.org/x/crypto@v0.43.0/argon2/argon2.go:97
+freshplate/server/internal/logic.(*Passwords).Hash(0xc000f17560, {0xc000e8c200, 0x1a})
+ /Users/shaun/Desktop/Programming/CodeRepository/FreshPlate/server/internal/logic/passwords.go:84 +0x194
+freshplate/server/internal/logic.(*Service).Register(0xc000f163c0, {0x10719a2b8, 0x108a3b180}, {0xc0004f5585, 0xb}, {0xc000e8c200, 0x1a})
+ /Users/shaun/Desktop/Programming/CodeRepository/FreshPlate/server/internal/logic/auth.go:46 +0xa8
+freshplate/server/internal/api.(*API).register(0xc0000fc000, 0xc00059c000)
+ /Users/shaun/Desktop/Programming/CodeRepository/FreshPlate/server/internal/api/api.go:222 +0x1cc
+github.com/gin-gonic/gin.(*Context).Next(0xc00059c000)
+ /Users/shaun/.goenv/shared/go-mod/github.com/gin-gonic/gin@v1.11.0/context.go:192 +0x174
+freshplate/server/internal/api.(*API).context(0xc0000fc000, 0xc00059c000)
+ /Users/shaun/Desktop/Programming/CodeRepository/FreshPlate/server/internal/api/security.go:138 +0xf8c
+github.com/gin-gonic/gin.(*Context).Next(0xc00059c000)
+ /Users/shaun/.goenv/shared/go-mod/github.com/gin-gonic/gin@v1.11.0/context.go:192 +0x174
+freshplate/server/internal/api.New.func2(0xc00059c000)
+ /Users/shaun/Desktop/Programming/CodeRepository/FreshPlate/server/internal/api/api.go:51 +0x4c
+github.com/gin-gonic/gin.(*Context).Next(0xc00059c000)
+ /Users/shaun/.goenv/shared/go-mod/github.com/gin-gonic/gin@v1.11.0/context.go:192 +0x174
+github.com/gin-gonic/gin.CustomRecoveryWithWriter.func1(0xc00059c000)
+ /Users/shaun/.goenv/shared/go-mod/github.com/gin-gonic/gin@v1.11.0/recovery.go:92 +0x94
+github.com/gin-gonic/gin.(*Context).Next(0xc00059c000)
+ /Users/shaun/.goenv/shared/go-mod/github.com/gin-gonic/gin@v1.11.0/context.go:192 +0x174
+freshplate/server/internal/api.New.func1(0xc00059c000)
+ /Users/shaun/Desktop/Programming/CodeRepository/FreshPlate/server/internal/api/api.go:47 +0x6c
+github.com/gin-gonic/gin.(*Context).Next(0xc00059c000)
+ /Users/shaun/.goenv/shared/go-mod/github.com/gin-gonic/gin@v1.11.0/context.go:192 +0x174
+github.com/gin-gonic/gin.(*Engine).handleHTTPRequest(0xc000364000, 0xc00059c000)
+ /Users/shaun/.goenv/shared/go-mod/github.com/gin-gonic/gin@v1.11.0/gin.go:689 +0x528
+github.com/gin-gonic/gin.(*Engine).ServeHTTP(0xc000364000, {0x107197f40, 0xc00102a600}, 0xc000260500)
+ /Users/shaun/.goenv/shared/go-mod/github.com/gin-gonic/gin@v1.11.0/gin.go:643 +0x338
+freshplate/server/internal/api.(*browser).request(0xc00102a800, {0x1062c4af8, 0x4}, {0x1062db2bc, 0x12}, {0xc0005fc0a0, 0x42}, 0x0)
+ /Users/shaun/Desktop/Programming/CodeRepository/FreshPlate/server/internal/api/api_test.go:81 +0x948
+freshplate/server/internal/api.(*browser).register(0xc00102a800, {0x1062d3781, 0xb})
+ /Users/shaun/Desktop/Programming/CodeRepository/FreshPlate/server/internal/api/api_test.go:137 +0xd0
+freshplate/server/internal/api.adminFixture(0xc0002a2488)
+ /Users/shaun/Desktop/Programming/CodeRepository/FreshPlate/server/internal/api/recipes_test.go:54 +0x288
+freshplate/server/internal/api.TestRecipeAPI021_024_MiscContracts(0xc0002a2488)
+ /Users/shaun/Desktop/Programming/CodeRepository/FreshPlate/server/internal/api/recipes_test.go:442 +0x34
+testing.tRunner(0xc0002a2488, 0x107181778)
+ /Users/shaun/.goenv/versions/1.26.4/src/testing/testing.go:2036 +0x168
+created by testing.(*T).Run in goroutine 1
+ /Users/shaun/.goenv/versions/1.26.4/src/testing/testing.go:2101 +0x7c0
+
+goroutine 5001 [select]:
+database/sql.(*DB).connectionOpener(0xc000dfc4e0, {0x10719a3a8, 0xc0011624b0})
+ /Users/shaun/.goenv/versions/1.26.4/src/database/sql/sql.go:1261 +0xbc
+created by database/sql.OpenDB in goroutine 5000
+ /Users/shaun/.goenv/versions/1.26.4/src/database/sql/sql.go:841 +0x250
+
+goroutine 4974 [runnable]:
+golang.org/x/crypto/argon2.indexAlpha(0xd161793b2210eb75?, 0x10000?, 0x4000?, 0x1?, 0x2?, 0x1?, 0x0?, 0x2bd8?)
+ /Users/shaun/.goenv/shared/go-mod/golang.org/x/crypto@v0.43.0/argon2/argon2.go:257 +0xf8
+golang.org/x/crypto/argon2.processBlocks.func1(0x2, 0x1, 0x0, 0xc0004f5610)
+ /Users/shaun/.goenv/shared/go-mod/golang.org/x/crypto@v0.43.0/argon2/argon2.go:220 +0x338
+created by golang.org/x/crypto/argon2.processBlocks in goroutine 5000
+ /Users/shaun/.goenv/shared/go-mod/golang.org/x/crypto@v0.43.0/argon2/argon2.go:232 +0x1b8
+FAIL freshplate/server/internal/api 601.183s
+ok   freshplate/server/internal/logic 6.030s
+ok   freshplate/server/internal/runtime (cached)
+ok   freshplate/server/internal/store 18.573s
+?    freshplate/server/migrations [no test files]
+FAIL
+exit_code=1

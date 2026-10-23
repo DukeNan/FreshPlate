@@ -819,6 +819,77 @@ definitions:
         - disabled
         type: string
     type: object
+  logic.Recommendation:
+    properties:
+      can_cook:
+        type: boolean
+      ingredients:
+        items:
+          $ref: '#/definitions/logic.RecommendationIngredient'
+        type: array
+      missing_count:
+        type: integer
+      recipe:
+        $ref: '#/definitions/logic.RecommendationRecipe'
+      uses_expiring:
+        type: boolean
+    type: object
+  logic.RecommendationIngredient:
+    properties:
+      food:
+        $ref: '#/definitions/store.Food'
+      have:
+        type: string
+        x-nullable: true
+      lack:
+        type: string
+        x-nullable: true
+      need:
+        type: string
+      state:
+        type: string
+      unit:
+        type: string
+    type: object
+  logic.RecommendationPage:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/logic.Recommendation'
+        type: array
+      stats:
+        $ref: '#/definitions/logic.RecommendationStats'
+      total:
+        type: integer
+    type: object
+  logic.RecommendationRecipe:
+    properties:
+      duration_minutes:
+        type: integer
+      id:
+        type: integer
+      name:
+        type: string
+      servings:
+        type: integer
+      version:
+        type: integer
+      visibility:
+        type: string
+    type: object
+  logic.RecommendationStats:
+    properties:
+      candidates:
+        type: integer
+      filtered_by_restrictions:
+        type: integer
+      filtered_disabled_reference:
+        type: integer
+      filtered_incomplete_metadata:
+        type: integer
+      has_usable_inventory:
+        type: boolean
+    type: object
   store.Audit:
     properties:
       action:
@@ -967,7 +1038,7 @@ definitions:
     type: object
 info:
   contact: {}
-  description: 'FreshPlate 三模块 API：用户模块（注册登录、JWT 访问/刷新令牌、饮食偏好、管理员用户与审计）；食材与库存模块（公共食材目录、带营养数据的食材管理、个人库存出入与盘点）；食谱模块（私有与公共食谱的创建、编辑、详情与检索）。通用约定：使用
+  description: 'FreshPlate API：用户模块（注册登录、JWT 访问/刷新令牌、饮食偏好、管理员用户与审计）；食材与库存模块（公共食材目录、带营养数据的食材管理、个人库存出入与盘点）；食谱模块（私有与公共食谱的创建、编辑、详情与检索）；推荐模块（本人库存匹配、饮食安全过滤、缺料说明与排序）。通用约定：使用
     Authorization: Bearer access JWT（15 分钟），每次查会话确保即时撤销。refresh HttpOnly Cookie 固定有效
     7 天，轮换并检测重放。登录、刷新和注销要求精确 Origin 与 CSRF；其他写接口无需 CSRF，受保护写接口仍要求 X-Expected-User-ID。JWT
     仅保存前端内存。强制改密期间允许 /me、/auth/csrf、/auth/refresh、/auth/logout、/me/password。成功返回 data，失败返回
@@ -2961,6 +3032,73 @@ paths:
       summary: 更新本人私有食谱
       tags:
       - 食谱
+  /recommendations:
+    get:
+      description: 仅本人视角；只读快照，安全过滤后按缺料数、临期、耗时、ID 排序。stats 不受检索与 availability 影响。
+      parameters:
+      - description: 食谱名称字面子串，TrimSpace 后最多 100 码点
+        in: query
+        name: q
+        type: string
+      - default: all
+        description: 可做筛选
+        enum:
+        - all
+        - can_cook
+        in: query
+        name: availability
+        type: string
+      - default: 1
+        description: 页码
+        in: query
+        maximum: 1000000
+        minimum: 1
+        name: page
+        type: integer
+      - default: 20
+        description: 每页条数
+        in: query
+        maximum: 100
+        minimum: 1
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/api.response'
+            - properties:
+                data:
+                  $ref: '#/definitions/logic.RecommendationPage'
+              type: object
+        "400":
+          description: INVALID_ARGUMENT
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "401":
+          description: AUTH_REQUIRED
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "403":
+          description: PASSWORD_CHANGE_REQUIRED
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "500":
+          description: INTERNAL_ERROR
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "503":
+          description: DATABASE_BUSY
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: 基于本人库存与饮食限制推荐食谱
+      tags:
+      - 推荐
 securityDefinitions:
   BearerAuth:
     in: header

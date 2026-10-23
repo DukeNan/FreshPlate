@@ -1,0 +1,76 @@
+=== RUN   TestRecommendationAPIContractFilteringAndIsolation
+--- PASS: TestRecommendationAPIContractFilteringAndIsolation (0.79s)
+=== RUN   TestValidationRecommendationPasswordGate
+--- PASS: TestValidationRecommendationPasswordGate (1.19s)
+=== RUN   TestValidationRecommendationBusyReadAndRecovery
+--- PASS: TestValidationRecommendationBusyReadAndRecovery (0.76s)
+PASS
+ok  	freshplate/server/internal/api	3.947s
+=== RUN   TestRecommendationConversions
+=== RUN   TestRecommendationConversions/same_missing_metadata
+=== RUN   TestRecommendationConversions/piece_g
+=== RUN   TestRecommendationConversions/g_piece_remainder
+=== RUN   TestRecommendationConversions/g_ml
+=== RUN   TestRecommendationConversions/ml_g
+=== RUN   TestRecommendationConversions/piece_ml
+=== RUN   TestRecommendationConversions/ml_piece
+=== RUN   TestRecommendationConversions/needs_both
+=== RUN   TestRecommendationConversions/round_final_only
+=== RUN   TestRecommendationConversions/cap_boundary
+=== RUN   TestRecommendationConversions/composite_saturation
+=== RUN   TestRecommendationConversions/intermediate_overflow_final_exact
+=== RUN   TestRecommendationConversions/ml_piece_saturated
+=== RUN   TestRecommendationConversions/below_milli
+--- PASS: TestRecommendationConversions (0.00s)
+    --- PASS: TestRecommendationConversions/same_missing_metadata (0.00s)
+    --- PASS: TestRecommendationConversions/piece_g (0.00s)
+    --- PASS: TestRecommendationConversions/g_piece_remainder (0.00s)
+    --- PASS: TestRecommendationConversions/g_ml (0.00s)
+    --- PASS: TestRecommendationConversions/ml_g (0.00s)
+    --- PASS: TestRecommendationConversions/piece_ml (0.00s)
+    --- PASS: TestRecommendationConversions/ml_piece (0.00s)
+    --- PASS: TestRecommendationConversions/needs_both (0.00s)
+    --- PASS: TestRecommendationConversions/round_final_only (0.00s)
+    --- PASS: TestRecommendationConversions/cap_boundary (0.00s)
+    --- PASS: TestRecommendationConversions/composite_saturation (0.00s)
+    --- PASS: TestRecommendationConversions/intermediate_overflow_final_exact (0.00s)
+    --- PASS: TestRecommendationConversions/ml_piece_saturated (0.00s)
+    --- PASS: TestRecommendationConversions/below_milli (0.00s)
+=== RUN   TestRecommendationStatesAndInvariants
+=== RUN   TestRecommendationStatesAndInvariants/empty
+=== RUN   TestRecommendationStatesAndInvariants/exact
+=== RUN   TestRecommendationStatesAndInvariants/one_milli_short
+=== RUN   TestRecommendationStatesAndInvariants/aggregate
+=== RUN   TestRecommendationStatesAndInvariants/unknown
+=== RUN   TestRecommendationStatesAndInvariants/known_sufficient
+=== RUN   TestRecommendationStatesAndInvariants/zero
+--- PASS: TestRecommendationStatesAndInvariants (0.00s)
+    --- PASS: TestRecommendationStatesAndInvariants/empty (0.00s)
+    --- PASS: TestRecommendationStatesAndInvariants/exact (0.00s)
+    --- PASS: TestRecommendationStatesAndInvariants/one_milli_short (0.00s)
+    --- PASS: TestRecommendationStatesAndInvariants/aggregate (0.00s)
+    --- PASS: TestRecommendationStatesAndInvariants/unknown (0.00s)
+    --- PASS: TestRecommendationStatesAndInvariants/known_sufficient (0.00s)
+    --- PASS: TestRecommendationStatesAndInvariants/zero (0.00s)
+=== RUN   TestRecommendationSafetyPriorityAndStats
+--- PASS: TestRecommendationSafetyPriorityAndStats (0.00s)
+=== RUN   TestRecommendationDatesSortAndFilter
+--- PASS: TestRecommendationDatesSortAndFilter (0.00s)
+=== RUN   TestRecommendationAggregateCapBoundaryOrder
+--- PASS: TestRecommendationAggregateCapBoundaryOrder (0.00s)
+=== RUN   TestValidateRecommendationQuery
+--- PASS: TestValidateRecommendationQuery (0.00s)
+=== RUN   TestValidationRecommendationConversionOracle
+--- PASS: TestValidationRecommendationConversionOracle (0.00s)
+=== RUN   TestValidationRecommendationSaturationAndInvariants
+--- PASS: TestValidationRecommendationSaturationAndInvariants (0.00s)
+PASS
+ok  	freshplate/server/internal/logic	1.490s
+=== RUN   TestRecommendationBatchQueriesAndVisibility
+--- PASS: TestRecommendationBatchQueriesAndVisibility (0.03s)
+=== RUN   TestRecommendationReadSnapshotDuringFoodChange
+--- PASS: TestRecommendationReadSnapshotDuringFoodChange (0.01s)
+=== RUN   TestValidationRecommendationEmptyAndInactiveInventory
+--- PASS: TestValidationRecommendationEmptyAndInactiveInventory (0.01s)
+PASS
+ok  	freshplate/server/internal/store	0.863s

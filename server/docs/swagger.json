@@ -1,7 +1,7 @@
 {
     "swagger": "2.0",
     "info": {
-        "description": "FreshPlate 三模块 API：用户模块（注册登录、JWT 访问/刷新令牌、饮食偏好、管理员用户与审计）；食材与库存模块（公共食材目录、带营养数据的食材管理、个人库存出入与盘点）；食谱模块（私有与公共食谱的创建、编辑、详情与检索）。通用约定：使用 Authorization: Bearer access JWT（15 分钟），每次查会话确保即时撤销。refresh HttpOnly Cookie 固定有效 7 天，轮换并检测重放。登录、刷新和注销要求精确 Origin 与 CSRF；其他写接口无需 CSRF，受保护写接口仍要求 X-Expected-User-ID。JWT 仅保存前端内存。强制改密期间允许 /me、/auth/csrf、/auth/refresh、/auth/logout、/me/password。成功返回 data，失败返回 error.code/message。所有 API no-store，不启用 CORS。",
+        "description": "FreshPlate API：用户模块（注册登录、JWT 访问/刷新令牌、饮食偏好、管理员用户与审计）；食材与库存模块（公共食材目录、带营养数据的食材管理、个人库存出入与盘点）；食谱模块（私有与公共食谱的创建、编辑、详情与检索）；推荐模块（本人库存匹配、饮食安全过滤、缺料说明与排序）。通用约定：使用 Authorization: Bearer access JWT（15 分钟），每次查会话确保即时撤销。refresh HttpOnly Cookie 固定有效 7 天，轮换并检测重放。登录、刷新和注销要求精确 Origin 与 CSRF；其他写接口无需 CSRF，受保护写接口仍要求 X-Expected-User-ID。JWT 仅保存前端内存。强制改密期间允许 /me、/auth/csrf、/auth/refresh、/auth/logout、/me/password。成功返回 data，失败返回 error.code/message。所有 API no-store，不启用 CORS。",
         "title": "FreshPlate API",
         "contact": {},
         "version": "0.1.0"
@@ -3084,6 +3084,110 @@
                     }
                 }
             }
+        },
+        "/recommendations": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "仅本人视角；只读快照，安全过滤后按缺料数、临期、耗时、ID 排序。stats 不受检索与 availability 影响。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "推荐"
+                ],
+                "summary": "基于本人库存与饮食限制推荐食谱",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "食谱名称字面子串，TrimSpace 后最多 100 码点",
+                        "name": "q",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "all",
+                            "can_cook"
+                        ],
+                        "type": "string",
+                        "default": "all",
+                        "description": "可做筛选",
+                        "name": "availability",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 1000000,
+                        "minimum": 1,
+                        "type": "integer",
+                        "default": 1,
+                        "description": "页码",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 100,
+                        "minimum": 1,
+                        "type": "integer",
+                        "default": 20,
+                        "description": "每页条数",
+                        "name": "page_size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/api.response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/logic.RecommendationPage"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "INVALID_ARGUMENT",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "AUTH_REQUIRED",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "PASSWORD_CHANGE_REQUIRED",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "INTERNAL_ERROR",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    },
+                    "503": {
+                        "description": "DATABASE_BUSY",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -4163,6 +4267,114 @@
                         "active",
                         "disabled"
                     ]
+                }
+            }
+        },
+        "logic.Recommendation": {
+            "type": "object",
+            "properties": {
+                "can_cook": {
+                    "type": "boolean"
+                },
+                "ingredients": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/logic.RecommendationIngredient"
+                    }
+                },
+                "missing_count": {
+                    "type": "integer"
+                },
+                "recipe": {
+                    "$ref": "#/definitions/logic.RecommendationRecipe"
+                },
+                "uses_expiring": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "logic.RecommendationIngredient": {
+            "type": "object",
+            "properties": {
+                "food": {
+                    "$ref": "#/definitions/store.Food"
+                },
+                "have": {
+                    "type": "string",
+                    "x-nullable": true
+                },
+                "lack": {
+                    "type": "string",
+                    "x-nullable": true
+                },
+                "need": {
+                    "type": "string"
+                },
+                "state": {
+                    "type": "string"
+                },
+                "unit": {
+                    "type": "string"
+                }
+            }
+        },
+        "logic.RecommendationPage": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/logic.Recommendation"
+                    }
+                },
+                "stats": {
+                    "$ref": "#/definitions/logic.RecommendationStats"
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "logic.RecommendationRecipe": {
+            "type": "object",
+            "properties": {
+                "duration_minutes": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "servings": {
+                    "type": "integer"
+                },
+                "version": {
+                    "type": "integer"
+                },
+                "visibility": {
+                    "type": "string"
+                }
+            }
+        },
+        "logic.RecommendationStats": {
+            "type": "object",
+            "properties": {
+                "candidates": {
+                    "type": "integer"
+                },
+                "filtered_by_restrictions": {
+                    "type": "integer"
+                },
+                "filtered_disabled_reference": {
+                    "type": "integer"
+                },
+                "filtered_incomplete_metadata": {
+                    "type": "integer"
+                },
+                "has_usable_inventory": {
+                    "type": "boolean"
                 }
             }
         },

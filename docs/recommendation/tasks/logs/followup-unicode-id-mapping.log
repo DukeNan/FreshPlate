@@ -1,0 +1,35 @@
+RECO-API-001: server/internal/api/recommendations_test.go :: TestRecommendationAPIContractFilteringAndIsolation
+RECO-API-002: server/internal/api/recommendations_validation_test.go :: TestValidationRecommendationPasswordGate
+RECO-API-003: server/internal/api/recommendations_validation_test.go :: TestValidationRecommendationBusyReadAndRecovery
+RECO-LOGIC-001: server/internal/logic/recommendations_test.go :: TestRecommendationConversions
+RECO-LOGIC-002: server/internal/logic/recommendations_test.go :: TestRecommendationStatesAndInvariants
+RECO-LOGIC-003: server/internal/logic/recommendations_test.go :: TestRecommendationSafetyPriorityAndStats
+RECO-LOGIC-004: server/internal/logic/recommendations_test.go :: TestRecommendationDatesSortAndFilter
+RECO-LOGIC-005: server/internal/logic/recommendations_test.go :: TestRecommendationAggregateCapBoundaryOrder
+RECO-LOGIC-006: server/internal/logic/recommendations_test.go :: TestValidateRecommendationQuery
+RECO-LOGIC-007: server/internal/logic/recommendations_validation_test.go :: TestValidationRecommendationConversionOracle
+RECO-LOGIC-008: server/internal/logic/recommendations_validation_test.go :: TestValidationRecommendationSaturationAndInvariants
+RECO-STORE-001: server/internal/store/recommendations_test.go :: TestRecommendationBatchQueriesAndVisibility
+RECO-STORE-002: server/internal/store/recommendations_test.go :: TestRecommendationReadSnapshotDuringFoodChange
+RECO-STORE-003: server/internal/store/recommendations_validation_test.go :: TestValidationRecommendationEmptyAndInactiveInventory
+RECO-WEB-001: web/src/recommendations.test.js :: sums all three exclusive safety counts
+RECO-WEB-002: web/src/recommendations.test.js :: prioritizes no candidates over display filters and inventory banner
+RECO-WEB-003: web/src/recommendations.test.js :: prioritizes all safety filtered over display filters
+RECO-WEB-010: web/src/recommendations.test.js :: uses combined display filters %j / %s
+RECO-WEB-004: web/src/recommendations.test.js :: does not report empty when total is positive, even on an empty page or without usable inventory
+RECO-WEB-005: web/src/recommendations.test.js :: only transfers the clicked recipe once without writing browser storage
+RECO-WEB-006: web/src/recommendations.test.js :: does not reuse a different recipe or a direct visit
+RECO-WEB-007: web/src/recommendations.test.js :: clears immediately when identity generation changes, including switching away and back
+RECO-WEB-008: web/src/recommendations.test.js :: drops the whole match on version mismatch
+RECO-WEB-011: web/src/recommendations.test.js :: describes %s with text and exact quantities
+RECO-WEB-009: web/src/recommendations.test.js :: summarizes all non-ok ingredients including unknown without treating null as zero
+RECO-WEB-012: web/src/recommendations.test.js :: validates trimmed Unicode code points at the 100-character boundary
+RECO-WEB-013: web/src/recommendations.test.js :: matches Go whitespace normalization at NEL and BOM boundaries
+RECO-E2E-001: web/e2e/recommendation-module.spec.js
+RECO-E2E-002: web/e2e/recommendation-module.spec.js
+RECO-E2E-003: web/e2e/recommendation-module.spec.js
+RECO-E2E-004: web/e2e/recommendation-module.spec.js
+RECO-E2E-005: web/e2e/recommendation-module.spec.js
+RECO-E2E-006: web/e2e/recommendation-module.spec.js
+RECO-COMPAT-001: web/e2e/swagger.spec.js
+PASS: 34 unique IDs; 14 Go functions, 13 Vitest definitions (19 expanded cases), 6 recommendation E2E tests, 1 Swagger test; both document ranges align.

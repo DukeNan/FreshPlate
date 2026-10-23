@@ -1,0 +1,4 @@
+=== RUN   TestRecommendationBatchQueriesAndVisibility
+--- PASS: TestRecommendationBatchQueriesAndVisibility (0.03s)
+PASS
+ok  	freshplate/server/internal/store	0.846s

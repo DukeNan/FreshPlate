@@ -1,0 +1,13 @@
+
+> freshplate-web@0.1.0 test
+> vitest run
+
+
+ RUN  v4.1.12 /Users/shaun/Desktop/Programming/CodeRepository/FreshPlate/web
+
+
+ Test Files  5 passed (5)
+      Tests  78 passed (78)
+   Start at  17:10:13
+   Duration  361ms (transform 202ms, setup 0ms, import 339ms, tests 223ms, environment 2ms)
+

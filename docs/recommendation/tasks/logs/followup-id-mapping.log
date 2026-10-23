@@ -1,0 +1,34 @@
+RECO-API-001: server/internal/api/recommendations_test.go :: TestRecommendationAPIContractFilteringAndIsolation
+RECO-API-002: server/internal/api/recommendations_validation_test.go :: TestValidationRecommendationPasswordGate
+RECO-API-003: server/internal/api/recommendations_validation_test.go :: TestValidationRecommendationBusyReadAndRecovery
+RECO-LOGIC-001: server/internal/logic/recommendations_test.go :: TestRecommendationConversions
+RECO-LOGIC-002: server/internal/logic/recommendations_test.go :: TestRecommendationStatesAndInvariants
+RECO-LOGIC-003: server/internal/logic/recommendations_test.go :: TestRecommendationSafetyPriorityAndStats
+RECO-LOGIC-004: server/internal/logic/recommendations_test.go :: TestRecommendationDatesSortAndFilter
+RECO-LOGIC-005: server/internal/logic/recommendations_test.go :: TestRecommendationAggregateCapBoundaryOrder
+RECO-LOGIC-006: server/internal/logic/recommendations_test.go :: TestValidateRecommendationQuery
+RECO-LOGIC-007: server/internal/logic/recommendations_validation_test.go :: TestValidationRecommendationConversionOracle
+RECO-LOGIC-008: server/internal/logic/recommendations_validation_test.go :: TestValidationRecommendationSaturationAndInvariants
+RECO-STORE-001: server/internal/store/recommendations_test.go :: TestRecommendationBatchQueriesAndVisibility
+RECO-STORE-002: server/internal/store/recommendations_test.go :: TestRecommendationReadSnapshotDuringFoodChange
+RECO-STORE-003: server/internal/store/recommendations_validation_test.go :: TestValidationRecommendationEmptyAndInactiveInventory
+RECO-WEB-001: web/src/recommendations.test.js
+RECO-WEB-002: web/src/recommendations.test.js
+RECO-WEB-003: web/src/recommendations.test.js
+RECO-WEB-004: web/src/recommendations.test.js
+RECO-WEB-005: web/src/recommendations.test.js
+RECO-WEB-006: web/src/recommendations.test.js
+RECO-WEB-007: web/src/recommendations.test.js
+RECO-WEB-008: web/src/recommendations.test.js
+RECO-WEB-009: web/src/recommendations.test.js
+RECO-WEB-010: web/src/recommendations.test.js
+RECO-WEB-011: web/src/recommendations.test.js
+RECO-WEB-012: web/src/recommendations.test.js
+RECO-E2E-001: web/e2e/recommendation-module.spec.js
+RECO-E2E-002: web/e2e/recommendation-module.spec.js
+RECO-E2E-003: web/e2e/recommendation-module.spec.js
+RECO-E2E-004: web/e2e/recommendation-module.spec.js
+RECO-E2E-005: web/e2e/recommendation-module.spec.js
+RECO-E2E-006: web/e2e/recommendation-module.spec.js
+RECO-COMPAT-001: web/e2e/swagger.spec.js
+PASS: 33 unique IDs; 14 Go functions, 12 Vitest definitions (18 expanded cases), 6 recommendation E2E tests, 1 Swagger test.

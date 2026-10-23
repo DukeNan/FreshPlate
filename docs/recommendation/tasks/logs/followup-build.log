@@ -1,0 +1,13 @@
+
+> freshplate-web@0.1.0 build
+> vite build
+
+vite v6.4.4 building for production...
+transforming...
+✓ 50 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                   0.41 kB │ gzip:  0.31 kB
+dist/assets/index-3-FjYFrS.css    6.75 kB │ gzip:  2.00 kB
+dist/assets/index-D_69yEil.js   204.08 kB │ gzip: 68.86 kB
+✓ built in 749ms
