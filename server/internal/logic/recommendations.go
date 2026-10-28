@@ -9,6 +9,7 @@ import (
 	"time"
 	"unicode/utf8"
 
+	"freshplate/server/internal/calendar"
 	"freshplate/server/internal/store"
 )
 
@@ -131,7 +132,7 @@ func BuildRecommendations(input store.RecommendationInput, today time.Time, avai
 	if err != nil {
 		return out, err
 	}
-	today = UtcToday(today)
+	today = calendar.Today(today)
 	inventory := map[int64][]store.InventoryItem{}
 	for _, batch := range input.Inventory {
 		if batch.QuantityMilli <= 0 || batch.FoodStatus != "active" || ExpiryState(batch.QuantityMilli, batch.ExpiresOn, today) == "expired" {
@@ -237,7 +238,7 @@ func (s *Service) Recommendations(ctx context.Context, actor store.Session, q, a
 	if err != nil || page < 1 || page > 1000000 || size < 1 || size > 100 {
 		return RecommendationPage{}, ErrInvalidArgument
 	}
-	today := UtcToday(s.Now())
+	today := s.Now()
 	input, err := s.Store.RecommendationSnapshot(ctx, actor.User.ID, q)
 	if err != nil {
 		return RecommendationPage{}, err

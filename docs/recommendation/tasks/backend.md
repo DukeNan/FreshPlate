@@ -6,7 +6,7 @@
 
 - §2：store 限定 published 公共 ∪ 本人私有；纯函数先排无原料记录，再按元数据 → EnforceRestrictions → 停用引用三项互斥计数。请求级 ValidatePreferences，原有函数签名保持不变。
 - §3.1：math/bits Mul64、阈值 128 位比较、Div64 实现最终单位唯一一次向下取整；六位系数 math.Round 整数化并复核范围；单批及累加 cap=10^15；同单位恒已知；四态和缺量规范字符串。
-- §3.2：UtcToday 单次 Service.Now 注入，ExpiryState 共用三天阈值；按缺料、临期、耗时、id 排序；availability、total、分页顺序符合方案。
+- §3.2：calendar.Today 单次 Service.Now 注入，ExpiryState 共用三天阈值；按缺料、临期、耗时、id 排序；availability、total、分页顺序符合方案。
 - §3.3：候选 SQL SELECT 使用绑定的 instr(name,?) 名称匹配标记；安全过滤 stats 仍来自全量候选，不随 q 减少。
 - §4：受保护 GET /api/recommendations；logic DTO 精确返回 data 内 items/total/stats，recipe 不包含 owner/steps/status/审计；have/lack 无 omitempty 确保 null。
 - §5：固定五条 SELECT（偏好、库存+food、候选、原料+food、附加过敏原），全部在单 ReadOnly 事务内完成。到期/active 过滤在内存。查询、扫描及提交错误统一 mapError。
@@ -15,7 +15,7 @@
 
 ## 证据与决策
 
-现有 `store/readPreferences` 逐 excluded_food_ids 查询展示名称，不满足推荐固定查询数；本模块直接单批读取偏好 JSON 与目标数值（不读取无用 ExcludedFoods），不修改原有偏好接口。现有库存与食谱 scanner、Food DTO、Quantity 格式化、UtcToday/ExpiryState、分页及认证 helper 均复用。
+现有 `store/readPreferences` 逐 excluded_food_ids 查询展示名称，不满足推荐固定查询数；本模块直接单批读取偏好 JSON 与目标数值（不读取无用 ExcludedFoods），不修改原有偏好接口。现有库存与食谱 scanner、Food DTO、Quantity 格式化、calendar.Today/ExpiryState、分页及认证 helper 均复用。
 
 纯计算接口：BuildRecommendations(store.RecommendationInput, today, availability, page, size)。输入仅为通过 store 候选可见性筛选的快照，NameMatches 来自参数化 instr；输出 RecommendationPage。Service 负责参数及页码校验、一次时钟注入与 IO 调用。
 

@@ -21,3 +21,13 @@ func TestNutritionDays(t *testing.T) {
 		t.Fatalf("unknown value not preserved: %+v", days)
 	}
 }
+
+func TestNutritionDaysChinaMidnight(t *testing.T) {
+	end := time.Date(2026, 10, 27, 0, 0, 0, 0, time.UTC)
+	before := store.NutritionItem{MealID: 1, AteAt: time.Date(2026, 10, 26, 15, 59, 0, 0, time.UTC).Unix()}
+	after := store.NutritionItem{MealID: 2, AteAt: time.Date(2026, 10, 26, 16, 0, 0, 0, time.UTC).Unix()}
+	days := NutritionDays(end, []store.NutritionItem{before, after})
+	if days[5].MealsCount != 1 || days[6].MealsCount != 1 {
+		t.Fatalf("wrong China calendar dates: %+v", days)
+	}
+}

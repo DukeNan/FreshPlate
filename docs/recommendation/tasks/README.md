@@ -6,7 +6,7 @@
 
 | 任务 / 负责 Agent | 允许修改范围 | 输入与输出 | 依赖与完成条件 |
 | --- | --- | --- | --- |
-| 后端 / backend | `server/internal/{logic,store,api}/recommendations*.go`、API 路由与必要 DTO、Swagger 生成文件 | 当前偏好、本人库存、公共和本人 published 食谱、一次 UTC today → `GET /api/recommendations` | 复用现有偏好/数量/到期规则；完成设计 §2–5、§8 后端验收及实现单测 |
+| 后端 / backend | `server/internal/{logic,store,api}/recommendations*.go`、API 路由与必要 DTO、Swagger 生成文件 | 当前偏好、本人库存、公共和本人 published 食谱、一次中国标准时间 today → `GET /api/recommendations` | 复用现有偏好/数量/到期规则；完成设计 §2–5、§8 后端验收及实现单测 |
 | 前端 / frontend | `web/src/` 的推荐视图、路由导航、详情和内存快照及单测 | 设计 §4 响应 → 列表、过滤分页、详情快照 | 可与后端依约并行；完成 §6 空态/身份隔离/version 校验，Vitest/build 通过 |
 | 独立验证 / validation | `web/e2e/recommendation-module.spec.js`、独立测试文件、`validation.md` | 设计与最终变更 → 独立清单、检查结果、缺陷 | 未参与业务实现；准备与实现并行，完整回归依赖集成；失败交实现者修复后复测 |
 | 集成 / root | 本任务索引、实施计划、测试文档；必要跨模块协调 | 各任务产物 → 集成结果及交付映射 | 解决接口问题、记录决策与文档证据，不做无关重构 |
@@ -36,7 +36,7 @@
 
 ## 初始核对与决策
 
-- 设计所依赖的 `EnforceRestrictions`、`ValidatePreferences`、`FormatQuantity`、`UtcToday`、`ExpiryState` 均存在；维持 API → logic → store 边界。
+- 设计所依赖的 `EnforceRestrictions`、`ValidatePreferences`、`FormatQuantity`、`calendar.Today`、`ExpiryState` 均存在；维持 API → logic → store 边界。
 - 仓库 AGENTS 与实施计划仍描述推荐待实现，这是本次要更新的状态文字；无需需求变更。
 - 名称检索使用参数化 SQL `instr(name,?)>0` 命中旗；保留全部候选以计算 stats，仅对安全幸存且名称命中的候选做匹配，不引入 N+1。
 - 常规实现细节由负责 Agent 决策；发现需求冲突或重大行为变更由主 Agent向用户确认。

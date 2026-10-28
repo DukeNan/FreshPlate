@@ -53,7 +53,7 @@ type inventoryFoodOutput struct {
 
 // inventoryItemOutput 是详情/列表统一响应 DTO：id、food{id,name,status}、
 // quantity（规范字符串）、unit、expires_on、note、version、expiry_state、
-// created_at、updated_at。expiry_state 为服务端按 UTC 当日派生，不持久化。
+// created_at、updated_at。expiry_state 为服务端按中国标准时间当日派生，不持久化。
 type inventoryItemOutput struct {
 	ID          int64               `json:"id"`
 	Food        inventoryFoodOutput `json:"food"`
@@ -141,7 +141,7 @@ func inventoryOutput(item store.InventoryItem, today time.Time) inventoryItemOut
 
 // inventoryList godoc
 // @Summary 分页查询本人库存
-// @Description 仅登录用户可用。返回本人全部未删除批次（含数量为零项），按 ID 倒序；items 与 total 基于同一服务端 today 取得，筛选与响应 expiry_state 规则一致（depleted/expired/expiring/fresh/unknown）。q 为食材名称字面子串；不提供总质量/总数量聚合。日期统一按 UTC 判断。
+// @Description 仅登录用户可用。返回本人全部未删除批次（含数量为零项），按 ID 倒序；items 与 total 基于同一服务端 today 取得，筛选与响应 expiry_state 规则一致（depleted/expired/expiring/fresh/unknown）。q 为食材名称字面子串；不提供总质量/总数量聚合。日期统一按中国标准时间判断。
 // @Tags 库存
 // @Produce json
 // @Param q query string false "食材名称字面子串；处理后至多 100 码点。"

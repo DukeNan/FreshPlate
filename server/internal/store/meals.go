@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"freshplate/server/internal/calendar"
 	"time"
 
 	"gorm.io/gorm"
@@ -112,7 +113,7 @@ func (s *Store) CreateMeal(ctx context.Context, actor Session, in MealInput, now
 			if batchVersion != item.Version || quantity < item.QuantityMilli {
 				return E(409, "VERSION_CONFLICT", "库存已变化或数量不足，请刷新后重试")
 			}
-			if status != "active" || (expires != nil && *expires < now.UTC().Format("2006-01-02")) {
+			if status != "active" || (expires != nil && *expires < calendar.Today(now).Format("2006-01-02")) {
 				return E(409, "FOOD_UNAVAILABLE", "库存食材已停用或过期")
 			}
 			usedFoods[foodID] = true

@@ -12,10 +12,9 @@ const ORIGIN = 'http://127.0.0.1:18080'
 export const fixture = JSON.parse(readFileSync(new URL('./fixtures.json', import.meta.url), 'utf8'))
 export { expect }
 
-// 按 UTC 日历日计算偏移日期字符串（YYYY-MM-DD）。服务端按 UTC 判断
-// 临期/过期，因此构造「今日到期 / +N 天」日期必须用 getUTC* 系列。
+// 按中国标准时间日历日计算偏移日期字符串。
 export function utcDate(offsetDays = 0) {
-  const now = new Date()
+  const now = new Date(Date.now() + 8 * 60 * 60 * 1000)
   const day = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()) + offsetDays * 86400000)
   return `${day.getUTCFullYear()}-${String(day.getUTCMonth() + 1).padStart(2, '0')}-${String(day.getUTCDate()).padStart(2, '0')}`
 }

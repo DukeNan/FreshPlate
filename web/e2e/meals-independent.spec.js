@@ -135,8 +135,10 @@ test('营养按实际份量计算并保留快照；七天边界及未知值', as
     headers: userA.headers,
     data: { food_id: unknown.id, quantity: '100', unit: 'g', expires_on: null, note: '独立验收' },
   }))
-  const body = { ...confirmation([item(stock, '20')]), recipe_id: unknownRecipe.id, recipe_version: unknownRecipe.version }
+  const body = { ...confirmation([item(stock, '20')]), recipe_id: unknownRecipe.id, recipe_version: unknownRecipe.version, ate_at: '2026-10-19T16:00:00Z' }
   await data(await submit(userA, body))
+  const previousDay = await data(await userA.api.get('/api/nutrition?end=2026-10-19', { headers: userA.headers }))
+  expect(previousDay.days[6].meals_count).toBe(0)
   expect((await summary()).days[6]).toMatchObject({
     meals_count: 2, complete: false, energy_kcal: null, protein_g: null, fat_g: null, carbs_g: null,
   })
@@ -149,7 +151,7 @@ test('浏览器从食谱确认烹饪到记录及营养概览', async () => {
   await page.getByRole('button', { name: '填写烹饪记录' }).click()
   await page.getByLabel('烹饪份数').fill('2')
   await page.getByLabel('食用份数').fill('1')
-  await page.getByLabel('就餐时间（本地时间）').fill('2026-10-19T12:00')
+  await page.getByLabel('就餐时间（中国标准时间）').fill('2026-10-19T12:00')
   await page.getByLabel(new RegExp(`批次 #${stock.id} ·`)).fill('30')
   await page.getByRole('button', { name: '确认烹饪并记餐' }).click()
   await expect(page.getByRole('status').filter({ hasText: '烹饪已确认' })).toBeVisible()
@@ -157,7 +159,7 @@ test('浏览器从食谱确认烹饪到记录及营养概览', async () => {
   await page.getByRole('link', { name: '查看饮食记录' }).click()
   await expect(page.getByRole('row').filter({ hasText: recipe.name }).first()).toContainText('1')
   await page.goto('/nutrition')
-  await page.getByLabel('截止日期（UTC）').fill('2026-10-19')
+  await page.getByLabel('截止日期（中国标准时间）').fill('2026-10-19')
   await page.getByRole('button', { name: '查询' }).click()
   await expect(page.getByRole('row').filter({ hasText: '2026-10-19' })).toContainText('30')
 })
@@ -239,7 +241,7 @@ test('营养概览较早的响应不会覆盖最新查询', async () => {
   try {
     await page.goto('/nutrition')
     await firstRequest
-    await page.getByLabel('截止日期（UTC）').fill('2026-10-20')
+    await page.getByLabel('截止日期（中国标准时间）').fill('2026-10-20')
     await page.locator('form').dispatchEvent('submit')
     await expect(page.getByRole('row').filter({ hasText: '2026-10-20' })).toBeVisible()
     const firstResponse = page.waitForResponse(response => response.url().includes('/api/nutrition?') && !response.url().includes('end=2026-10-20'))

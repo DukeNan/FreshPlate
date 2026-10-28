@@ -10,11 +10,7 @@ const generation = auth.generation, expectedUserId = auth.user?.id
 const open = ref(false), loading = ref(false), saving = ref(false), batches = ref([])
 const error = ref(''), message = ref(''), pending = ref(null), uncertain = ref(false), loadFailed = ref(false)
 const cooked = ref(String(props.recipe.servings)), eaten = ref('1')
-const localNow = () => {
-  const d = new Date()
-  return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16)
-}
-const ateAt = ref(localNow())
+const ateAt = ref(new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString().slice(0, 16))
 async function show() {
   open.value = true; loading.value = true; error.value = ''; loadFailed.value = false
   try {
@@ -44,7 +40,7 @@ async function submit() {
     if (!items.length) { error.value = '请至少填写一个库存批次的实际使用量。'; return }
     const selected = new Set(batches.value.filter(batch => batch.used).map(batch => batch.food.id))
     if (props.recipe.ingredients.some(item => !selected.has(item.food.id))) { error.value = '请为食谱中的每种食材填写至少一个库存批次的实际使用量。'; return }
-    const date = new Date(ateAt.value)
+    const date = new Date(`${ateAt.value}+08:00`)
     if (Number.isNaN(date.getTime())) { error.value = '请输入有效的就餐时间。'; return }
     pending.value = { request_key: crypto.randomUUID(), recipe_id: props.recipe.id, recipe_version: props.recipe.version, cooked_servings: cooked.value, eaten_servings: eaten.value, ate_at: date.toISOString().replace('.000Z', 'Z'), items }
   }
@@ -80,7 +76,7 @@ async function submit() {
         <legend>实际份量和用料</legend>
         <label for="cooked-servings">烹饪份数</label><input id="cooked-servings" v-model="cooked" inputmode="decimal" required>
         <label for="eaten-servings">食用份数</label><input id="eaten-servings" v-model="eaten" inputmode="decimal" required>
-        <label for="ate-at">就餐时间（本地时间）</label><input id="ate-at" v-model="ateAt" type="datetime-local" required>
+        <label for="ate-at">就餐时间（中国标准时间）</label><input id="ate-at" v-model="ateAt" type="datetime-local" required>
         <p>每种食谱原料都须填写至少一个库存批次的实际使用量；留空表示不使用该批次。只显示未过期且启用的食材，数量单位与库存一致。提交时会重新检查饮食限制与过敏原数据。</p>
         <div v-for="batch in batches" :key="batch.id">
           <label :for="`used-${batch.id}`">{{ batch.food.name }} · 批次 #{{ batch.id }} · 可用 {{ batch.quantity }} {{ unitLabel(batch.unit) }} · 到期 {{ batch.expires_on || '未知' }}</label>

@@ -1,5 +1,5 @@
 // 库存模块 E2E（INV-E2E-001~010）。
-// 日期均以 UTC 日历日构造（服务端按 UTC 判断临期/过期）；
+// 日期均以中国标准时间日历日构造；
 // 数量全程字符串断言，不做浮点解析。
 import {
   test, expect, fixture, loggedInPage, ensureFood, setFoodStatus, utcDate,

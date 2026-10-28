@@ -461,8 +461,8 @@ func TestInvAPI035_ListAndDerivationShareToday(t *testing.T) {
 	f, alice, _ := inventoryFixture(t)
 	foodID := seedFoodRow(t, f, "鸡胸肉", "active")
 	id := seedInventoryRow(t, f, alice.id, foodID, 1000, "g", "2026-10-19", "", 1)
-	// UTC 日界前：今日到期 → expiring。
-	f.now = time.Date(2026, 10, 19, 23, 59, 0, 0, time.UTC)
+	// 中国标准时间日界前：今日到期 → expiring。
+	f.now = time.Date(2026, 10, 19, 15, 59, 0, 0, time.UTC)
 	alice.login("alice_01", testPassword) // 时钟前移超过 15 分钟，重新登录刷新 JWT
 	w := alice.request("GET", "/api/inventory-items?expiry_state=expiring", "", nil)
 	status(t, w, 200)
@@ -471,8 +471,8 @@ func TestInvAPI035_ListAndDerivationShareToday(t *testing.T) {
 	if p.Total != 1 || p.Items[0].ID != id || p.Items[0].ExpiryState != "expiring" {
 		t.Fatalf("日界前应 expiring: %+v", p)
 	}
-	// UTC 日界后：同一批次变 expired，且不再命中 expiring 筛选。
-	f.now = time.Date(2026, 10, 20, 0, 1, 0, 0, time.UTC)
+	// 中国标准时间日界后：同一批次变 expired，且不再命中 expiring 筛选。
+	f.now = time.Date(2026, 10, 19, 16, 1, 0, 0, time.UTC)
 	alice.login("alice_01", testPassword) // 再次刷新 JWT
 	w = alice.request("GET", "/api/inventory-items?expiry_state=expiring", "", nil)
 	status(t, w, 200)

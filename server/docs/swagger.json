@@ -1882,7 +1882,7 @@
                         "BearerAuth": []
                     }
                 ],
-                "description": "仅登录用户可用。返回本人全部未删除批次（含数量为零项），按 ID 倒序；items 与 total 基于同一服务端 today 取得，筛选与响应 expiry_state 规则一致（depleted/expired/expiring/fresh/unknown）。q 为食材名称字面子串；不提供总质量/总数量聚合。日期统一按 UTC 判断。",
+                "description": "仅登录用户可用。返回本人全部未删除批次（含数量为零项），按 ID 倒序；items 与 total 基于同一服务端 today 取得，筛选与响应 expiry_state 规则一致（depleted/expired/expiring/fresh/unknown）。q 为食材名称字面子串；不提供总质量/总数量聚合。日期统一按中国标准时间判断。",
                 "produces": [
                     "application/json"
                 ],
@@ -2836,11 +2836,11 @@
                 "tags": [
                     "营养"
                 ],
-                "summary": "七日营养估算（UTC）",
+                "summary": "七日营养估算（中国标准时间）",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "结束日期 YYYY-MM-DD，默认 UTC 今天",
+                        "description": "结束日期 YYYY-MM-DD，默认中国标准时间今天",
                         "name": "end",
                         "in": "query"
                     }

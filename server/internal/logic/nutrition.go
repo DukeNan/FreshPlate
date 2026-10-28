@@ -3,6 +3,7 @@ package logic
 import (
 	"time"
 
+	"freshplate/server/internal/calendar"
 	"freshplate/server/internal/store"
 )
 
@@ -18,7 +19,7 @@ type NutritionDay struct {
 
 // NutritionDays totals only complete days; unknown data is never treated as zero.
 func NutritionDays(end time.Time, items []store.NutritionItem) []NutritionDay {
-	end = time.Date(end.Year(), end.Month(), end.Day(), 0, 0, 0, 0, time.UTC)
+	end = time.Date(end.Year(), end.Month(), end.Day(), 0, 0, 0, 0, calendar.China)
 	days := make([]NutritionDay, 7)
 	seen := make(map[int64]bool)
 	for i := range days {
@@ -26,7 +27,7 @@ func NutritionDays(end time.Time, items []store.NutritionItem) []NutritionDay {
 		days[i] = NutritionDay{Date: end.AddDate(0, 0, i-6).Format("2006-01-02"), EnergyKcal: &zero[0], ProteinG: &zero[1], FatG: &zero[2], CarbsG: &zero[3], Complete: true}
 	}
 	for _, item := range items {
-		date := time.Unix(item.AteAt, 0).UTC().Format("2006-01-02")
+		date := time.Unix(item.AteAt, 0).In(calendar.China).Format("2006-01-02")
 		for i := range days {
 			day := &days[i]
 			if day.Date != date {

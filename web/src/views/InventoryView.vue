@@ -1,7 +1,8 @@
 <script setup>
+import { chinaDate } from '../date.js'
 // 库存模块前端单页（方案 §4/§6）：列表筛选与分页、新建、编辑、删除。
 // 约定：数量全程使用字符串（inputmode=decimal + 正则预检），绝不经 Number 转换；
-// 到期日原样展示不转时区（页面注明按 UTC 日期判断）；状态徽标为文字 + 颜色，
+// 到期日原样展示不转时区（页面注明按中国标准时间日期判断）；状态徽标为文字 + 颜色，
 // 数量为 0 由服务端 expiry_state=depleted 保证优先于任何日期状态。
 import { ref, computed, watch, onMounted } from 'vue'
 import { api } from '../api.js'
@@ -39,26 +40,21 @@ const formError = ref(''), formMessage = ref('')
 const foodSearchQ = ref(''), foodChoices = ref([]), foodChoicesTotal = ref(0)
 const foodChoicesSearched = ref(false), foodChoicesLoading = ref(false)
 
-// UTC 今日（YYYY-MM-DD）：仅读取 UTC 日历日，不把日期经浏览器时区换算。
-function utcTodayString() {
-  const now = new Date()
-  return `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}-${String(now.getUTCDate()).padStart(2, '0')}`
-}
 function unitName(unit) { return UNITS[unit] || unit }
 // 数量字符串 → 千分单位十进制字符串与两个千分串的大小比较均由共享模块
 // quantity.js 提供（无前导零，只做字符串运算）。
-// 状态徽标：expiring 且到期日等于 UTC 今日时显示「今日到期」，其余按服务端状态。
+// 状态徽标：expiring 且到期日等于中国标准时间今日时显示「今日到期」，其余按服务端状态。
 function stateLabel(item) {
-  if (item.expiry_state === 'expiring') return item.expires_on === utcTodayString() ? '今日到期' : '临期'
+  if (item.expiry_state === 'expiring') return item.expires_on === chinaDate() ? '今日到期' : '临期'
   return STATE_TEXT[item.expiry_state] || '未知'
 }
 function badgeClass(item) {
-  if (item.expiry_state === 'expiring' && item.expires_on === utcTodayString()) return 'today'
+  if (item.expiry_state === 'expiring' && item.expires_on === chinaDate()) return 'today'
   return item.expiry_state || 'unknown'
 }
 
 const noteLength = computed(() => [...formNote.value].length)
-const expiryPast = computed(() => !!formExpiresOn.value && formExpiresOn.value < utcTodayString())
+const expiryPast = computed(() => !!formExpiresOn.value && formExpiresOn.value < chinaDate())
 const expiryInvalid = computed(() => !!formExpiresOn.value && !DATE_RE.test(formExpiresOn.value))
 // 停用食材且草稿数量大于原值：给出提示，但仍允许提交（后端是最终裁决，409 FOOD_DISABLED 显示其消息）。
 const increaseBlocked = computed(() => {
@@ -250,7 +246,7 @@ onMounted(() => { load(); loadFoodOptions() })
 <section>
   <p class="eyebrow">我的食材库存</p>
   <h1>我的库存</h1>
-  <p class="muted">按批次记录食材的数量、单位与到期日；到期与临期状态按 UTC 日期判断，到期日当天计为「今日到期」。无到期日 ≠ 不会过期，请自行留意。</p>
+  <p class="muted">按批次记录食材的数量、单位与到期日；到期与临期状态按中国标准时间日期判断，到期日当天计为「今日到期」。无到期日 ≠ 不会过期，请自行留意。</p>
 
   <p v-if="!formOpen" class="actions"><button :disabled="busy || auth.checking || !!auth.checkError" @click="openCreate">新建库存批次</button></p>
 
@@ -292,7 +288,7 @@ onMounted(() => { load(); loadFoodOptions() })
         <label for="form-expires">到期日（留空表示未知）</label>
         <input id="form-expires" v-model="formExpiresOn" type="date">
         <p v-if="expiryInvalid" class="error" role="alert">到期日格式必须为 YYYY-MM-DD，或留空。</p>
-        <p v-else-if="expiryPast" class="notice" role="status">到期日早于今日（按 UTC 日期判断）：允许录入已过期批次，保存后该批次会标记为「已过期」。</p>
+        <p v-else-if="expiryPast" class="notice" role="status">到期日早于今日（按中国标准时间日期判断）：允许录入已过期批次，保存后该批次会标记为「已过期」。</p>
         <label for="form-note">备注（至多 500 字）</label>
         <textarea id="form-note" v-model="formNote" rows="3" maxlength="500"></textarea>
         <small>已输入 {{ noteLength }}/500 字。</small>
@@ -321,7 +317,7 @@ onMounted(() => { load(); loadFoodOptions() })
 
   <div class="table-wrap card">
     <table>
-      <caption>我的库存批次，共 {{ total }} 条（状态按 UTC 日期判断）</caption>
+      <caption>我的库存批次，共 {{ total }} 条（状态按中国标准时间日期判断）</caption>
       <thead><tr><th scope="col">食材</th><th scope="col">批次 / 版本</th><th scope="col">数量 / 单位</th><th scope="col">到期日</th><th scope="col">状态</th><th scope="col">操作</th></tr></thead>
       <tbody>
         <tr v-for="item in items" :key="item.id">

@@ -32,7 +32,7 @@
 
 ### 3.1 食材可用量与状态
 
-对候选食谱的每个食材，取本人有效库存批次（`user_id=? AND deleted_at IS NULL AND quantity_milli>0`，且满足到期有效条件 `expires_on IS NULL OR expires_on >= today`，且关联食材 `status='active'`）按 `food_id` 聚合；该集合（下称"有效批次集合"）是本节匹配、§3.2 `uses_expiring` 与 §4 `has_usable_inventory` 共同引用的唯一集合定义。追加 `status='active'` 条件不改变任何候选的匹配结果：§2 第 3 项已排除引用停用食材的候选，候选食材必为 active，该条件仅使 `has_usable_inventory` 语义唯一。`today` 为 §3.2/§5 共用的同一次注入服务端 UTC 日期，边界与库存模块 `ExpiryState` 一致：`expires_on < today`（库存语义 expired）不计入聚合；到期日当天（expiring）计入；`expires_on IS NULL`（unknown）视为可用。该到期过滤按 §5 在内存完成（批量取出已含 `expires_on`），不给 store 查询引入 today 绑定。食材仅存在过期批次时按无可用库存处理，缺料说明不区分"从未购买"与"仅有已过期批次"，不新增第五态。
+对候选食谱的每个食材，取本人有效库存批次（`user_id=? AND deleted_at IS NULL AND quantity_milli>0`，且满足到期有效条件 `expires_on IS NULL OR expires_on >= today`，且关联食材 `status='active'`）按 `food_id` 聚合；该集合（下称"有效批次集合"）是本节匹配、§3.2 `uses_expiring` 与 §4 `has_usable_inventory` 共同引用的唯一集合定义。追加 `status='active'` 条件不改变任何候选的匹配结果：§2 第 3 项已排除引用停用食材的候选，候选食材必为 active，该条件仅使 `has_usable_inventory` 语义唯一。`today` 为 §3.2/§5 共用的同一次注入服务端中国标准时间（UTC+8）日期，边界与库存模块 `ExpiryState` 一致：`expires_on < today`（库存语义 expired）不计入聚合；到期日当天（expiring）计入；`expires_on IS NULL`（unknown）视为可用。该到期过滤按 §5 在内存完成（批量取出已含 `expires_on`），不给 store 查询引入 today 绑定。食材仅存在过期批次时按无可用库存处理，缺料说明不区分"从未购买"与"仅有已过期批次"，不新增第五态。
 
 每条批次相对食谱申报单位的可换算性单独判定：批次单位与申报单位相同则恒可换算（系数 1，与食材换算字段是否齐全无关）；跨单位时按换算表判定——`g`↔`ml` 需 `density_g_ml`，`piece`↔`g` 需 `piece_weight_g`，`piece`↔`ml` 经克中转、两个系数缺一不可；缺任一所需系数即该条批次不可换算。
 

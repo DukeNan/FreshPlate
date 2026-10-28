@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"freshplate/server/internal/calendar"
 	"strings"
 	"testing"
 	"time"
@@ -94,12 +95,12 @@ func TestInvLOGIC019_024_ExpiryDateValidation(t *testing.T) {
 
 // INV-LOGIC-025/027/028/029/030/031：expiry_state 派生与数量零优先级。
 func TestInvLOGIC025_027_031_ExpiryStateDerivation(t *testing.T) {
-	today := UtcToday(time.Date(2026, 10, 19, 15, 0, 0, 0, time.UTC))
+	today := calendar.Today(time.Date(2026, 10, 19, 14, 0, 0, 0, time.UTC))
 	for _, tc := range []struct {
-		name         string
-		milli        int64
-		expiresOn    *string
-		want         string
+		name      string
+		milli     int64
+		expiresOn *string
+		want      string
 	}{
 		{name: "数量零优先depleted", milli: 0, expiresOn: sptr("2026-10-18"), want: "depleted"},
 		{name: "数量零且无日期仍depleted", milli: 0, expiresOn: nil, want: "depleted"},
@@ -118,11 +119,11 @@ func TestInvLOGIC025_027_031_ExpiryStateDerivation(t *testing.T) {
 	}
 }
 
-// INV-LOGIC-032：UTC 日历日跨日，不依赖服务器本地时区。
-func TestInvLOGIC032_UTCCalendarDayBoundary(t *testing.T) {
+// INV-LOGIC-032：中国标准时间日历日跨日，不依赖服务器本地时区。
+func TestInvLOGIC032_ChinaCalendarDayBoundary(t *testing.T) {
 	date := sptr("2026-10-19")
-	before := UtcToday(time.Date(2026, 10, 19, 23, 59, 0, 0, time.UTC))
-	after := UtcToday(time.Date(2026, 10, 20, 0, 0, 0, 0, time.UTC))
+	before := calendar.Today(time.Date(2026, 10, 19, 15, 59, 0, 0, time.UTC))
+	after := calendar.Today(time.Date(2026, 10, 19, 16, 0, 0, 0, time.UTC))
 	if got := ExpiryState(1000, date, before); got != "expiring" {
 		t.Fatalf("23:59 应为 expiring: %s", got)
 	}
@@ -130,7 +131,7 @@ func TestInvLOGIC032_UTCCalendarDayBoundary(t *testing.T) {
 		t.Fatalf("次日 00:00 应为 expired: %s", got)
 	}
 	if before.Format("2006-01-02") != "2026-10-19" || after.Format("2006-01-02") != "2026-10-20" {
-		t.Fatal("UtcToday 未按 UTC 截断日历日")
+		t.Fatal("未按中国标准时间截断日历日")
 	}
 }
 
@@ -220,9 +221,9 @@ func TestInvLOGIC026_TodayTakenOncePerRequest(t *testing.T) {
 	s.Now = func() time.Time {
 		calls++
 		if calls == 1 {
-			return time.Date(2026, 10, 19, 23, 59, 0, 0, time.UTC)
+			return time.Date(2026, 10, 19, 15, 59, 0, 0, time.UTC)
 		}
-		return time.Date(2026, 10, 20, 0, 30, 0, 0, time.UTC)
+		return time.Date(2026, 10, 19, 16, 30, 0, 0, time.UTC)
 	}
 	items, total, today, err := s.InventoryList(ctx, actor, "", 0, "expiring", 1, 20)
 	if err != nil {

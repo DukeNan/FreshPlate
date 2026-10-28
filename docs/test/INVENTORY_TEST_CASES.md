@@ -59,7 +59,7 @@
 | INV-LOGIC-029 | 3 天/4 天边界 | 注入 today=2026-10-19 | date=2026-10-22 与 date=2026-10-23 | today+3 → `expiring`；today+4 → `fresh` | P0 | server/internal/logic/inventory_test.go |
 | INV-LOGIC-030 | fresh 派生 | 注入 today | date > today+3 | `fresh` | P1 | server/internal/logic/inventory_test.go |
 | INV-LOGIC-031 | 数量 0 优先 depleted | 注入 today | quantity_milli=0 且 date=昨天（已过期到期日） | `depleted`，不再显示临期/过期警告 | P0 | server/internal/logic/inventory_test.go |
-| INV-LOGIC-032 | UTC 日历日跨日 | 注入时钟分别为 UTC 2026-10-19T23:59 与 2026-10-20T00:00 | 同一 date=2026-10-19 | 前者 `expiring`（今日到期），后者 `expired`；不依赖服务器本地时区 | P1 | server/internal/logic/inventory_test.go |
+| INV-LOGIC-032 | 中国标准时间日历日跨日 | 注入时钟分别为 UTC 2026-10-19T15:59 与 2026-10-19T16:00 | 同一 date=2026-10-19 | 前者 `expiring`（今日到期），后者 `expired`；不依赖服务器本地时区 | P1 | server/internal/logic/inventory_test.go |
 | INV-LOGIC-033 | 停用食材只能减量（业务规则） | food.status=disabled 的库存批次 | 比较：新数量 > 旧数量 / 新数量 ≤ 旧数量、设 0、仅改备注或到期日 | 增量拒绝（映射 409 FOOD_DISABLED）；减量、设零、改备注、改到期日、删除均允许 | P0 | server/internal/logic/inventory_test.go |
 | INV-LOGIC-034 | 创建数量必须 >0 | 无 | quantity 解析为 0 的创建请求 | 拒绝，INVALID_ARGUMENT（helper 允许 0，创建业务规则拒绝） | P0 | server/internal/logic/inventory_test.go |
 | INV-LOGIC-035 | note 码点上限校验 | 无 | 500 码点（含多码点 emoji）与 501 码点 | 500 通过；501 拒绝（按 Unicode 码点计数而非字节） | P1 | server/internal/logic/inventory_test.go |
@@ -157,7 +157,7 @@
 | INV-API-032 | 响应不泄露内部字段 | 登录 | 读取详情与列表 JSON | 不出现 user_id、quantity_milli（内部千分单位）、deleted_at；expires_on=null 显式输出 | P0 | server/internal/api/inventory_test.go |
 | INV-API-033 | 数量输出为规范字符串 | 已存 quantity_milli=1250 的批次 | 读取详情 | quantity="1.25"（字符串、去尾零），非数字类型 | P1 | server/internal/api/inventory_test.go |
 | INV-API-034 | 已过期日期可录入 | 登录 | POST expires_on=过去日期；PUT 同 | 200/201 成功，expiry_state=expired（允许记录已过期批次，界面明确提示） | P1 | server/internal/api/inventory_test.go |
-| INV-API-035 | 列表与筛选同一 today | 注入时钟跨越 UTC 日界 | 同一请求内含日期边界批次与 expiry_state 筛选 | SQL 筛选与响应派生共用同一服务端 today，结果自洽 | P1 | server/internal/api/inventory_test.go |
+| INV-API-035 | 列表与筛选同一 today | 注入时钟跨越中国标准时间日界 | 同一请求内含日期边界批次与 expiry_state 筛选 | SQL 筛选与响应派生共用同一服务端 today，结果自洽 | P1 | server/internal/api/inventory_test.go |
 | INV-API-036 | 不提供聚合端点 | 登录 | `GET /inventory-items/summary` 或任何总量/总质量路径 | 404（不额外提供总质量/总数量，不同单位不能相加） | P2 | server/internal/api/inventory_test.go |
 | INV-API-037 | 成功响应 no-store | 登录 | 任意 inventory 请求 | 响应含 Cache-Control: no-store（fixture 已全局断言） | P2 | server/internal/api/inventory_test.go |
 
@@ -217,7 +217,7 @@
 | INV-WEB-011 | 账号变化丢弃草稿 | 表单有未保存内容 | 模拟身份切换（沿用现有身份处理） | 丢弃旧账号草稿，表单清空/复位 | P1 | web/src/views/InventoryView.test.js |
 | INV-WEB-012 | 状态标签不只靠颜色 | 渲染五状态行 | 断言标签 DOM | 每个状态（fresh/expiring/expired/unknown/depleted）有文字标签 + 颜色，不只颜色 | P1 | web/src/views/InventoryView.test.js |
 | INV-WEB-013 | 编辑锁定食材与单位 | 打开编辑表单 | 检查字段 | food 与 unit 只读；food 为停用状态时显示“只允许减少数量”提示 | P0 | web/src/views/InventoryView.test.js |
-| INV-WEB-014 | 日期不经时区转换 | 渲染列表 | 检查 YYYY-MM-DD 展示路径 | 字符串原样展示；页面注明“按 UTC 日期判断”；不调用 Date 把日期转浏览器时区 | P1 | web/src/views/InventoryView.test.js |
+| INV-WEB-014 | 日期不经时区转换 | 渲染列表 | 检查 YYYY-MM-DD 展示路径 | 字符串原样展示；页面注明“按中国标准时间日期判断”；不调用 Date 把日期转浏览器时区 | P1 | web/src/views/InventoryView.test.js |
 | INV-WEB-015 | 新建表单选食材 | mock GET /food-catalog | 打开新建表单 | 分页检索 active 食材，显示名称及明确单位；不自动推断个重 | P1 | web/src/views/InventoryView.test.js |
 | INV-WEB-016 | 键盘可用性 | 渲染表单 | Tab 遍历、Enter 提交 | 焦点顺序合理，可纯键盘完成新建/编辑/删除流程 | P2 | web/src/views/InventoryView.test.js |
 | INV-WEB-017 | 导航与路由 | 渲染 App | 检查导航与路由表 | App.vue 导航含库存入口；router.js 注册 /inventory（InventoryView.vue） | P1 | web/src/views/InventoryView.test.js + web/src/api.test.js |

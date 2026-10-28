@@ -2,6 +2,8 @@
 
 FreshPlate（鲜食记）是饮食管理项目，已实现用户、食材基础数据、食材库存、食谱管理与确定性推荐，可在 macOS/Linux 本地运行。AI 步骤生成、记餐与营养业务尚未实现，后续规划见 [实现计划](IMPLEMENTATION_PLAN.md)，三模块实施结果见 [实施总结](docs/test/IMPLEMENTATION_SUMMARY.md)。
 
+库存到期、推荐和营养统计按中国标准时间（UTC+8）计算日历日；记餐时间按中国标准时间输入和显示，时间点仍以 UTC 保存。
+
 ## 当前功能
 
 - 注册、登录、退出；access JWT 有效期 15 分钟，HttpOnly refresh Cookie 固定有效期 7 天，支持轮换、重放检测及即时撤销。密码使用 Argon2id 哈希。
