@@ -169,9 +169,9 @@ test('REC-E2E-003 私有食谱全生命周期：草稿→完成→归档→恢�
   expect(await a.evaluate(() => window.__xss)).toBeUndefined()
   expect(await a.evaluate(() => window.__cspViolations)).toEqual([])
   expect(pageErrors).toEqual([])
-  // 页面不提供烹饪/删除等入口（归档取代删除）。
+  // 归档取代删除，已完成食谱提供烹饪入口。
   await expect(a.getByRole('button', { name: /删除/ })).toHaveCount(0)
-  await expect(a.getByRole('button', { name: /烹饪/ })).toHaveCount(0)
+  await expect(a.getByRole('button', { name: '填写烹饪记录' })).toBeVisible()
 })
 
 test('REC-E2E-004 版本冲突：草稿保留、提示对比重载、重载后可重新提交', async () => {

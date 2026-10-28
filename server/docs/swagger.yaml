@@ -404,6 +404,53 @@ definitions:
       user:
         $ref: '#/definitions/store.User'
     type: object
+  api.mealCreateInput:
+    properties:
+      ate_at:
+        type: string
+      cooked_servings:
+        type: string
+      eaten_servings:
+        type: string
+      items:
+        items:
+          $ref: '#/definitions/api.mealItemInput'
+        type: array
+      recipe_id:
+        type: integer
+      recipe_version:
+        type: integer
+      request_key:
+        type: string
+    type: object
+  api.mealItemInput:
+    properties:
+      inventory_id:
+        type: integer
+      quantity:
+        type: string
+      version:
+        type: integer
+    type: object
+  api.mealOutput:
+    properties:
+      ate_at:
+        type: string
+      cooked_servings:
+        type: string
+      created_at:
+        type: string
+      eaten_servings:
+        type: string
+      id:
+        type: integer
+      recipe_id:
+        type: integer
+      recipe_name:
+        type: string
+      recipe_version:
+        type: integer
+    type: object
   api.passwordChange:
     properties:
       current_password:
@@ -2775,6 +2822,109 @@ paths:
       summary: 完整替换个人饮食设置
       tags:
       - 个人账户
+  /meals:
+    get:
+      parameters:
+      - description: 页码
+        in: query
+        name: page
+        type: integer
+      - description: 每页数量
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: 分页查询本人饮食记录
+      tags:
+      - 饮食
+    post:
+      consumes:
+      - application/json
+      description: 同一请求编号仅扣减一次；必须提交食谱各食材的本人有效库存批次及实际用量。版本或库存变化时拒绝保存。
+      parameters:
+      - description: 表单加载时的用户 ID
+        in: header
+        name: X-Expected-User-ID
+        required: true
+        type: string
+      - description: 烹饪确认
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/api.mealCreateInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/api.response'
+            - properties:
+                data:
+                  $ref: '#/definitions/api.mealOutput'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/api.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: 确认烹饪并记录饮食
+      tags:
+      - 饮食
+  /nutrition:
+    get:
+      parameters:
+      - description: 结束日期 YYYY-MM-DD，默认 UTC 今天
+        in: query
+        name: end
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.response'
+      security:
+      - BearerAuth: []
+      summary: 七日营养估算（UTC）
+      tags:
+      - 营养
   /recipes:
     get:
       description: 仅登录用户可用。scope=public（默认）仅返回已发布公共食谱，不接受 status 筛选；scope=mine 返回本人私有食谱的全部状态，可按

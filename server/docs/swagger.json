@@ -2687,6 +2687,174 @@
                 }
             }
         },
+        "/meals": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "饮食"
+                ],
+                "summary": "分页查询本人饮食记录",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "页码",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "每页数量",
+                        "name": "page_size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "同一请求编号仅扣减一次；必须提交食谱各食材的本人有效库存批次及实际用量。版本或库存变化时拒绝保存。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "饮食"
+                ],
+                "summary": "确认烹饪并记录饮食",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "表单加载时的用户 ID",
+                        "name": "X-Expected-User-ID",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "烹饪确认",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.mealCreateInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/api.response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/api.mealOutput"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/api.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/nutrition": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "营养"
+                ],
+                "summary": "七日营养估算（UTC）",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "结束日期 YYYY-MM-DD，默认 UTC 今天",
+                        "name": "end",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.response"
+                        }
+                    }
+                }
+            }
+        },
         "/recipes": {
             "get": {
                 "security": [
@@ -3710,6 +3878,78 @@
                 },
                 "user": {
                     "$ref": "#/definitions/store.User"
+                }
+            }
+        },
+        "api.mealCreateInput": {
+            "type": "object",
+            "properties": {
+                "ate_at": {
+                    "type": "string"
+                },
+                "cooked_servings": {
+                    "type": "string"
+                },
+                "eaten_servings": {
+                    "type": "string"
+                },
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.mealItemInput"
+                    }
+                },
+                "recipe_id": {
+                    "type": "integer"
+                },
+                "recipe_version": {
+                    "type": "integer"
+                },
+                "request_key": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.mealItemInput": {
+            "type": "object",
+            "properties": {
+                "inventory_id": {
+                    "type": "integer"
+                },
+                "quantity": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "integer"
+                }
+            }
+        },
+        "api.mealOutput": {
+            "type": "object",
+            "properties": {
+                "ate_at": {
+                    "type": "string"
+                },
+                "cooked_servings": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "eaten_servings": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "recipe_id": {
+                    "type": "integer"
+                },
+                "recipe_name": {
+                    "type": "string"
+                },
+                "recipe_version": {
+                    "type": "integer"
                 }
             }
         },

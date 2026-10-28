@@ -136,6 +136,7 @@ var migrationChain = []struct {
 	{3, "003_foods.sql"},
 	{4, "004_inventory.sql"},
 	{5, "005_recipes.sql"},
+	{6, "006_meals.sql"},
 }
 
 // foodColumns 是 v3 重建后 foods 表的全部列，供启动结构校验使用。
@@ -226,7 +227,7 @@ func (s *Store) migrate(ctx context.Context) error {
 			}
 		}
 		// 统一结构检查：缺表、缺列、缺索引或外键悬空都拒绝启动。
-		for _, table := range []string{"users", "sessions", "refresh_tokens", "user_preferences", "foods", "audit_logs", "resource_audit_logs", "inventory_items", "recipes", "recipe_ingredients", "recipe_allergens"} {
+		for _, table := range []string{"users", "sessions", "refresh_tokens", "user_preferences", "foods", "audit_logs", "resource_audit_logs", "inventory_items", "recipes", "recipe_ingredients", "recipe_allergens", "meal_logs", "meal_log_items"} {
 			var n int
 			if err := c.QueryRowContext(ctx, "SELECT count(*) FROM sqlite_master WHERE type='table' AND name=?", table).Scan(&n); err != nil {
 				return err
@@ -247,6 +248,8 @@ func (s *Store) migrate(ctx context.Context) error {
 			"recipes":             "id,visibility,owner_user_id,status,name,servings,duration_minutes,steps_json,source,allergen_complete,allergen_source,version,created_at,updated_at",
 			"recipe_ingredients":  "recipe_id,position,food_id,quantity_milli,unit",
 			"recipe_allergens":    "recipe_id,allergen_code",
+			"meal_logs":           "id,user_id,request_key,request_hash,recipe_id,recipe_name,recipe_version,cooked_servings_milli,eaten_servings_milli,ate_at,created_at",
+			"meal_log_items":      "meal_id,inventory_id,food_id,food_name,quantity_milli,unit,energy_kcal_100g,protein_g_100g,fat_g_100g,carbohydrate_g_100g,density_g_ml,piece_weight_g",
 		} {
 			rows, err := c.QueryContext(ctx, "SELECT "+columns+" FROM "+table+" LIMIT 0")
 			if err != nil {
@@ -254,7 +257,7 @@ func (s *Store) migrate(ctx context.Context) error {
 			}
 			rows.Close()
 		}
-		for _, index := range []string{"sessions_user", "sessions_expiry", "refresh_session", "audit_created", "audit_target", "resource_audit_resource", "inventory_user", "inventory_user_expiry", "recipes_owner", "recipes_visibility", "recipe_ingredients_food"} {
+		for _, index := range []string{"sessions_user", "sessions_expiry", "refresh_session", "audit_created", "audit_target", "resource_audit_resource", "inventory_user", "inventory_user_expiry", "recipes_owner", "recipes_visibility", "recipe_ingredients_food", "meals_user"} {
 			var n int
 			if err := c.QueryRowContext(ctx, "SELECT count(*) FROM sqlite_master WHERE type='index' AND name=?", index).Scan(&n); err != nil {
 				return err

@@ -144,7 +144,7 @@ test('RECO-E2E-003 详情版本变化完全丢弃推荐匹配，刷新详情无�
   await expect(page.getByText(/缺.*99/)).toHaveCount(0)
   await page.reload()
   await expect(page.getByText('该食谱在推荐加载后已被修改，请返回并刷新推荐', { exact: false })).toHaveCount(0)
-  await expect(page.getByRole('button', { name: /烹饪/ })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: '填写烹饪记录' })).toBeVisible()
 })
 
 test('RECO-E2E-004 唯一库存食材停用后无可用库存，安全幸存列表全 missing', async () => {

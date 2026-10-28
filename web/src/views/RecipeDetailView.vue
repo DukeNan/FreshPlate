@@ -3,11 +3,12 @@
 // 停用标记）、步骤与来源。全部内容使用文本插值渲染，绝不用 v-html，也不解析
 // Markdown；来源按纯文本显示，避免链接协议风险。未发布/已撤回公共、他人
 // 私有与不存在一律 404，页面统一提示，不区分原因。仅本人私有食谱显示编辑
-// 入口（公共食谱不可编辑）；不提供任何烹饪或库存扣减按钮。
+// 入口（公共食谱不可编辑）。
 import { ref, computed, onMounted } from 'vue'
 import { api } from '../api.js'
 import { auth } from '../auth.js'
 import { ingredientStatus, matchingRecommendation, missingSummary, takeRecommendation, unitLabel } from '../recommendations.js'
+import CookingForm from '../components/CookingForm.vue'
 
 const props = defineProps({ id: { type: String, required: true } })
 const generation = auth.generation
@@ -64,6 +65,7 @@ onMounted(load)
       <p class="muted">已发布 ≠ 始终安全；本页面仅为数据展示，不构成推荐，也不代表适合当前账号食用。</p>
 
       <div class="actions"><RouterLink v-if="editable" class="linklike" :to="`/recipes/${detail.id}/edit`">编辑</RouterLink><RouterLink class="linklike" to="/recipes">返回列表</RouterLink></div>
+      <CookingForm v-if="detail.status === 'published'" :recipe="detail" />
 
       <p v-if="recommendationSnapshot && !recommendation" class="notice" role="status">该食谱在推荐加载后已被修改，请返回并刷新推荐。<RouterLink to="/recommendations">返回推荐</RouterLink></p>
       <section v-if="recommendation" class="card" aria-label="推荐匹配快照">

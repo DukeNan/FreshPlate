@@ -127,9 +127,9 @@ func refuseOpen(t *testing.T, path, fragment string) {
 	}
 }
 
-var wantTables = []string{"users", "sessions", "refresh_tokens", "user_preferences", "foods", "audit_logs", "resource_audit_logs", "inventory_items", "recipes", "recipe_ingredients", "recipe_allergens"}
+var wantTables = []string{"users", "sessions", "refresh_tokens", "user_preferences", "foods", "audit_logs", "resource_audit_logs", "inventory_items", "recipes", "recipe_ingredients", "recipe_allergens", "meal_logs", "meal_log_items"}
 
-var wantIndexes = []string{"sessions_user", "sessions_expiry", "refresh_session", "audit_created", "audit_target", "resource_audit_resource", "inventory_user", "inventory_user_expiry", "recipes_owner", "recipes_visibility", "recipe_ingredients_food"}
+var wantIndexes = []string{"sessions_user", "sessions_expiry", "refresh_session", "audit_created", "audit_target", "resource_audit_resource", "inventory_user", "inventory_user_expiry", "recipes_owner", "recipes_visibility", "recipe_ingredients_food", "meals_user"}
 
 func assertTablesAndIndexes(t *testing.T, db *sql.DB) {
 	t.Helper()
@@ -489,7 +489,7 @@ func TestFoodMIG010MidMigrationFailureRollsBack(t *testing.T) {
 		t.Fatalf("foods rows after failure: %d", got)
 	}
 	// 后续迁移的表未创建。
-	for _, table := range []string{"inventory_items", "recipes", "recipe_ingredients", "recipe_allergens"} {
+	for _, table := range []string{"inventory_items", "recipes", "recipe_ingredients", "recipe_allergens", "meal_logs", "meal_log_items"} {
 		if got := queryInt(t, db, "SELECT count(*) FROM sqlite_master WHERE type='table' AND name=?", table); got != 0 {
 			t.Fatalf("table %s exists after rollback", table)
 		}
